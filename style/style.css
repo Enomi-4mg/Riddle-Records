@@ -1,0 +1,113 @@
+@charset "UTF-8";
+.kiwi-maru-regular {
+    font-family: "Kiwi Maru", serif;
+    font-weight: 400;
+    font-style: normal;
+  }  
+body {
+    font-family: "Kiwi Maru",serif;
+    width: auto;
+    margin: 3rem 1rem;
+    background-color: #fff;
+    padding: 0 20px 20px 20px;
+    border: solid;
+    border-width:0;
+  }
+h1{
+    color:aqua;
+    font-family: "Kiwi Maru",serif;
+}
+p{
+    font-size:20px;
+}
+ul{
+    list-style-type: none;
+    margin: none;
+}
+a {
+    background-color: transparent;
+    text-decoration: none;
+    color: inherit;
+}
+img{
+    max-width: 60%;
+    height: auto;
+    border-radius: none;
+}
+* ::after ::before{
+    box-sizing:border-box;
+    border-style:solid;
+    border-width:0;
+}
+.web_title{
+    top: 0%;
+    left: auto;
+    margin:30px 30px 30px 30px;
+    font-size:3rem;
+}
+.page_title{
+    font-size:2rem;
+    margin:30px 30px 30px 30px;
+}
+.reload {
+    cursor: pointer;
+}
+.main_color{
+    color:aquamarine
+}
+.sub_color{
+    color:cadetblue
+}
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 14rem;
+    /* background-color: transparent; */
+    background-color:rgb(42, 220, 163);
+    display: flex;
+    justify-content: start;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, .2);
+    transition: 0s ease-out;
+    z-index: 1;
+}
+.sidebar_content {
+    position: absolute;
+    left: 1.4rem;
+    bottom: 2rem;
+    width: fit-content;
+    margin: auto;
+    user-select: none;
+}
+.sidebar_menu {
+    font-size: 1.05rem;
+}
+.menu_item{
+    margin-top: 0.8rem;
+}
+.galary_item {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+}
+.galary_gap{
+    gap: 20px;
+    border-bottom: 1px solid rgba(136, 136, 136, 0.3);
+    border: 3px solid #ccc;
+    padding-top: 20px;
+}
+.work_title{
+    font-size:1.4rem;
+}
+.work_img{
+    border: 3px solid #38f955;
+}
+.container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 0;
+    box-sizing: border-box;
+}
