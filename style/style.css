@@ -14,7 +14,7 @@ body {
     border-width:0;
   }
 h1{
-    color:aqua;
+    color:rgb(150, 227, 227);
     font-family: "Kiwi Maru",serif;
 }
 p{
@@ -63,8 +63,7 @@ img{
     top: 0;
     left: 0;
     bottom: 0;
-    width: 14rem;
-    /* background-color: transparent; */
+    width: 10%;;
     background-color:rgb(42, 220, 163);
     display: flex;
     justify-content: start;
@@ -74,7 +73,7 @@ img{
 }
 .sidebar_content {
     position: absolute;
-    left: 1.4rem;
+    left: 0.4rem;
     bottom: 2rem;
     width: fit-content;
     margin: auto;
