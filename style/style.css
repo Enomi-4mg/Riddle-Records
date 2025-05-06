@@ -39,11 +39,6 @@ img{
     height: auto;
     border-radius: none;
 }
-/* * ::after ::before{
-    box-sizing:border-box;
-    border-style:solid;
-    border-width:0;
-} */
 .web_title{
     top: 0%;
     left: auto;
@@ -70,7 +65,7 @@ img{
     width: 55px;
     height: 55px;
     border-radius: 50%;
-    background-color: #1bb48e; /* サイドバーより濃い色 */
+    background-color: #1bb48e;
     color: white;
     border: none;
     font-size: 1.6rem;
@@ -84,8 +79,8 @@ img{
     transition: transform 0.25s ease, background-color 0.25s ease;
   }
 .menu_toggle:hover {
-    transform: scale(1.1); /* 拡大のみ */
-    background-color: #179d7d; /* ホバー時に少し暗く */
+    transform: scale(1.1);
+    background-color: #179d7d;
 }
 .sidebar {
     position: fixed;
@@ -143,3 +138,16 @@ img{
     padding: 0 0;
     box-sizing: border-box;
 }
+@media screen and (max-width: 600px) {
+    .menu_toggle {
+      width: 45px;
+      height: 45px;
+      font-size: 1.6rem;
+      top: 10px;
+      left: 10px;
+    }
+  
+    .sidebar {
+      width: 70%;
+    }
+  }
