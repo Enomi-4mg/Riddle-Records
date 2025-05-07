@@ -134,7 +134,8 @@ img{
     font-size:1.4rem;
 }
 .work_img{
-    border: 3px solid #38f955;
+    border: 3px solid #8d8d8d;
+    max-width:70%;
 }
 .container {
     max-width: 1000px;
@@ -174,9 +175,11 @@ img{
       top: 10px;
       left: 10px;
     }
-  
     .sidebar {
       width: 40%;
+    }
+    .work_img{
+        max-width:80%;
     }
 }
 @media screen and (max-width: 600px) {
@@ -193,8 +196,10 @@ img{
       top: 10px;
       left: 10px;
     }
-  
     .sidebar {
       width: 70%;
+    }
+    .work_img{
+        max-width:80%;
     }
   }
