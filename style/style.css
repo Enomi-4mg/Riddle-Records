@@ -141,6 +141,25 @@ img{
     padding: 0 0;
     box-sizing: border-box;
 }
+@media screen and (min-width: 601px) and (max-width: 1024px) {
+    .web_title{
+        top: 0%;
+        left: auto;
+        margin:5px 30px 30px 30px;
+        font-size:2.3rem;
+    }
+    .menu_toggle {
+      width: 45px;
+      height: 45px;
+      font-size: 1.6rem;
+      top: 10px;
+      left: 10px;
+    }
+  
+    .sidebar {
+      width: 40%;
+    }
+}
 @media screen and (max-width: 600px) {
     .web_title{
         top: 0%;
