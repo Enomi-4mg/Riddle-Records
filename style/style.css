@@ -118,13 +118,13 @@ img{
 .menu_item{
     margin-top: 0.8rem;
 }
-.galary_item {
+.gallery_item {
     display: flex;
     flex-direction: column;
     gap: 20px;
     text-align: center;
 }
-.galary_gap{
+.gallery_gap{
     gap: 20px;
     border-bottom: 1px solid rgba(136, 136, 136, 0.3);
     border: 3px solid #ccc;
