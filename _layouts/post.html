@@ -15,11 +15,11 @@ layout: default
     
     <nav class="post-nav" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc;">
         {% if page.previous %}
-        <a href="{{ page.previous.url }}" style="margin-right: 1rem;">← {{ page.previous.title }}</a>
+        <a href="{{ page.previous.url | relative_url }}" style="margin-right: 1rem;">← {{ page.previous.title }}</a>
         {% endif %}
         
         {% if page.next %}
-        <a href="{{ page.next.url }}">{{ page.next.title }} →</a>
+        <a href="{{ page.next.url | relative_url }}">{{ page.next.title }} →</a>
         {% endif %}
     </nav>
 </article>
