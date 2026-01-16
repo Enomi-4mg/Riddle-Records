@@ -1,0 +1,22 @@
+title: Riddle Records
+description: A site for diary, music, and art
+author: 4mg
+
+collections:
+  diary:
+    output: true
+    permalink: /diary/:name/
+  
+  songs:
+    output: true
+    permalink: /disco/:name/
+
+include:
+  - jpg
+  - png
+  - favicon
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
