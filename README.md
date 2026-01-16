@@ -30,8 +30,9 @@ bundle exec jekyll serve
 
 # 5. ブラウザで確認
 # http://localhost:4000/Riddle-Records/ を開く
-
 ```
+
+```bash
 Riddle-Records/
 ├─ _layouts/                    ← テンプレート（ページの骨組み）
 │   ├─ default.html              ← すべてのページの基本テンプレート
@@ -76,7 +77,7 @@ Riddle-Records/
 └─ README.md                    ← このファイル
 ```
 
-```
+```Jykell
 {# コメント #}
 
 {{ variable }}                          ← 変数を表示
@@ -95,13 +96,14 @@ Riddle-Records/
 {% include file.html %}                 ← ファイルを埋め込み
 ```
 
-```
+```Jykell
 {{ entry.date | date: "%Y年%m月%d日" }}    ← 日付フォーマット
 {{ text | truncatewords: 30 }}             ← 最初の30語まで表示
 {{ html | strip_html }}                    ← HTMLタグを削除
 {{ array | sort: 'field' }}                ← フィールドでソート
 {{ array | reverse }}                      ← 配列を反転
 ```
+
 【ポイント】
 - _ で始まるフォルダ（_layouts など）は Jekyll の特別なフォルダ
 - GitHub Pages が自動で _site/ を生成して、それを公開する
