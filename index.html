@@ -8,10 +8,6 @@ title: "Riddle Records"
 {% assign latest_diary = site.diary | sort: 'date' | reverse | first %}
 {% assign latest_song = site.songs | sort: 'date' | reverse | first %}
 {% assign latest_gallery = site.data.gallery | sort: 'date' | reverse | first %}
-{% assign gallery_link = latest_gallery.article_url | default: '' %}
-{% if gallery_link == '' %}
-  {% assign gallery_link = '/gallery.html#gallery-container' %}
-{% endif %}
 
 <section class="home-intro">
   <p class="home-welcome">ようこそ、Riddle Records 公式サイトへ。</p>
@@ -48,11 +44,17 @@ title: "Riddle Records"
 
     {% if latest_gallery %}
     <article class="home-card">
-      <a href="{{ gallery_link | relative_url }}" class="home-card-clickable">
+      <a href="{{ '/gallery.html' | relative_url }}" class="home-card-clickable">
         <div class="home-card-head">
           <span class="home-card-label">Gallery</span>
           <time class="home-card-date" datetime="{{ latest_gallery.date | date: '%Y-%m-%d' }}">{{ latest_gallery.date | date: "%Y年%m月%d日" }}</time>
         </div>
+        {% if latest_gallery.cloudinary_id %}
+        <div class="home-card-thumb">
+          {% assign img_url = 'https://res.cloudinary.com/ddbjkjq9w/image/upload/c_fill,w_400,h_400,g_auto/' | append: latest_gallery.cloudinary_id %}
+          <img src="{{ img_url }}" alt="{{ latest_gallery.title }}" loading="lazy">
+        </div>
+        {% endif %}
         <h3 class="home-card-title">{{ latest_gallery.title }}</h3>
         <p class="home-card-desc">{{ latest_gallery.description | default: '' | truncate: 70 }}</p>
       </a>
@@ -67,6 +69,11 @@ title: "Riddle Records"
           <span class="home-card-label">Discography</span>
           <time class="home-card-date" datetime="{{ latest_song.date | date: '%Y-%m-%d' }}">{{ latest_song.date | date: "%Y年%m月%d日" }}</time>
         </div>
+        {% if latest_song.youtube_id %}
+        <div class="home-card-thumb">
+          <img src="https://img.youtube.com/vi/{{ latest_song.youtube_id }}/maxresdefault.jpg" alt="{{ latest_song.title }}" loading="lazy">
+        </div>
+        {% endif %}
         <h3 class="home-card-title">{{ latest_song.title }}</h3>
         <p class="home-card-desc">{{ latest_song.description | default: '' | truncate: 70 }}</p>
       </a>

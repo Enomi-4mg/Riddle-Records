@@ -77,6 +77,20 @@ function preloadImages(container) {
   return Promise.all(promises);
 }
 
+// Get page category from URL
+function getPageCategory(url) {
+  const path = new URL(url, window.location.origin).pathname;
+  
+  if (path === '/' || path.endsWith('/index.html')) return 'home';
+  if (path.includes('/about')) return 'about';
+  if (path.includes('/diary')) return 'diary'; // Includes both /diary.html and /diary/YYYY-MM-DD/
+  if (path.includes('/gallery')) return 'gallery';
+  if (path.includes('/disco')) return 'disco'; // Includes both /disco.html and /disco/YYYY-MM-DD/
+  if (path.includes('/info')) return 'info';
+  
+  return 'other';
+}
+
 // Wait for all images in container to load
 // Initialize event listeners for links
 function initializeEventListeners() {
@@ -103,8 +117,21 @@ function initializeEventListeners() {
         e.preventDefault();
         
         const url = link.href;
+        // Get current category at click time, not at initialization
+        const currentCategory = getPageCategory(window.location.href);
+        const targetCategory = getPageCategory(url);
+        const isCategoryChange = currentCategory !== targetCategory;
         
-        if (curtain) {
+        console.log(`Navigation: ${currentCategory} -> ${targetCategory}, isCategoryChange: ${isCategoryChange}`);
+        
+        // Only use transition animation when moving between different categories
+        if (curtain && isCategoryChange) {
+          // Mark that we're using internal navigation
+          sessionStorage.setItem('internalNavigation', 'true');
+          
+          // Remove hidden state if it exists
+          curtain.removeAttribute('data-hidden');
+          
           // Remove all animation classes first
           curtain.classList.remove('ascending', 'initial', 'descending');
           
@@ -138,6 +165,9 @@ function initializeEventListeners() {
             }
           }, 300); // Wait for descend animation
         } else {
+          // Direct navigation without animation for same-category moves
+          // Mark that we're using internal navigation (no transition needed)
+          sessionStorage.setItem('internalNavigation', 'skip');
           window.location.href = url;
         }
       }
@@ -151,8 +181,8 @@ function initializeEventListeners() {
 document.addEventListener('DOMContentLoaded', () => {
   const curtain = document.querySelector('.transition-curtain');
   
-  // When page loads, ascend the curtain (幕が上に消える)
-  if (curtain) {
+  // Only show transition on true initial page load (not if already hidden)
+  if (curtain && !curtain.hasAttribute('data-hidden')) {
     setTimeout(() => {
       curtain.classList.remove('initial');
       curtain.classList.add('ascending');
@@ -165,26 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Handle browser back/forward buttons
 window.addEventListener('popstate', async (e) => {
-  const curtain = document.querySelector('.transition-curtain');
-  
-  if (curtain) {
-    curtain.classList.remove('ascending');
-    setTimeout(() => {
-      curtain.classList.add('descending');
-    }, 10);
-    
-    setTimeout(async () => {
-      const url = window.location.href;
-      const success = await loadPageContent(url);
-      
-      if (success) {
-        curtain.classList.remove('descending');
-        setTimeout(() => {
-          curtain.classList.add('ascending');
-        }, 50);
-      }
-    }, 300);
-  }
+  // No transition animation on back/forward navigation
+  const url = window.location.href;
+  await loadPageContent(url);
 });
 
 // Sidebar toggle

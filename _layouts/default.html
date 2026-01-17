@@ -22,6 +22,21 @@
 </head>
 <body>
     <div class="transition-curtain initial"></div>
+    <script>
+        // Check navigation type immediately to prevent curtain flash
+        (function() {
+            var navType = sessionStorage.getItem('internalNavigation');
+            if (navType === 'skip') {
+                var curtain = document.querySelector('.transition-curtain');
+                if (curtain) {
+                    curtain.classList.remove('initial', 'descending', 'ascending');
+                    curtain.style.transform = 'translateY(100%)';
+                    curtain.setAttribute('data-hidden', 'true');
+                }
+                sessionStorage.removeItem('internalNavigation');
+            }
+        })();
+    </script>
     {% include sidebar.html %}
     {% include header.html %}
     

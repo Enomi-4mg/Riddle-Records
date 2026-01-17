@@ -1,10 +1,6 @@
 <header class="site-header">
     <div class="header-container">
-        <a href="{{ '/' | relative_url }}" class="header-logo">
-            <img src="{{ '/favicon/favicon.ico' | relative_url }}" alt="Riddle Records" class="logo-icon">
-            <span class="site-title">Riddle Records</span>
-        </a>
-        <nav class="header-nav">
+        <nav class="header-nav header-nav-left">
             <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="{{ '/' | relative_url }}" class="{% if page.url == '/' %}active{% endif %}">Home</a>
@@ -15,6 +11,14 @@
                 <li class="nav-item">
                     <a href="{{ '/diary' | relative_url }}" class="{% if page.url contains '/diary' %}active{% endif %}">Diary</a>
                 </li>
+            </ul>
+        </nav>
+        <a href="{{ '/' | relative_url }}" class="header-logo">
+            <img src="{{ '/favicon/favicon.ico' | relative_url }}" alt="Riddle Records" class="logo-icon">
+            <span class="site-title">Riddle Records</span>
+        </a>
+        <nav class="header-nav header-nav-right">
+            <ul class="nav-menu">
                 <li class="nav-item">
                     <a href="{{ '/gallery' | relative_url }}" class="{% if page.url == '/gallery' or page.url == '/gallery.html' %}active{% endif %}">Gallery</a>
                 </li>
