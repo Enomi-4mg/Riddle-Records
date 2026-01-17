@@ -23,7 +23,6 @@ exclude:
   - vendor/bundle
   - vendor/cache
   - vendor
-  - legacy
 
 url: "https://enomi-4mg.github.io"
 baseurl: "/Riddle-Records"

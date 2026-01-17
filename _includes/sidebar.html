@@ -2,22 +2,22 @@
     <div class="sidebar_content">
         <ul class="sidebar_menu">
             <li class="menu_item">
-                <a href="{{ '/' | relative_url }}">Home</a>
+                <a href="{{ '/' | relative_url }}" class="{% if page.url == '/' %}active{% endif %}">Home</a>
             </li>
             <li class="menu_item">
-                <a href="{{ '/about' | relative_url }}">About</a>
+                <a href="{{ '/about' | relative_url }}" class="{% if page.url == '/about' or page.url == '/about.html' %}active{% endif %}">About</a>
             </li>
             <li class="menu_item">
-                <a href="{{ '/diary' | relative_url }}">Diary</a>
+                <a href="{{ '/diary' | relative_url }}" class="{% if page.url contains '/diary' %}active{% endif %}">Diary</a>
             </li>
             <li class="menu_item">
-                <a href="{{ '/gallery' | relative_url }}">Gallery</a>
+                <a href="{{ '/gallery' | relative_url }}" class="{% if page.url == '/gallery' or page.url == '/gallery.html' %}active{% endif %}">Gallery</a>
             </li>
             <li class="menu_item">
-                <a href="{{ '/disco' | relative_url }}">Discography</a>
+                <a href="{{ '/disco' | relative_url }}" class="{% if page.url contains '/disco' %}active{% endif %}">Discography</a>
             </li>
             <li class="menu_item">
-                <a href="{{ '/info' | relative_url }}">Information</a>
+                <a href="{{ '/info' | relative_url }}" class="{% if page.url == '/info' or page.url == '/info.html' %}active{% endif %}">Information</a>
             </li>
         </ul>
     </div>

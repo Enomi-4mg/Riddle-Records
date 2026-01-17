@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "日記"
+title: "Journal"
 ---
 
 {% assign sorted_entries = site.diary | sort: 'date' | reverse %}

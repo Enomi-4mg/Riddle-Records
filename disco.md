@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "曲"
+title: "Songs"
 ---
 
 {% assign sorted_songs = site.songs | sort: 'date' | reverse %}

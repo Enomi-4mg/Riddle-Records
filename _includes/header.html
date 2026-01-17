@@ -1,3 +1,31 @@
 <header class="site-header">
-    <div class="menu_toggle">☰</div>
+    <div class="header-container">
+        <a href="{{ '/' | relative_url }}" class="header-logo">
+            <img src="{{ '/favicon/favicon.ico' | relative_url }}" alt="Riddle Records" class="logo-icon">
+            <span class="site-title">Riddle Records</span>
+        </a>
+        <nav class="header-nav">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ '/' | relative_url }}" class="{% if page.url == '/' %}active{% endif %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ '/about' | relative_url }}" class="{% if page.url == '/about' or page.url == '/about.html' %}active{% endif %}">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ '/diary' | relative_url }}" class="{% if page.url contains '/diary' %}active{% endif %}">Diary</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ '/gallery' | relative_url }}" class="{% if page.url == '/gallery' or page.url == '/gallery.html' %}active{% endif %}">Gallery</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ '/disco' | relative_url }}" class="{% if page.url contains '/disco' %}active{% endif %}">Discography</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ '/info' | relative_url }}" class="{% if page.url == '/info' or page.url == '/info.html' %}active{% endif %}">Information</a>
+                </li>
+            </ul>
+        </nav>
+        <div class="menu_toggle">☰</div>
+    </div>
 </header>

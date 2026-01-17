@@ -62,6 +62,84 @@ img{
 .sub_color{
     color:cadetblue
 }
+
+/* ===== Header Styles ===== */
+.site-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(42, 220, 163, 0.95);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-right: 2rem;
+    transition: opacity 0.3s ease;
+}
+
+.header-logo:hover {
+    opacity: 0.8;
+}
+
+.logo-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+.site-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0a1510;
+    white-space: nowrap;
+}
+
+.header-nav {
+    flex: 1;
+    display: flex;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item a {
+    color: #0a1510;
+    font-size: 1rem;
+    font-weight: 400;
+    padding: 0.5rem 0;
+    transition: color 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-item a:hover {
+    color: #f4fffa;
+}
+
+.nav-item a.active {
+    color: #f4fffa;
+    font-weight: 700;
+    border-bottom-color: #f4fffa;
+}
+
+/* Menu Toggle (Mobile Only) */
 .menu_toggle {
     position: fixed;
     top: 15px;
@@ -117,6 +195,10 @@ img{
 }
 .menu_item{
     margin-top: 0.8rem;
+}
+.menu_item a.active {
+    color: #0a1510;
+    font-weight: 700;
 }
 .gallery_item {
     display: flex;
@@ -224,6 +306,34 @@ img{
     transform: scale(1.2);
     color: #69fd95; /* Xの場合など、ホバー色調整 */
   }
+
+/* Main Content Padding for Fixed Header */
+body {
+    padding-top: 70px;
+}
+
+/* ===== Responsive Styles ===== */
+/* Tablet & Mobile: Hide header nav, show toggle button */
+@media screen and (max-width: 768px) {
+    .header-nav {
+        display: none;
+    }
+    
+    .menu_toggle {
+        display: flex;
+    }
+    
+    body {
+        padding-top: 80px;
+    }
+}
+
+/* Desktop: Hide toggle button */
+@media screen and (min-width: 769px) {
+    .menu_toggle {
+        display: none;
+    }
+}
   
 @media screen and (min-width: 601px) and (max-width: 1024px) {
     .web_title{

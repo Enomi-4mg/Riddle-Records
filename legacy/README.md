@@ -1,4 +1,7 @@
-# Legacy Content（旧サイト構造）
+---
+layout: page
+title: Legacy Content
+---
 
 このフォルダには、Jekyll 導入前の静的 HTML ファイルが保存されています。
 
