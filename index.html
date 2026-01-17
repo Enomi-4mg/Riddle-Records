@@ -51,7 +51,7 @@ title: "Riddle Records"
         </div>
         {% if latest_gallery.cloudinary_id %}
         <div class="home-card-thumb">
-          {% assign img_url = 'https://res.cloudinary.com/ddbjkjq9w/image/upload/c_fill,w_400,h_400,g_auto/' | append: latest_gallery.cloudinary_id %}
+          {% assign img_url = site.cloudinary_url | append: '/w_400,h_400,c_fill,q_auto,f_auto/v1/' | append: latest_gallery.cloudinary_id %}
           <img src="{{ img_url }}" alt="{{ latest_gallery.title }}" loading="lazy">
         </div>
         {% endif %}
