@@ -24,3 +24,7 @@ exclude:
 
 url: "https://enomi-4mg.github.io"
 baseurl: "/Riddle-Records"
+
+# Cloudinary settings
+cloudinary_cloud_name: "dzq8y9qes"
+cloudinary_url: "https://res.cloudinary.com/dzq8y9qes/image/upload"

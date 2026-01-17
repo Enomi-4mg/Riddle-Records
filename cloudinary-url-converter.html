@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudinary URL → Public ID コンバーター</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .info {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            resize: vertical;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+        .output.visible {
+            display: block;
+        }
+        .output h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .output-text {
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .copy-btn {
+            background: #51cf66;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        .copy-btn:hover {
+            background: #40c057;
+        }
+        .example {
+            background: #f0f7ff;
+            padding: 15px;
+            border-left: 4px solid #007acc;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .example h4 {
+            margin-top: 0;
+            color: #007acc;
+        }
+        .example code {
+            background: white;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Cloudinary URL → Public ID コンバーター</h1>
+        <p class="info">Cloudinaryから取得したURLをコピペして、gallery.yml用のPublic IDを自動生成します</p>
+
+        <div class="example">
+            <h4>使い方：</h4>
+            <ol>
+                <li>Cloudinaryダッシュボードで画像をクリック</li>
+                <li>詳細画面からURLをコピー</li>
+                <li>下のテキストボックスにコピペして「変換」ボタンをクリック</li>
+                <li>出力されたPublic IDをgallery.ymlに貼り付け</li>
+            </ol>
+            <p><strong>例：</strong> <code>https://res.cloudinary.com/dzq8y9qes/image/upload/draw_girl_isg7dp.png</code><br>
+            → <code>draw_girl_isg7dp.png</code></p>
+        </div>
+
+        <div class="form-group">
+            <label for="urlInput">CloudinaryのURL（複数行OK）：</label>
+            <textarea id="urlInput" placeholder="https://res.cloudinary.com/dzq8y9qes/image/upload/...&#10;複数のURLを改行で区切って貼り付けられます"></textarea>
+        </div>
+
+        <button onclick="convertURL()">変換</button>
+
+        <div id="output" class="output">
+            <h3>📋 gallery.yml用Public ID：</h3>
+            <div class="output-text" id="outputText"></div>
+            <button class="copy-btn" onclick="copyToClipboard()">📋 コピー</button>
+        </div>
+    </div>
+
+    <script>
+        function convertURL() {
+            const input = document.getElementById('urlInput').value.trim();
+            if (!input) {
+                alert('URLを入力してください');
+                return;
+            }
+
+            const urls = input.split('\n').map(u => u.trim()).filter(u => u);
+            const results = [];
+
+            urls.forEach(url => {
+                // URLから Public ID を抽出
+                // 例: https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill/draw_girl_isg7dp.png
+                // → draw_girl_isg7dp.png
+                const match = url.match(/\/image\/upload\/(?:[^/]*\/)*([^/]+)$/);
+                if (match) {
+                    results.push(match[1]);
+                } else {
+                    results.push(`エラー: ${url}`);
+                }
+            });
+
+            const outputText = document.getElementById('outputText');
+            outputText.textContent = results.join('\n');
+            document.getElementById('output').classList.add('visible');
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('outputText').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('コピーしました！');
+            }).catch(() => {
+                alert('コピーに失敗しました');
+            });
+        }
+
+        // Enterキーで実行
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                convertURL();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -108,3 +108,19 @@ Riddle-Records/
 - _ で始まるフォルダ（_layouts など）は Jekyll の特別なフォルダ
 - GitHub Pages が自動で _site/ を生成して、それを公開する
 - legacy/ フォルダは GitHub Pages には含まれない（.gitignore で除外推奨）
+
+---
+
+## 🖼️ Cloudinary 画像運用ガイド（簡易版）
+
+- **設定**: `_config.yml` に `cloudinary_cloud_name` と `cloudinary_url` を定義済み。参照は `{{ site.cloudinary_url }}` を使用。
+- **アップロード**: CloudinaryのMedia Libraryで `riddle-records/jpg/...`・`riddle-records/png/...` に配置。`Public ID`（拡張子なし）を控える。
+- **Markdown参照（記事）**: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg` を推奨（幅800px・品質自動・形式自動）。
+- **サムネイル（ギャラリー）**: `{{ site.cloudinary_url }}/w_400,h_400,c_fill,q_auto,f_auto/v1/<cloudinary_id>.jpg` を推奨（正方形にトリミング）。
+- **データ駆動**: `_data/gallery.yml` に `title/date/cloudinary_id/description/category` を追記すると [gallery.md](gallery.md) から自動表示可能。
+- **暫定運用**: プロジェクトサイトの`baseurl`都合で、ローカル画像は `{{ '/path' | relative_url }}` を使うと404を回避できます。
+
+トラブル時は以下を確認してください：
+- 画像が表示されない → `cloudinary_id` が正しいか／拡張子の付与／フォルダ構成の一致
+- 404が出る → ルート相対`/path`ではなく `relative_url` か Cloudinary の絶対URLに統一
+- iframe警告 → `allowfullscreen`は削除し、`allow`に`fullscreen`を含めて一本化（SpotifyのEME警告は仕様）
