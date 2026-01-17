@@ -124,3 +124,68 @@ Riddle-Records/
 - 画像が表示されない → `cloudinary_id` が正しいか／拡張子の付与／フォルダ構成の一致
 - 404が出る → ルート相対`/path`ではなく `relative_url` か Cloudinary の絶対URLに統一
 - iframe警告 → `allowfullscreen`は削除し、`allow`に`fullscreen`を含めて一本化（SpotifyのEME警告は仕様）
+
+---
+
+## 🎨 ギャラリーへの作品追加方法
+
+### 手順
+
+1. **Cloudinaryに画像をアップロード**
+   - [Cloudinary Dashboard](https://cloudinary.com/console) にログイン
+   - Media Library から画像をアップロード
+   - Public ID（拡張子なし）をメモ（例: `my_artwork_abc123`）
+
+2. **`_data/gallery.yml` に新しいエントリを追加**
+   ```yaml
+   - title: "作品タイトル"
+     date: 2026-01-17
+     cloudinary_id: "your_public_id.png"  # 拡張子を含める
+     description: "作品の説明"
+     category: "イラスト"  # または 3DCG / 写真
+     article_url: "/diary/2026-01-17/"  # オプション（関連記事がない場合は ""）
+   ```
+
+3. **Git にコミット & プッシュ**
+   ```bash
+   git add _data/gallery.yml
+   git commit -m "Add new artwork to gallery"
+   git push origin main
+   ```
+
+4. **自動デプロイ完了を待つ**
+   - GitHub Actions が自動的にビルド & デプロイ
+   - 数分後に公開サイトで確認可能
+
+### ギャラリー機能
+
+- **日時ソート**: 「新しい順」「古い順」ボタンで並び替え
+- **カテゴリフィルター**: デフォルトで「イラスト」「3DCG」を表示、「写真」は非表示
+- **Lightbox拡大表示**: 画像クリックでモーダル表示、ESCキーで閉じる
+- **記事リンク**: `article_url` を設定した作品に「📖 関連記事を読む」ボタンが表示
+
+### 注意点
+
+- **インデント**: YAML は半角スペース2個でインデント（タブ禁止）
+- **引用符**: ダブルクォート `"` で統一
+- **相対パス**: `/diary/2025-06-06/` のように先頭に `/` を付ける
+- **空値**: 関連記事がない場合は `article_url: ""` または省略
+
+---
+
+## 🔄 GitHub Actions による自動デプロイ
+
+このサイトは `.github/workflows/jekyll.yml` によって自動デプロイされます。
+
+### デプロイの流れ
+
+1. `main` ブランチに `git push`
+2. GitHub Actions が自動的に起動
+3. Jekyll ビルドを実行
+4. GitHub Pages にデプロイ
+
+### デプロイ状況の確認
+
+リポジトリの **Actions** タブでビルド状況を確認できます。エラーが発生した場合は、ログを確認してください。
+
+---

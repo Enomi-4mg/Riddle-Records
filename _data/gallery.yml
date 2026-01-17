@@ -7,51 +7,60 @@
   cloudinary_id: "draw_girl_isg7dp.png"
   description: "女の子のイラスト"
   category: "イラスト"
+  article_url: ""
 
 - title: "友達"
   date: 2025-04-25
   cloudinary_id: "man_lilman_i8bkgb.png"
   description: "友達のイラスト"
   category: "イラスト"
+  article_url: ""
 
 - title: "迎えに来たよ"
   date: 2025-04-25
   cloudinary_id: "D_2025_04_25_netaa9.png"
   description: "迎えに来たキャラクター"
   category: "イラスト"
+  article_url: ""
 
 - title: "ボート"
   date: 2025-04-25
   cloudinary_id: "boat_pic_zxfzwh.png"
   description: "ボートのイラスト"
   category: "イラスト"
+  article_url: ""
 
 - title: "五つのりんご（被写界深度なし）"
   date: 2025-06-06
   cloudinary_id: "five_apples_spot_angle2_xmytbf.png"
   description: "Blenderチュートリアルで作成した静物"
   category: "3DCG"
+  article_url: "/diary/2025-06-06/"
 
 - title: "五つのりんご（被写界深度あり）"
   date: 2025-06-06
   cloudinary_id: "five_apples_spot_angle2_pint_mgaggo.png"
   description: "被写界深度を適用"
   category: "3DCG"
+  article_url: "/diary/2025-06-06/"
 
 - title: "富士山"
   date: 2025-06-06
   cloudinary_id: "mt.fuji_b82xur.jpg"
   description: "河口湖で撮影"
   category: "写真"
+  article_url: "/diary/2025-06-06/"
 
 - title: "四コマ漫画：witness"
   date: 2025-10-01
   cloudinary_id: "witness_krpm8q.jpg"
   description: "お絵描き練習"
   category: "イラスト"
+  article_url: "/diary/2025-10-01/"
 
 - title: "四コマ漫画：homework"
   date: 2025-10-01
   cloudinary_id: "homework_cbrujv.jpg"
   description: "お絵描き練習"
   category: "イラスト"
+  article_url: "/diary/2025-10-01/"
