@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Songs"
+title: "Discography"
 ---
 
 <h1 class="web_title">{{ page.title }}</h1>

@@ -21,10 +21,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css">
 </head>
 <body>
+    <div class="transition-curtain initial"></div>
     {% include sidebar.html %}
     {% include header.html %}
     
-    {% if page.title == "Journal" or page.title == "Gallery" %}
+    {% if page.title == "Journal" or page.title == "Gallery" or page.title == "Discography" %}
         <main class="container wide-container">
     {% else %}
         <main class="container">

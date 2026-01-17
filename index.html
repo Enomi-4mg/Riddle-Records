@@ -3,11 +3,84 @@ layout: default
 title: "Riddle Records"
 ---
 
-<h1 class="web_title">Riddle Records</h1>
-<p>
-  左上のメニューから各ページへ移動できます。
-  新しい日記と楽曲は Liquid で自動生成される一覧にまとめています。
-</p>
-<p>
-  最終更新: 2026年1月17日。
-</p>
+{% assign about_page = site.pages | where: "path", "about.html" | first %}
+{% assign info_page = site.pages | where: "path", "info.md" | first %}
+{% assign latest_diary = site.diary | sort: 'date' | reverse | first %}
+{% assign latest_song = site.songs | sort: 'date' | reverse | first %}
+{% assign latest_gallery = site.data.gallery | sort: 'date' | reverse | first %}
+{% assign gallery_link = latest_gallery.article_url | default: '' %}
+{% if gallery_link == '' %}
+  {% assign gallery_link = '/gallery.html#gallery-container' %}
+{% endif %}
+
+<section class="home-intro">
+  <p class="home-welcome">ようこそ、Riddle Records 公式サイトへ。</p>
+  <p>4mgのポートフォリオサイトです。</p>
+  <p>ページ上部のヘッダーメニューからも各ページへ移動できます。</p>
+  <p><small>最終更新：2026/01/17</small></p>
+</section>
+
+<section class="home-latest">
+  <h2 class="page_title">コンテンツ</h2>
+  <div class="home-grid">
+    <a href="{{ '/about.html' | relative_url }}" class="home-card home-card-link">
+      <div class="home-card-head">
+        <span class="home-card-label">About</span>
+      </div>
+      <h3 class="home-card-title">プロフィール</h3>
+      <p class="home-card-desc">{{ site.author_profile.bio | default: 'プロフィールとリンク集を掲載しています。' }}</p>
+      <span class="home-card-cta">About を見る →</span>
+    </a>
+
+    {% if latest_diary %}
+    <article class="home-card">
+      <a href="{{ latest_diary.url | relative_url }}" class="home-card-clickable">
+        <div class="home-card-head">
+          <span class="home-card-label">Diary</span>
+          <time class="home-card-date" datetime="{{ latest_diary.date | date: '%Y-%m-%d' }}">{{ latest_diary.date | date: "%Y年%m月%d日" }}</time>
+        </div>
+        <h3 class="home-card-title">{{ latest_diary.title }}</h3>
+        <p class="home-card-desc">{{ latest_diary.content | strip_html | truncate: 70 }}</p>
+      </a>
+      <a class="home-card-cta" href="{{ '/diary.html' | relative_url }}">一覧を見る →</a>
+    </article>
+    {% endif %}
+
+    {% if latest_gallery %}
+    <article class="home-card">
+      <a href="{{ gallery_link | relative_url }}" class="home-card-clickable">
+        <div class="home-card-head">
+          <span class="home-card-label">Gallery</span>
+          <time class="home-card-date" datetime="{{ latest_gallery.date | date: '%Y-%m-%d' }}">{{ latest_gallery.date | date: "%Y年%m月%d日" }}</time>
+        </div>
+        <h3 class="home-card-title">{{ latest_gallery.title }}</h3>
+        <p class="home-card-desc">{{ latest_gallery.description | default: '' | truncate: 70 }}</p>
+      </a>
+      <a class="home-card-cta" href="{{ '/gallery.html' | relative_url }}">一覧を見る →</a>
+    </article>
+    {% endif %}
+
+    {% if latest_song %}
+    <article class="home-card">
+      <a href="{{ latest_song.url | relative_url }}" class="home-card-clickable">
+        <div class="home-card-head">
+          <span class="home-card-label">Discography</span>
+          <time class="home-card-date" datetime="{{ latest_song.date | date: '%Y-%m-%d' }}">{{ latest_song.date | date: "%Y年%m月%d日" }}</time>
+        </div>
+        <h3 class="home-card-title">{{ latest_song.title }}</h3>
+        <p class="home-card-desc">{{ latest_song.description | default: '' | truncate: 70 }}</p>
+      </a>
+      <a class="home-card-cta" href="{{ '/disco.html' | relative_url }}">一覧を見る →</a>
+    </article>
+    {% endif %}
+
+    <a href="{{ '/info.html' | relative_url }}" class="home-card home-card-link">
+      <div class="home-card-head">
+        <span class="home-card-label">Information</span>
+      </div>
+      <h3 class="home-card-title">お知らせ</h3>
+      <p class="home-card-desc">最新のお知らせや更新情報はこちらをご確認ください。</p>
+      <span class="home-card-cta">一覧を見る →</span>
+    </a>
+  </div>
+</section>
