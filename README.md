@@ -189,3 +189,43 @@ Riddle-Records/
 リポジトリの **Actions** タブでビルド状況を確認できます。エラーが発生した場合は、ログを確認してください。
 
 ---
+
+## ✍️ Diary の更新手順
+
+1. **記事ファイルを作成**
+   - `_diary/YYYY-MM-DD.md` を新規作成（例: `_diary/2026-01-17.md`）。
+   - ファイル名の年月日と `date` は揃える。
+
+2. **フロントマターを記述**
+   ```md
+   ---
+   layout: post
+   title: "タイトルを書いてね"
+   date: 2026-01-17
+   ---
+   ```
+
+3. **本文を書く**
+   - Markdown で自由に記述。見出し・リスト・太字・斜体が使用可能。
+   - 画像は相対パス or Cloudinary: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg`
+   - 動画は `<iframe>` をそのまま貼り付け。
+
+4. **ローカル確認（任意）**
+   ```bash
+   bundle exec jekyll serve
+   ```
+   - `http://localhost:4000/Riddle-Records/diary/` で記事が表示されるか確認。
+
+5. **コミット & プッシュ**
+   ```bash
+   git add _diary/2026-01-17.md
+   git commit -m "Add diary 2026-01-17"
+   git push origin main
+   ```
+   - GitHub Pages / Actions が自動でデプロイ。
+
+補足:
+- 一覧ページは [diary.md](diary.md) のコレクションループで自動更新されます。
+- `_site/` 配下は自動生成物なので手動編集不要です。
+
+---
