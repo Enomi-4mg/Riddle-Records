@@ -48,12 +48,13 @@ html {
 
 body {
     font-family: "Kiwi Maru",serif;
-    width: auto;
+    width: 100%;
     margin: 0;
     background-color: #f4fffa;
-    padding: 70px 20px 20px 20px;
-    border: solid;
-    border-width:0;
+    padding: 80px 20px 20px 20px;
+    border: none;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 h1{
     color:rgb(47, 56, 56);
@@ -76,24 +77,27 @@ a {
     text-decoration: none;
     color: inherit;
 }
-img{
-    max-width: 60%;
+img {
+    max-width: 100%;
     height: auto;
-    border-radius: none;
+    border-radius: 0.5rem;
+    display: block;
 }
-.web_title{
+.web_title {
     top: 0%;
     left: auto;
-    margin:30px 30px 30px 30px;
-    font-size:3rem;
-    color:#0a1510;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45)
+    margin: 25px auto 25px auto;
+    font-size: 2.8rem;
+    color: #0a1510;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
+    max-width: 1400px;
+    padding: 0 15px;
 }
-.page_title{
-    font-size:2.1rem;
+.page_title {
+    font-size: 2.1rem;
     margin: 1.5rem auto;
-    padding: 0 30px;
-    color:#0a1510;
+    padding: 0 15px;
+    color: #0a1510;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.349);
     max-width: 1000px;
 }
@@ -113,10 +117,12 @@ img{
 .header-container {
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
-    padding: 1.5rem 2rem 0.75rem;
-    max-width: 1400px;
+    justify-content: center;
+    padding: 1.5rem 1rem 0.75rem;
+    max-width: 100%;
     margin: 0 auto;
+    box-sizing: border-box;
+    position: relative;
 }
 
 .header-logo {
@@ -140,7 +146,7 @@ img{
 }
 
 .site-title {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 700;
     color: #0a1510;
     white-space: nowrap;
@@ -152,17 +158,17 @@ img{
 
 .header-nav-left {
     order: 1;
-    padding-right: 5rem;
+    padding-right: 2rem;
 }
 
 .header-nav-right {
     order: 3;
-    padding-left: 5rem;
+    padding-left: 2rem;
 }
 
 .nav-menu {
     display: flex;
-    gap: 2.5rem;
+    gap: 1.5rem;
     list-style: none;
     margin: 0;
     padding: 0;
@@ -170,7 +176,7 @@ img{
 
 .nav-item a {
     color: #0a1510;
-    font-size: 1.15rem;
+    font-size: 1rem;
     font-weight: 400;
     padding: 0.25rem 0;
     transition: color 0.3s ease;
@@ -187,63 +193,107 @@ img{
 
 /* Menu Toggle (Mobile Only) */
 .menu_toggle {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    background-color: #1bb48e;
-    color: aquamarine;
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 0;
+    background-color: transparent;
+    color: #0a1510;
     border: none;
     font-size: 1.6rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: none;
     cursor: pointer;
     z-index: 1000;
-    font-size:2rem;
-    transition: transform 0.25s ease, background-color 0.25s ease;
-  }
-.menu_toggle:hover {
-    /* Hover effect removed for seamless transition */
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+    padding: 0;
+}
+.menu_toggle:active {
+    background-color: rgba(10, 21, 16, 0.1);
+    border-radius: 50%;
 }
 .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 13%;
-    background-color:rgb(42, 220, 163);
+    width: 100%;
+    max-width: 280px;
+    background-color: rgb(42, 220, 163);
     display: flex;
-    justify-content: start;
-    box-shadow: 0px 3px 6px rgba(0, 0, 0, .2);
+    justify-content: flex-start;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    z-index: 1;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999;
+    padding-top: 20px;
 }
-.sidebar.show{
-    transform:translateX(0);
+.sidebar.show {
+    transform: translateX(0);
+}
+
+/* Overlay when sidebar is open */
+.sidebar.show::after {
+    content: '';
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: -1;
+    animation: overlayFadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes overlayFadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
 }
 .sidebar_content {
-    position: absolute;
-    left: 0.4rem;
-    bottom: 2rem;
-    width: fit-content;
-    margin: auto;
-    color:#eafff4;
+    position: relative;
+    left: 0;
+    bottom: auto;
+    width: 100%;
+    padding: 80px 1.5rem 2rem 1.5rem;
+    color: #f4fffa;
     user-select: none;
 }
 .sidebar_menu {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
-.menu_item{
-    margin-top: 0.8rem;
+.menu_item {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+}
+.menu_item a {
+    color: #f4fffa;
+    transition: color 0.2s ease, padding-left 0.2s ease;
+    display: block;
+    padding-left: 1rem;
+    padding-right: 0.5rem;
+    font-weight: 500;
+}
+.menu_item a:hover {
+    color: #0a1510;
+    padding-left: 1.5rem;
 }
 .menu_item a.active {
     color: #0a1510;
     font-weight: 700;
+    padding-left: 1.5rem;
 }
 .gallery_item {
     display: flex;
@@ -332,13 +382,14 @@ img{
     max-width: 1000px;
     width: 100%;
     margin: 0 auto;
-    padding: 0 0;
+    padding: 0 15px;
     box-sizing: border-box;
 }
 
 /* Wide container for content-heavy pages (Diary, Gallery) */
 .container.wide-container {
     max-width: 1400px;
+    padding: 0 15px;
 }
 .social_links {
     display: flex;
@@ -364,11 +415,11 @@ img{
     gap: 1rem;
     align-items: start;
     max-width: 1000px;
-    margin: 10px 30px 16px 30px;
-    padding: 1rem;
+    margin: 10px auto 16px auto;
+    padding: 1.2rem;
     border-radius: 0.75rem;
     background: rgba(255, 255, 255, 0.6);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .profile-avatar-wrap {
     width: 140px;
@@ -448,8 +499,8 @@ img{
     display: flex;
     gap: 0.75rem 1rem;
     flex-wrap: wrap;
-    margin: 0 30px 6px 30px;
-    padding: 0;
+    margin: 0 auto 6px auto;
+    padding: 0 15px;
     list-style: none;
 }
 .profile-links .link-list li {
@@ -481,7 +532,8 @@ img{
 
 /* Intro section width align with profile card */
 .about-intro {
-    margin: 0 30px 16px 30px;
+    margin: 0 auto 16px auto;
+    padding: 0 15px;
 }
 .about-intro p {
     margin: 0.25rem 0;
@@ -494,7 +546,8 @@ img{
 
 /* ===== Works Preview ===== */
 .works-preview {
-    margin: 0 30px 16px 30px;
+    margin: 0 auto 16px auto;
+    padding: 0 15px;
 }
 .works-preview .page_title {
     margin: 1rem 0 0.75rem 0;
@@ -558,6 +611,45 @@ img{
     }
 }
 @media screen and (max-width: 600px) {
+    .header-container {
+        padding: 0.5rem 0.75rem;
+        justify-content: center;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .menu_toggle {
+        position: fixed !important;
+        top: 8px;
+        left: 8px;
+        order: 1;
+        width: 48px;
+        height: 48px;
+        font-size: 1.5rem;
+        padding: 0;
+        margin: 0;
+        z-index: 1001;
+    }
+    .header-logo {
+        order: 2;
+        flex: 0;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 0 auto;
+    }
+    .site-title {
+        font-size: 1.3rem;
+        font-weight: 500;
+    }
+    .logo-icon {
+        width: 22px;
+        height: 22px;
+    }
+    .header-nav-left {
+        display: none;
+    }
+    .header-nav-right {
+        display: none;
+    }
     .works-grid {
         grid-template-columns: 1fr 1fr;
     }
@@ -568,6 +660,7 @@ img{
         grid-template-columns: 1fr;
         justify-items: center;
         text-align: center;
+        margin: 10px 15px 16px 15px;
     }
     .profile-meta {
         grid-template-columns: 1fr;
@@ -576,6 +669,16 @@ img{
     .profile-avatar {
         width: 120px;
         height: 120px;
+    }
+    .profile-name {
+        font-size: 1.4rem;
+    }
+    .about-intro {
+        margin: 0 15px 16px 15px;
+    }
+    .profile-links .link-list {
+        margin: 0 15px 6px 15px;
+        justify-content: center;
     }
 }
 
@@ -589,11 +692,17 @@ img{
     }
     
     .menu_toggle {
-        display: flex;
+        display: flex !important;
     }
     
     body {
-        padding-top: 93px;
+        padding-top: 85px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .header-container {
+        padding: 1rem 1rem 0.5rem;
     }
 }
 
@@ -602,58 +711,203 @@ img{
     .menu_toggle {
         display: none;
     }
+    
+    .header-nav-left {
+        padding-right: 3rem;
+    }
+    
+    .header-nav-right {
+        padding-left: 3rem;
+    }
+    
+    .nav-menu {
+        gap: 2rem;
+    }
+    
+    .nav-item a {
+        font-size: 1.1rem;
+    }
+    
+    .site-title {
+        font-size: 2rem;
+    }
 }
   
 @media screen and (min-width: 601px) and (max-width: 1024px) {
-    .web_title{
-        margin: 5px auto 30px auto;
-        padding: 0;
-        max-width: 100%;
-        font-size:2.3rem;
+    .header-container {
+        gap: 0.5rem;
     }
     .menu_toggle {
-      width: 45px;
-      height: 45px;
-      font-size: 1.6rem;
-      top: 10px;
-      left: 10px;
+        order: 1;
+        width: 48px;
+        height: 48px;
+    }
+    .web_title {
+        margin: 10px auto 30px auto;
+        padding: 0;
+        max-width: 100%;
+        font-size: 2.2rem;
     }
     .sidebar {
-      width: 40%;
+        max-width: 250px;
     }
-    .work_img{
-        max-width:80%;
+    .work_img {
+        max-width: 85%;
+    }
+    .disco-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        padding: 1.5rem 0;
+    }
+    body {
+        padding-top: 85px;
+    }
+}
+
+/* iPad Specific Optimization (768px - 1024px) */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+    .header-container {
+        justify-content: space-between;
+        padding: 1.2rem 1.5rem 0.75rem;
+    }
+    .header-logo {
+        order: 1;
+        flex: 0 0 auto;
+    }
+    .header-nav-left {
+        order: 2;
+        display: flex !important;
+        flex-grow: 1;
+        justify-content: flex-end;
+        padding-right: 1rem;
+        padding-left: 0;
+    }
+    .header-nav-right {
+        order: 3;
+        display: flex !important;
+        padding-left: 1rem;
+        padding-right: 0;
+    }
+    .nav-menu {
+        gap: 1.2rem;
+    }
+    .web_title {
+        font-size: 2.5rem;
+        margin: 15px auto 35px auto;
+    }
+    .page_title {
+        font-size: 2.2rem;
+        margin: 1.8rem auto;
+    }
+    .sidebar {
+        max-width: 280px;
+    }
+    .sidebar_content {
+        padding: 80px 1.5rem 2rem 1.5rem;
+    }
+    .sidebar_menu {
+        font-size: 1.15rem;
+    }
+    .menu_item {
+        margin-top: 0.3rem;
+        padding: 0.3rem 0;
+    }
+    .menu_item a {
+        padding-left: 0.8rem;
+    }
+    .menu_item a:hover {
+        padding-left: 1.2rem;
+    }
+    .menu_item a.active {
+        padding-left: 1.2rem;
+    }
+    .container {
+        max-width: 100%;
+        padding: 0 30px;
+    }
+    .home-intro {
+        padding: 0 30px;
+        margin: 3rem auto 2rem auto;
+    }
+    .home-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin: 0 30px;
+    }
+    .works-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
     }
     .disco-grid {
         grid-template-columns: repeat(3, 1fr);
         gap: 1.5rem;
-        padding: 1.5rem 0;
+    }
+    .profile-card {
+        margin: 10px auto 16px auto;
+        grid-template-columns: 160px 1fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    .profile-avatar,
+    .profile-avatar-wrap {
+        width: 160px;
+        height: 160px;
+    }
+    .about-intro {
+        padding: 0 30px;
+        margin: 0 auto 16px auto;
+    }
+    .works-preview {
+        padding: 0 30px;
+        margin: 0 auto 16px auto;
+    }
+    .profile-links .link-list {
+        margin: 0 auto 6px auto;
+        padding: 0 30px;
     }
 }
 @media screen and (max-width: 600px) {
-    .web_title{
-        margin: 5px auto 30px auto;
+    .web_title {
+        margin: 10px auto 25px auto;
         padding: 0;
         max-width: 100%;
-        font-size:2rem;
+        font-size: 1.8rem;
     }
     .menu_toggle {
-      width: 45px;
-      height: 45px;
-      font-size: 1.6rem;
-      top: 10px;
-      left: 10px;
+        width: 48px;
+        height: 48px;
+        font-size: 1.3rem;
+        top: 18px;
+        left: 18px;
     }
     .sidebar {
-      width: 70%;
+        max-width: 260px;
     }
-    .work_img{
-        max-width:80%;
+    .work_img {
+        max-width: 90%;
     }
     .disco-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
         padding: 1rem 0;
+    }
+    body {
+        padding-top: 85px;
+    }
+    .page_title {
+        font-size: 1.8rem;
+        padding: 0 15px;
+        margin: 1.2rem auto;
+    }
+    .home-intro {
+        margin: 2rem 0 1.5rem 0;
+        padding: 0 15px;
+    }
+    .home-intro p {
+        font-size: 1.1rem;
+    }
+    .home-welcome {
+        font-size: 1.6rem;
     }
 }
 
@@ -781,20 +1035,20 @@ img{
 /* ===== Home Page Styles ===== */
 .home-intro {
     text-align: left;
-    margin: 5rem auto 2rem 30px;
+    margin: 2rem auto 1.5rem auto;
     max-width: 800px;
-    padding: 0;
+    padding: 0 15px;
 }
 
 .home-welcome {
-    font-size: 2.3srem;
+    font-size: 2rem;
     font-weight: bold;
     color: #0a1510;
     margin-bottom: 1rem;
 }
 
 .home-intro p {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     margin: 0.5rem 0;
 }
 
@@ -905,5 +1159,16 @@ img{
     .home-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
+        margin: 0 15px;
+    }
+    .home-card {
+        padding: 1.2rem;
+        gap: 0.5rem;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .home-intro {
+        margin-left: 0;
     }
 }

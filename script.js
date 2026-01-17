@@ -200,12 +200,101 @@ window.addEventListener('popstate', async (e) => {
   await loadPageContent(url);
 });
 
-// Sidebar toggle
+// Sidebar toggle and link handling
 const toggleButton = document.querySelector('.menu_toggle');
 const sidebar = document.querySelector('.sidebar');
+const sidebarLinks = document.querySelectorAll('.sidebar a');
+const curtain = document.querySelector('.transition-curtain');
+
 if (toggleButton && sidebar) {
   toggleButton.addEventListener('click', () => {
     sidebar.classList.toggle('show');
+  });
+}
+
+// Close sidebar when clicking on overlay
+document.addEventListener('click', (e) => {
+  // Check if sidebar is open and click is outside the sidebar and toggle button
+  if (sidebar && sidebar.classList.contains('show')) {
+    if (!sidebar.contains(e.target) && !toggleButton.contains(e.target)) {
+      sidebar.classList.remove('show');
+    }
+  }
+});
+
+// Handle sidebar link clicks
+if (sidebarLinks.length > 0) {
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', async (e) => {
+      const href = link.getAttribute('href');
+      
+      // Skip anchor links
+      if (href && !href.startsWith('#') && href !== '#') {
+        e.preventDefault();
+        
+        const currentCategory = getPageCategory(window.location.href);
+        const targetCategory = getPageCategory(href);
+        const isCategoryChange = currentCategory !== targetCategory;
+        
+        console.log(`Sidebar Navigation: ${currentCategory} -> ${targetCategory}, isCategoryChange: ${isCategoryChange}`);
+        
+        if (curtain && isCategoryChange) {
+          // Mark that we're using internal navigation
+          sessionStorage.setItem('internalNavigation', 'true');
+          
+          // Remove hidden state if it exists
+          curtain.removeAttribute('data-hidden');
+          
+          // Remove all animation classes first
+          curtain.classList.remove('ascending', 'initial', 'descending');
+          
+          // Force position to top immediately (bypass animation)
+          curtain.style.transform = 'translateY(-100%)';
+          
+          // Force reflow to apply the transform immediately
+          void curtain.offsetHeight;
+          
+          // Remove inline style and start descending animation
+          curtain.style.transform = '';
+          curtain.classList.add('descending');
+          
+          // Close sidebar during animation
+          sidebar.classList.remove('show');
+          
+          // Load content while curtain is down
+          setTimeout(async () => {
+            const success = await loadPageContent(href);
+            
+            if (success) {
+              // Update browser history
+              window.history.pushState({ url: href }, '', href);
+              
+              // Wait a bit more for images to settle
+              await new Promise(resolve => setTimeout(resolve, 200));
+              
+              // Start ascending animation
+              curtain.classList.remove('descending');
+              curtain.classList.add('ascending');
+            } else {
+              // Fallback to normal navigation on AJAX failure
+              window.location.href = href;
+            }
+          }, 300); // Wait for descend animation
+        } else {
+          // Direct navigation without animation for same-category moves
+          // Close sidebar first
+          sidebar.classList.remove('show');
+          
+          // Mark that we're using internal navigation (no transition needed)
+          sessionStorage.setItem('internalNavigation', 'skip');
+          
+          // Small delay for better UX
+          setTimeout(() => {
+            window.location.href = href;
+          }, 100);
+        }
+      }
+    });
   });
 }
 
