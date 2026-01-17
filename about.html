@@ -5,15 +5,115 @@ title: "About"
 
 <h1 class="web_title">{{ page.title }}</h1>
 
-<p>4mg のポートフォリオサイトです。</p>
-<p>ボカロ曲・イラスト・ゲームの制作等をしています。</p>
+<!-- Profile Card -->
+<section class="profile-card">
+  <div class="profile-avatar-wrap">
+    <img id="profile-avatar" class="profile-avatar" alt="プロフィール画像" src="{{ '/favicon/favicon.ico' | relative_url }}"
+      data-x-handle="{{ site.author_profile.x_handle }}" data-youtube-handle="{{ site.author_profile.youtube_handle }}">
+  </div>
+  <div class="profile-content">
+    <h2 class="profile-name">{{ site.author_profile.name | default: site.author }}</h2>
+    {% if site.author_profile.bio %}
+    <p class="profile-bio">{{ site.author_profile.bio }}</p>
+    {% endif %}
 
-<div class="social_links">
-  <a href="https://x.com/4mgEnomi" target="_blank" aria-label="X (旧Twitter)">
-    <i class="fab fa-x-twitter"></i>
-  </a>
-  <a href="https://www.youtube.com/@enomi2514" target="_blank" aria-label="YouTube">
-    <i class="fab fa-youtube"></i>
-  </a>
-  <a href="https://www.nicovideo.jp/user/77764856" target="_blank" aria-label="ニコニコ動画">ニコニコ動画</a>
-</div>
+    <dl class="profile-meta">
+      <div class="meta-row">
+        <dt>誕生日</dt>
+        <dd>
+          {% assign bmd = site.author_profile.birthday_md | default: '' %}
+          {% if bmd != '' %}
+          {% assign mm = bmd | slice: 0, 2 %}
+          {% assign dd = bmd | slice: 3, 2 %}
+          {{ mm }}月{{ dd }}日
+          {% else %}
+          未設定
+          {% endif %}
+        </dd>
+      </div>
+      {% if site.author_profile.motto %}
+      <div class="meta-row">
+        <dt>座右の銘</dt>
+        <dd>{{ site.author_profile.motto }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+
+    <div class="profile-tags">
+      {% if site.author_profile.hobbies %}
+      <div class="tag-group">
+        <span class="tag-label">趣味</span>
+        <div class="tag-items">
+          {% for h in site.author_profile.hobbies %}
+          <span class="tag">{{ h }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if site.author_profile.skills %}
+      <div class="tag-group">
+        <span class="tag-label">特技</span>
+        <div class="tag-items">
+          {% for s in site.author_profile.skills %}
+          <span class="tag">{{ s }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% if site.author_profile.favorites %}
+      <div class="tag-group">
+        <span class="tag-label">好きなもの</span>
+        <div class="tag-items">
+          {% for f in site.author_profile.favorites %}
+          <span class="tag">{{ f }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Site Internal Links (カテゴリ別リンク) -->
+<section class="profile-links">
+  <h3 class="page_title" style="margin-top: 1rem;">リンク集</h3>
+  <ul class="link-list">
+    <li class="platform-icons" aria-label="プラットフォーム">
+      <a href="https://x.com/4mgEnomi" target="_blank" aria-label="X (旧Twitter)"><i class="fab fa-x-twitter"></i></a>
+      <a href="https://www.youtube.com/@enomi2514" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+      <a href="https://www.nicovideo.jp/user/77764856" target="_blank" aria-label="ニコニコ動画">ニコニコ動画</a>
+    </li>
+  </ul>
+</section>
+
+<!-- Works preview -->
+<section class="works-preview">
+  <h3 class="page_title" style="margin-top: 1rem;">作品紹介</h3>
+  <div class="works-grid">
+    {% assign sorted_songs = site.songs | sort: 'date' | reverse %}
+    {% for song in sorted_songs limit: 2 %}
+      <div class="work-card">
+        <a href="{{ song.url | relative_url }}" class="work-thumb">
+          <img src="https://img.youtube.com/vi/{{ song.youtube_id }}/sddefault.jpg" alt="{{ song.title }} thumbnail">
+        </a>
+        <div class="work-info">
+          <p class="work_title">{{ song.title }}</p>
+          <time datetime="{{ song.date | date: '%Y-%m-%d' }}" class="work_date">{{ song.date | date: "%Y年%m月%d日" }}</time>
+        </div>
+      </div>
+    {% endfor %}
+
+    {% assign gallery_items = site.data.gallery | sort: 'date' | reverse %}
+    {% for item in gallery_items limit: 2 %}
+      <div class="work-card">
+        <a href="{{ '/gallery' | relative_url }}" class="work-thumb">
+          <img src="{{ site.cloudinary_url }}/{{ item.cloudinary_id }}" alt="{{ item.title }}">
+        </a>
+        <div class="work-info">
+          <p class="work_title">{{ item.title }}</p>
+          <time datetime="{{ item.date | date: '%Y-%m-%d' }}" class="work_date">{{ item.date | date: "%Y年%m月%d日" }}</time>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
