@@ -1,7 +1,9 @@
 ---
-layout: page
+layout: default
 title: "Journal"
 ---
+
+<h1 class="web_title">{{ page.title }}</h1>
 
 {% assign sorted_entries = site.diary | sort: 'date' | reverse %}
 

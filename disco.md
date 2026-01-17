@@ -1,7 +1,9 @@
 ---
-layout: page
+layout: default
 title: "Songs"
 ---
+
+<h1 class="web_title">{{ page.title }}</h1>
 
 {% assign sorted_songs = site.songs | sort: 'date' | reverse %}
 

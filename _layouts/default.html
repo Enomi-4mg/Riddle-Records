@@ -24,7 +24,11 @@
     {% include sidebar.html %}
     {% include header.html %}
     
-    <main class="container">
+    {% if page.title == "Journal" or page.title == "Gallery" %}
+        <main class="container wide-container">
+    {% else %}
+        <main class="container">
+    {% endif %}
         {{ content }}
     </main>
     

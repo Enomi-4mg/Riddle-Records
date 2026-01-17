@@ -1,7 +1,9 @@
 ---
-layout: page
+layout: default
 title: "Gallery"
 ---
+
+<h1 class="web_title">{{ page.title }}</h1>
 
 <div class="gallery-intro">
   <p>作品ギャラリーです。Blenderで作成した3DCG、イラスト、写真などを掲載しています。</p>
