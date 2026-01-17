@@ -5,18 +5,20 @@ title: "曲"
 
 {% assign sorted_songs = site.songs | sort: 'date' | reverse %}
 
-<ul class="gallery_item">
+<div class="disco-grid">
 {% for song in sorted_songs %}
-  <li class="gallery_gap">
-    <a href="{{ song.url | relative_url }}">
-      <img src="https://img.youtube.com/vi/{{ song.youtube_id }}/sddefault.jpg" alt="{{ song.title }} thumbnail" style="width: 100%; max-width: 320px;">
+  <div class="disco-card">
+    <a href="{{ song.url | relative_url }}" class="disco-card-image">
+      <img src="https://img.youtube.com/vi/{{ song.youtube_id }}/sddefault.jpg" alt="{{ song.title }} thumbnail">
     </a>
-    <p class="work_title" style="margin-top: 0.5rem;">
-      <a href="{{ song.url | relative_url }}">{{ song.title }}</a>
-    </p>
-    <time datetime="{{ song.date | date: '%Y-%m-%d' }}" style="color: #666; font-size: 0.9rem; display: block;">
-      {{ song.date | date: "%Y年%m月%d日" }}
-    </time>
-  </li>
+    <div class="disco-card-content">
+      <p class="disco-card-title">
+        <a href="{{ song.url | relative_url }}">{{ song.title }}</a>
+      </p>
+      <time datetime="{{ song.date | date: '%Y-%m-%d' }}" class="disco-card-date">
+        {{ song.date | date: "%Y年%m月%d日" }}
+      </time>
+    </div>
+  </div>
 {% endfor %}
-</ul>
+</div>

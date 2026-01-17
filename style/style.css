@@ -137,6 +137,70 @@ img{
     border: 3px solid #8d8d8d;
     max-width:70%;
 }
+
+/* Discography Grid Card Styles */
+.disco-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+.disco-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: box-shadow 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+}
+
+.disco-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.disco-card-image {
+    position: relative;
+    overflow: hidden;
+    display: block;
+    aspect-ratio: 1 / 1;
+}
+
+.disco-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    max-width: none;
+}
+
+.disco-card-content {
+    text-align: center;
+}
+
+.disco-card-title {
+    font-size: 1rem;
+    font-weight: bold;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.4;
+    color: #0a1510;
+}
+
+.disco-card-title a {
+    color: inherit;
+}
+
+.disco-card-title a:hover {
+    color: #1bb48e;
+    text-decoration: underline;
+}
+
+.disco-card-date {
+    color: #666;
+    font-size: 0.85rem;
+    display: block;
+}
+
 .container {
     max-width: 1000px;
     width: 100%;
@@ -181,6 +245,11 @@ img{
     .work_img{
         max-width:80%;
     }
+    .disco-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        padding: 1.5rem 0;
+    }
 }
 @media screen and (max-width: 600px) {
     .web_title{
@@ -202,4 +271,130 @@ img{
     .work_img{
         max-width:80%;
     }
-  }
+    .disco-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+}
+
+/* Landscape mobile (601px - 800px width) */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+    .disco-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* Post Details: Credits and Lyrics */
+.post-info {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.post-credits {
+    padding: 1.5rem;
+    background-color: rgba(27, 180, 142, 0.1);
+    border-left: 4px solid #1bb48e;
+    border-radius: 0.5rem;
+}
+
+.post-credits h3 {
+    margin-top: 0;
+    color: #1bb48e;
+    font-size: 1.2rem;
+}
+
+.post-credits p {
+    margin: 0.5rem 0;
+    color: #333;
+    line-height: 1.6;
+}
+
+.post-credits pre {
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    background-color: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 20px;
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.post-description {
+    padding: 1.5rem;
+    background-color: rgba(10, 21, 16, 0.05);
+    border-left: 4px solid #0a1510;
+    border-radius: 0.5rem;
+}
+
+.post-description h3 {
+    margin-top: 0;
+    color: #0a1510;
+    font-size: 1.2rem;
+}
+
+.post-description p {
+    margin: 0.5rem 0;
+    color: #333;
+    line-height: 1.6;
+}
+
+.post-lyrics {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+}
+
+.post-lyrics details {
+    cursor: pointer;
+}
+
+.post-lyrics summary {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #0a1510;
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem 0 -0.5rem;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.post-lyrics summary:hover {
+    background-color: rgba(27, 180, 142, 0.1);
+    border-radius: 0.3rem;
+}
+
+.post-lyrics summary::marker {
+    color: #1bb48e;
+}
+
+.post-lyrics pre {
+    margin: 1rem 0 0 0;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.3rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #333;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Mobile responsive */
+@media screen and (max-width: 600px) {
+    .post-info {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}

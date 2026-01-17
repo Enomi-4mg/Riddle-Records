@@ -13,6 +13,33 @@ layout: default
     
     {{ content }}
     
+    {% if page.credits or page.description %}
+    <section class="post-info">
+        {% if page.credits %}
+        <div class="post-credits">
+            <h3>クレジット</h3>
+            <pre>{{ page.credits }}</pre>
+        </div>
+        {% endif %}
+        
+        {% if page.description %}
+        <div class="post-description">
+            <h3>詳細情報</h3>
+            <p>{{ page.description }}</p>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+    
+    {% if page.lyrics %}
+    <section class="post-lyrics">
+        <details>
+            <summary>歌詞</summary>
+            <pre>{{ page.lyrics }}</pre>
+        </details>
+    </section>
+    {% endif %}
+    
     <nav class="post-nav" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc;">
         {% if page.previous %}
         <a href="{{ page.previous.url | relative_url }}" style="margin-right: 1rem;">← {{ page.previous.title }}</a>
@@ -23,3 +50,25 @@ layout: default
         {% endif %}
     </nav>
 </article>
+
+<style>
+.responsive-video-container {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    background-color: #000;
+}
+
+.responsive-video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+</style>
