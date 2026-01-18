@@ -31,6 +31,11 @@ baseurl: "/Riddle-Records"
 cloudinary_cloud_name: "dzq8y9qes"
 cloudinary_url: "https://res.cloudinary.com/dzq8y9qes/image/upload"
 
+# OGP settings
+og_image: "/favicon/favicon.ico"
+twitter_handle: "4mgEnomi"
+og_type: "website"
+
 # Author profile settings
 author_profile:
   name: "4mg"
@@ -51,3 +56,7 @@ author_profile:
   motto: "初心忘るべからず（仮）"
   x_handle: "4mgEnomi"
   youtube_handle: "@enomi2514"
+
+# Local development settings for mobile access
+host: 0.0.0.0
+port: 4000

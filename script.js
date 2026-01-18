@@ -91,11 +91,56 @@ function getPageCategory(url) {
   return 'other';
 }
 
+// Update sidebar active state based on current URL
+function updateSidebarActiveState() {
+  const currentPath = window.location.pathname;
+  const sidebarLinks = document.querySelectorAll('.sidebar a');
+  
+  // Remove active class from all links
+  sidebarLinks.forEach(link => {
+    link.classList.remove('active');
+  });
+  
+  // Add active class to the matching link
+  sidebarLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    
+    // Home
+    if ((currentPath === '/' || currentPath.endsWith('/index.html')) && 
+        (href === '/' || href.endsWith('/index.html'))) {
+      link.classList.add('active');
+    }
+    // About
+    else if ((currentPath.includes('/about')) && href.includes('/about')) {
+      link.classList.add('active');
+    }
+    // Diary
+    else if ((currentPath.includes('/diary')) && href.includes('/diary')) {
+      link.classList.add('active');
+    }
+    // Gallery
+    else if ((currentPath.includes('/gallery')) && href.includes('/gallery')) {
+      link.classList.add('active');
+    }
+    // Discography
+    else if ((currentPath.includes('/disco')) && href.includes('/disco')) {
+      link.classList.add('active');
+    }
+    // Information
+    else if ((currentPath.includes('/info')) && href.includes('/info')) {
+      link.classList.add('active');
+    }
+  });
+}
+
 // Wait for all images in container to load
 // Initialize event listeners for links
 function initializeEventListeners() {
   const curtain = document.querySelector('.transition-curtain');
   const links = document.querySelectorAll('a');
+  
+  // Update sidebar active state
+  updateSidebarActiveState();
   
   // Initialize gallery features if they exist on this page
   if (typeof initGallery === 'function') {
