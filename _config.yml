@@ -32,7 +32,7 @@ cloudinary_cloud_name: "dzq8y9qes"
 cloudinary_url: "https://res.cloudinary.com/dzq8y9qes/image/upload"
 
 # OGP settings
-og_image: "/favicon/favicon.ico"
+og_image: "/favicon/icon.jpg"
 twitter_handle: "4mgEnomi"
 og_type: "website"
 
