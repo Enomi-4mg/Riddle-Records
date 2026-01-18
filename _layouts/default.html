@@ -6,7 +6,8 @@
     <title>{{ page.title | default: site.title }}</title>
     <meta name="description" content="{{ page.description | default: site.description }}">
     <link rel="icon" href="{{ '/favicon/favicon.ico' | relative_url }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ '/style/style.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
+    <link rel="stylesheet" href="{{ '/assets/css/gallery.css' | relative_url }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <!-- DNS Prefetch & Preconnect for performance -->
@@ -50,6 +51,7 @@
     
     {% include footer.html %}
     
+    <script src="{{ '/assets/js/gallery.js' | relative_url }}"></script>
     <script src="{{ '/script.js' | relative_url }}"></script>
     
     <!-- Lightbox2 JS with defer for better performance -->

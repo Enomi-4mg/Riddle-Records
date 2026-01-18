@@ -97,6 +97,11 @@ function initializeEventListeners() {
   const curtain = document.querySelector('.transition-curtain');
   const links = document.querySelectorAll('a');
   
+  // Initialize gallery features if they exist on this page
+  if (typeof initGallery === 'function') {
+    initGallery();
+  }
+  
   links.forEach(link => {
     // Skip if already has listener (check by a custom attribute)
     if (link.dataset.listenerAdded) return;

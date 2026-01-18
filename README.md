@@ -56,8 +56,12 @@ Riddle-Records/
 │
 ├─ _site/                       ← ビルド後のサイト（自動生成、Git 除外）
 │
-├─ css/
-│   └─ style.css                 ← メインスタイル
+├─ assets/
+│   ├─ css/
+│   │   ├─ main.css              ← メインスタイル
+│   │   └─ gallery.css           ← ギャラリー固有スタイル
+│   └─ js/
+│       └─ gallery.js            ← ギャラリー機能
 │
 ├─ jpg/, png/                    ← メディアファイル（画像）
 │
