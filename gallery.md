@@ -1,6 +1,11 @@
 ---
 layout: default
 title: "Gallery"
+description: "イラスト・3DCG・写真などの作品ギャラリー。"
+og_title: "Gallery | Riddle Records"
+og_description: "作品ギャラリー。Lightboxで拡大表示に対応。"
+image: "/favicon/icon.jpg"
+og_type: "website"
 ---
 
 <h1 class="web_title">{{ page.title }}</h1>

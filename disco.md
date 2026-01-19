@@ -1,6 +1,11 @@
 ---
 layout: default
 title: "Discography"
+description: "公開した楽曲の一覧。"
+og_title: "Discography | Riddle Records"
+og_description: "公開中のオリジナル曲・参加作品を掲載。"
+image: "/favicon/icon.jpg"
+og_type: "website"
 ---
 
 <h1 class="web_title">{{ page.title }}</h1>

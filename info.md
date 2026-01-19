@@ -1,6 +1,11 @@
 ---
 layout: default
 title: "Information"
+description: "お知らせ・更新情報のページ。"
+og_title: "Information | Riddle Records"
+og_description: "サイトのお知らせや更新情報を掲載。"
+image: "/favicon/icon.jpg"
+og_type: "website"
 ---
 
 <h1 class="web_title">{{ page.title }}</h1>

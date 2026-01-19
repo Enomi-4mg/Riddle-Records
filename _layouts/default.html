@@ -23,7 +23,8 @@
     {% if site.url %}<meta property="og:site_name" content="{{ site.title }}">{% endif %}
     
     <!-- Twitter Card Tags -->
-    <meta name="twitter:card" content="summary_large_image">
+    {% assign twitter_card = page.twitter_card | default: site.twitter_card | default: 'summary' %}
+    <meta name="twitter:card" content="{{ twitter_card }}">
     {% if site.twitter_handle %}<meta name="twitter:site" content="@{{ site.twitter_handle }}">{% endif %}
     <meta name="twitter:title" content="{{ page.og_title | default: page.title | default: site.title }}">
     <meta name="twitter:description" content="{{ page.og_description | default: page.description | default: site.description }}">

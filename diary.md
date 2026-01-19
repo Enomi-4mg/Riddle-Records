@@ -1,6 +1,11 @@
 ---
 layout: default
 title: "Journal"
+description: "日記・活動報告の一覧。"
+og_title: "Diary | Riddle Records"
+og_description: "最新の日記・活動報告を掲載。"
+image: "/favicon/icon.jpg"
+og_type: "website"
 ---
 
 <div style="max-width: 900px; margin: 0 auto; padding: 0 1rem;">
