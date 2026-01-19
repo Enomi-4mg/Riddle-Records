@@ -3,6 +3,10 @@ html {
     overflow-y: scroll;
 }
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body {
     font-family: "Kiwi Maru",serif;
     width: 100%;
@@ -10,7 +14,6 @@ body {
     background-color: #f4fffa;
     padding: 80px 20px 20px 20px;
     border: none;
-    box-sizing: border-box;
     overflow-x: hidden;
 }
 h1{
@@ -87,6 +90,13 @@ img {
 
 .journal-card-info {
     padding: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
 }
 
 .journal-card-info h4 {
@@ -208,7 +218,7 @@ img {
 
 .logo-icon {
     width: 30px;
-    height: 30ｓpx;
+    height: 30px;
     object-fit: contain;
 }
 
@@ -670,7 +680,8 @@ img {
 
 @media screen and (max-width: 1024px) {
     .works-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
     }
 }
 @media screen and (max-width: 600px) {
@@ -715,7 +726,7 @@ img {
         display: none;
     }
     .works-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
     }
 }
 
@@ -760,9 +771,12 @@ img {
     }
     
     body {
-        padding-top: 85px;
-        padding-left: 20px;
-        padding-right: 20px;
+        padding-top: 68px;
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    p {
+        font-size: 18px;
     }
     
     .header-container {
@@ -806,6 +820,13 @@ img {
         width: 48px;
         height: 48px;
     }
+    .logo-icon {
+        width: 26px;
+        height: 26px;
+    }
+    .site-title {
+        font-size: 1.6rem;
+    }
     .web_title {
         margin: 10px auto 30px auto;
         padding: 0;
@@ -818,13 +839,34 @@ img {
     .work_img {
         max-width: 85%;
     }
+    .home-grid,
+    .works-grid,
+    .disco-grid,
+    .journal-card-grid {
+        grid-template-columns: 1fr;
+    }
     .disco-grid {
-        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+        padding: 1.25rem 0;
+    }
+    .works-grid,
+    .journal-card-grid {
+        gap: 1.25rem;
+    }
+    .home-grid {
         gap: 1.5rem;
-        padding: 1.5rem 0;
+        margin: 0 20px;
+    }
+    p {
+        font-size: 18px;
+    }
+    .post-info {
+        grid-template-columns: 1fr;
     }
     body {
-        padding-top: 85px;
+        padding-top: 72px;
+        padding-left: 18px;
+        padding-right: 18px;
     }
 }
 
@@ -887,23 +929,23 @@ img {
     }
     .container {
         max-width: 100%;
-        padding: 0 30px;
+        padding: 0 20px;
     }
     .home-intro {
-        padding: 0 30px;
-        margin: 3rem auto 2rem auto;
+        padding: 0 20px;
+        margin: 2.5rem auto 1.75rem auto;
     }
     .home-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2rem;
-        margin: 0 30px;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin: 0 20px;
     }
     .works-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr;
         gap: 1.5rem;
     }
     .disco-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: 1fr;
         gap: 1.5rem;
     }
     .profile-card {
@@ -918,16 +960,16 @@ img {
         height: 160px;
     }
     .about-intro {
-        padding: 0 30px;
+        padding: 0 20px;
         margin: 0 auto 16px auto;
     }
     .works-preview {
-        padding: 0 30px;
+        padding: 0 20px;
         margin: 0 auto 16px auto;
     }
     .profile-links .link-list {
         margin: 0 auto 6px auto;
-        padding: 0 30px;
+        padding: 0 20px;
     }
 }
 @media screen and (max-width: 600px) {
@@ -956,7 +998,12 @@ img {
         padding: 1rem 0;
     }
     body {
-        padding-top: 85px;
+        padding-top: 60px;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+    p {
+        font-size: 16px;
     }
     .page_title {
         font-size: 1.8rem;
@@ -978,7 +1025,7 @@ img {
 /* Landscape mobile (601px - 800px width) */
 @media screen and (max-height: 500px) and (orientation: landscape) {
     .disco-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
 }
@@ -1590,29 +1637,29 @@ main.container ul ul li::marker {
 
 /* Journal一覧のモバイル最適化 */
 @media screen and (max-width: 600px) {
-    .journal-entry-animate {
+    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) {
         display: flex !important;
         gap: 0.75rem !important;
         margin-bottom: 1.5rem !important;
         padding-bottom: 1.5rem !important;
     }
     
-    .journal-entry-animate img {
+    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) img {
         width: 100px !important;
         height: 100px !important;
         object-fit: cover !important;
         flex-shrink: 0 !important;
     }
     
-    .journal-entry-animate h3 {
+    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) h3 {
         font-size: 1rem !important;
     }
     
-    .journal-entry-animate div[style*="color: #666"] {
+    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) div[style*="color: #666"] {
         font-size: 0.9rem !important;
     }
     
-    .journal-entry-animate p {
+    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) p {
         font-size: 0.95rem !important;
         display: -webkit-box !important;
         -webkit-line-clamp: 3 !important;
@@ -1621,7 +1668,7 @@ main.container ul ul li::marker {
         overflow: hidden !important;
     }
     
-    .journal-entry-animate a[style] {
+    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) a[style] {
         flex-shrink: 0 !important;
     }
 }

@@ -48,6 +48,9 @@
     <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/animations.css' | relative_url }}">
     <link rel="stylesheet" href="{{ '/assets/css/gallery.css' | relative_url }}">
+    {% if page.title == "Journal" or page.layout == "journal" or page.collection == "journal" or page.url contains '/journal' %}
+    <link rel="stylesheet" href="{{ '/assets/css/journal.css' | relative_url }}">
+    {% endif %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     
     <!-- DNS Prefetch & Preconnect for performance -->
