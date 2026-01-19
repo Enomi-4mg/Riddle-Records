@@ -35,7 +35,7 @@ cloudinary_url: "https://res.cloudinary.com/dzq8y9qes/image/upload"
 og_image: "/favicon/icon.jpg"
 twitter_handle: "4mgEnomi"
 og_type: "website"
-twitter_card: "summary"
+twitter_card: "summary_large_image"
 
 # Author profile settings
 author_profile:
