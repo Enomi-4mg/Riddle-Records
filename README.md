@@ -15,7 +15,7 @@
 
 トップページから以下の各ページにアクセスできます：
 
-- **日記（diary.md）** - 活動日記・報告書
+- **日記（Journal.md）** - 活動日記・報告書
 - **音楽（disco.md）** - 音楽作品一覧
 - **ギャラリー（gallery.html）** - イラスト・作品ギャラリー
 - **プロフィール（about.html）** - 4mg について
@@ -32,14 +32,14 @@
 
 ---
 
-## 🔗 Gallery & Diary 連携
+## 🔗 Gallery & Journal 連携
 
-Gallery と Diary は密接に連携しており、作品と記事を横断的に閲覧できます。
+Gallery と Journal は密接に連携しており、作品と記事を横断的に閲覧できます。
 
 ### 主な機能
 
-- **Gallery → Diary**: 各作品カードから関連記事・メイキング記事へリンク
-- **Diary → Gallery**: 記事内で使用された画像に「📸 ギャラリーで見る」ボタンを自動表示
+- **Gallery → Journal**: 各作品カードから関連記事・メイキング記事へリンク
+- **Journal → Gallery**: 記事内で使用された画像に「📸 ギャラリーで見る」ボタンを自動表示
 - **関連作品**: 記事ページ末尾に関連作品セクションを自動表示
 
 ---
@@ -88,7 +88,7 @@ Riddle-Records/
 │   ├─ sidebar.html              ← ナビゲーションメニュー
 │   └─ footer.html               ← ページ下部
 │
-├─ _diary/                      ← 日記コンテンツ（Markdown）
+├─ _journal/                      ← 日記コンテンツ（Markdown）
 ├─ _songs/                      ← 音楽作品データ（Markdown）
 ├─ _data/gallery.yml            ← ギャラリー作品データ
 │
@@ -148,10 +148,10 @@ Riddle-Records/
 
 ## 📚 コンテンツ管理手順
 
-### 📝 新しい Diary 記事を追加
+### 📝 新しい Journal 記事を追加
 
 1. **記事ファイルを作成**
-   - `_diary/YYYY-MM-DD.md` を新規作成（例: `_diary/2026-01-17.md`）
+   - `_journal/YYYY-MM-DD.md` を新規作成（例: `_journal/2026-01-17.md`）
    - ファイル名の年月日と `date` を揃える
 
 2. **フロントマターを記述**
@@ -177,8 +177,8 @@ Riddle-Records/
 
 5. **コミット & プッシュ**
    ```bash
-   git add _diary/2026-01-17.md
-   git commit -m "Add diary 2026-01-17"
+   git add _journal/2026-01-17.md
+   git commit -m "Add Journal 2026-01-17"
    git push origin main
    ```
 
@@ -199,9 +199,9 @@ Riddle-Records/
      description: "作品の説明"
      categories:
        - "イラスト"  # イラスト / 3DCG / 写真
-     article_url: "/diary/2026-01-17/"  # 関連記事（オプション）
-     making_article_url: "/diary/2026-01-17/making/"  # メイキング（オプション）
-     thumbnail: true  # Diary一覧にサムネイル表示する場合（オプション）
+     article_url: "/Journal/2026-01-17/"  # 関連記事（オプション）
+     making_article_url: "/Journal/2026-01-17/making/"  # メイキング（オプション）
+     thumbnail: true  # Journal一覧にサムネイル表示する場合（オプション）
    ```
 
 3. **コミット & プッシュ**
@@ -219,9 +219,9 @@ Riddle-Records/
 
 ---
 
-### 🖼️ Diary一覧のサムネイル表示
+### 🖼️ Journal一覧のサムネイル表示
 
-Diary一覧ページ（`diary.md`）では、各日記エントリーにサムネイル画像を表示できます。
+Journal一覧ページ（`Journal.md`）では、各日記エントリーにサムネイル画像を表示できます。
 
 #### サムネイル表示の仕組み
 
@@ -231,18 +231,18 @@ Diary一覧ページ（`diary.md`）では、各日記エントリーにサム�
    ```yaml
    - title: "サムネイル画像"
      cloudinary_id: "thumbnail_abc123.png"
-     thumbnail_class: "diary-thumb"  # ← カスタムクラス
-     article_url: "/diary/2025-06-06/"
+     thumbnail_class: "Journal-thumb"  # ← カスタムクラス
+     article_url: "/Journal/2025-06-06/"
      # ギャラリーに表示しない場合は categories を省略可能
    ```
 
-2. **Diary記事のフロントマターで指定**
+2. **Journal記事のフロントマターで指定**
    ```yaml
    ---
    layout: post
    title: "記事タイトル"
    date: 2025-06-06
-   thumbnail_class: "diary-thumb"  # ← 使用するクラスを指定
+   thumbnail_class: "Journal-thumb"  # ← 使用するクラスを指定
    ---
    ```
 
@@ -256,7 +256,7 @@ Diary一覧ページ（`diary.md`）では、各日記エントリーにサム�
      date: 2025-06-06
      cloudinary_id: "artwork_abc123.png"
      categories: ["イラスト"]
-     article_url: "/diary/2025-06-06/"
+     article_url: "/Journal/2025-06-06/"
      thumbnail: true  # ← デフォルトサムネイル
    ```
 
@@ -267,17 +267,17 @@ Diary一覧ページ（`diary.md`）では、各日記エントリーにサム�
 
 #### ツールで簡単設定
 
-**diary-card-generator.html** を使用すると、GUIでサムネイル対応フラグを設定できます：
+**Journal-card-generator.html** を使用すると、GUIでサムネイル対応フラグを設定できます：
 
-1. `tools/diary-card-generator.html` をブラウザで開く
+1. `tools/Journal-card-generator.html` をブラウザで開く
 2. カード情報を入力
-3. 「サムネイル対象 (diary一覧で表示)」にチェック
+3. 「サムネイル対象 (Journal一覧で表示)」にチェック
 4. 生成された YAML をコピーして `_data/gallery.yml` に追加
 
 #### 重要なポイント
 
 - **優先順位**: `thumbnail_class` 指定 > `thumbnail: true` > プレースホルダー
-- **記事URLの一致**: `gallery.yml` の `article_url` と Diary 記事の URL が一致する必要があります
+- **記事URLの一致**: `gallery.yml` の `article_url` と Journal 記事の URL が一致する必要があります
 - **柔軟な使い分け**: 
   - ギャラリー表示用の画像とサムネイル用の画像を分けられる
   - サムネイル専用画像（ギャラリーに表示しない）も設定可能
@@ -288,14 +288,14 @@ Diary一覧ページ（`diary.md`）では、各日記エントリーにサム�
 
 ### 📖 メイキング記事を作成
 
-ファイル名: `_diary/YYYY-MM-DD-[作品名]-making.md`（例: `2025-06-06-five-apples-making.md`）
+ファイル名: `_journal/YYYY-MM-DD-[作品名]-making.md`（例: `2025-06-06-five-apples-making.md`）
 
 ```yaml
 ---
 layout: post
 title: "五つのりんご - メイキング"
 date: 2025-06-06
-permalink: /diary/2025-06-06/five-apples-making/
+permalink: /Journal/2025-06-06/five-apples-making/
 ---
 
 ## 制作過程
@@ -358,29 +358,29 @@ permalink: /diary/2025-06-06/five-apples-making/
 
 [tools/cloudinary-url-converter.html](tools/cloudinary-url-converter.html) - Cloudinary URL から Public ID を抽出
 
-### Diary Card Generator
+### Journal Card Generator
 
-[tools/diary-card-generator.html](tools/diary-card-generator.html) - DiaryカードHTMLと gallery.yml 用YAMLを生成
+[tools/Journal-card-generator.html](tools/Journal-card-generator.html) - JournalカードHTMLと gallery.yml 用YAMLを生成
 
 ---
 
-## 📸 Diary 画像表示機能
+## 📸 Journal 画像表示機能
 
-Diary投稿内の画像はカード形式で統一表示されます。
+Journal投稿内の画像はカード形式で統一表示されます。
 
 ### 画像の配置方法
 
 #### 単独画像
 
 ```html
-<div class="diary-card-grid">
-  <div class="diary-card">
+<div class="Journal-card-grid">
+  <div class="Journal-card">
     <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/cloudinary_id.jpg" 
-       data-lightbox="diary" data-title="画像説明">
+       data-lightbox="Journal" data-title="画像説明">
       <img src="{{ site.cloudinary_url }}/w_300,h_300,c_fill,q_auto,f_auto/v1/cloudinary_id.jpg" 
            alt="画像説明">
     </a>
-    <div class="diary-card-info">
+    <div class="Journal-card-info">
       <h4>画像タイトル</h4>
     </div>
   </div>
@@ -390,10 +390,10 @@ Diary投稿内の画像はカード形式で統一表示されます。
 #### 複数画像グリッド
 
 ```html
-<div class="diary-card-grid">
-  <div class="diary-card"><!-- カード1 --></div>
-  <div class="diary-card"><!-- カード2 --></div>
-  <div class="diary-card"><!-- カード3 --></div>
+<div class="Journal-card-grid">
+  <div class="Journal-card"><!-- カード1 --></div>
+  <div class="Journal-card"><!-- カード2 --></div>
+  <div class="Journal-card"><!-- カード3 --></div>
 </div>
 ```
 
@@ -403,7 +403,7 @@ Diary投稿内の画像はカード形式で統一表示されます。
 |-----------|------|
 | `w_300,h_300,c_fill` | サムネイル: 300×300px（正方形） |
 | `w_1920,q_auto,f_auto` | フル解像度: 1920px幅（Lightbox用） |
-| `data-lightbox="diary"` | Lightboxグループ化 |
+| `data-lightbox="Journal"` | Lightboxグループ化 |
 | `data-title` | Lightboxでの画像説明 |
 
 ### ギャラリーで見るボタンの制御
@@ -422,13 +422,13 @@ hide_gallery_buttons: true
 
 ```html
 <img class="no-gallery-button" src="..." alt="...">
-<div class="diary-card no-gallery-button">...</div>
+<div class="Journal-card no-gallery-button">...</div>
 <div class="making-comparison-grid no-gallery-button">...</div>
 ```
 
 ---
 
-## 🔗 Gallery & Diary 連携（詳細）
+## 🔗 Gallery & Journal 連携（詳細）
 
 ### Gallery データ設定（`_data/gallery.yml`）
 
@@ -439,11 +439,11 @@ hide_gallery_buttons: true
   description: "作品の説明"
   categories:
     - "3DCG"
-  article_url: "/diary/2025-06-06/"
-  making_article_url: "/diary/2025-06-06/five-apples-making/"
+  article_url: "/Journal/2025-06-06/"
+  making_article_url: "/Journal/2025-06-06/five-apples-making/"
 ```
 
-### 記事の FrontMatter（`_diary/*.md`）
+### 記事の FrontMatter（`_journal/*.md`）
 
 ```yaml
 ---

@@ -6,7 +6,7 @@ render_with_liquid: false
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diary Card Generator</title>
+    <title>Journal Card Generator</title>
     <link rel="stylesheet" href="tools.css">
     <style>
         .flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -30,8 +30,8 @@ render_with_liquid: false
 </head>
 <body>
     <div class="container">
-        <h1>🧩 Diary Card Generator</h1>
-        <p class="info">Diaryカード／比較カードのHTMLと、gallery.yml向けYAMLを自動生成します。Lightboxグループの切り替えや記事解析にも対応。</p>
+        <h1>🧩 Journal Card Generator</h1>
+        <p class="info">Journalカード／比較カードのHTMLと、gallery.yml向けYAMLを自動生成します。Lightboxグループの切り替えや記事解析にも対応。</p>
 
         <div class="example">
             <h4>ヒント</h4>
@@ -47,20 +47,20 @@ render_with_liquid: false
             <div class="half form-group">
                 <label for="layoutSelect">レイアウト</label>
                 <select id="layoutSelect">
-                    <option value="diary-card-grid">diary-card-grid（汎用）</option>
+                    <option value="journal-card-grid">journal-card-grid（汎用）</option>
                     <option value="making-comparison-grid">making-comparison-grid（2列比較）</option>
                 </select>
             </div>
             <div class="half form-group">
                 <label for="lightboxPreset">Lightboxグループ</label>
                 <select id="lightboxPreset">
-                    <option value="diary">diary（既定）</option>
+                    <option value="Journal">Journal（既定）</option>
                     <option value="gallery">gallery</option>
                     <option value="making-comparison">making-comparison</option>
                     <option value="custom">カスタム</option>
                 </select>
                 <input type="text" id="customLightbox" placeholder="custom-group" style="display:none; margin-top:8px;">
-                <div class="small-hint">postレイアウトの自動ラップは未ラップ画像のみを data-lightbox="diary" で包みます。カスタムグループは自前の&lt;a&gt;で回避してください。</div>
+                <div class="small-hint">postレイアウトの自動ラップは未ラップ画像のみを data-lightbox="Journal" で包みます。カスタムグループは自前の&lt;a&gt;で回避してください。</div>
             </div>
         </div>
 
@@ -68,7 +68,7 @@ render_with_liquid: false
             <div class="half form-group">
                 <label for="articleSlug">記事スラッグ（例: 2025-06-06）</label>
                 <input type="text" id="articleSlug" placeholder="2025-06-06">
-                <div class="small-hint">/diary/:name/ を推定します（上書き可）。</div>
+                <div class="small-hint">/Journal/:name/ を推定します（上書き可）。</div>
             </div>
             <div class="half form-group">
                 <label for="articleDate">日付 (YAML用, 任意)</label>
@@ -79,11 +79,11 @@ render_with_liquid: false
         <div class="flex-row">
             <div class="half form-group">
                 <label for="articleUrl">article_url</label>
-                <input type="text" id="articleUrl" placeholder="/diary/2025-06-06/">
+                <input type="text" id="articleUrl" placeholder="/Journal/2025-06-06/">
             </div>
             <div class="half form-group">
                 <label for="makingUrl">making_article_url (任意)</label>
-                <input type="text" id="makingUrl" placeholder="/diary/2025-06-06/five-apples-making/">
+                <input type="text" id="makingUrl" placeholder="/Journal/2025-06-06/five-apples-making/">
             </div>
         </div>
 
@@ -101,12 +101,12 @@ render_with_liquid: false
         <h3 class="section-title">記事解析モード</h3>
         <div class="form-group">
             <label for="articleInput">記事本文を貼り付け（HTML/Markdown混在OK）</label>
-            <textarea id="articleInput" placeholder="<div class=&quot;diary-card&quot;>..."></textarea>
+            <textarea id="articleInput" placeholder="<div class=&quot;journal-card&quot;>..."></textarea>
             <div class="button-row">
                 <button class="ghost-btn" onclick="analyzeArticle()">本文からカードを抽出</button>
                 <button class="ghost-btn" onclick="resetCards()">初期化</button>
             </div>
-            <div class="small-hint">.diary-card / .comparison-item 内の &lt;a data-lightbox&gt; や &lt;img&gt; から Cloudinary ID・caption・label を抽出します。</div>
+            <div class="small-hint">.journal-card / .comparison-item 内の &lt;a data-lightbox&gt; や &lt;img&gt; から Cloudinary ID・caption・label を抽出します。</div>
         </div>
 
         <h3 class="section-title">出力</h3>
@@ -173,7 +173,7 @@ render_with_liquid: false
             const slug = articleSlug.value.trim();
             if (!slug) return;
             if (!articleUrlTouched) {
-                articleUrl.value = `/diary/${slug}/`;
+                articleUrl.value = `/Journal/${slug}/`;
             }
             if (!comparisonGroup.value.trim()) {
                 comparisonGroup.value = slug;
@@ -244,7 +244,7 @@ render_with_liquid: false
                     <div class="form-group">
                         <label>
                             <input type="checkbox" ${card.thumbnail ? 'checked' : ''} onchange="updateCard(${index}, 'thumbnail', this.checked)">
-                            サムネイル対象 (diary一覧で表示)
+                            サムネイル対象 (Journal一覧で表示)
                         </label>
                     </div>
                     <div class="form-group">
@@ -260,7 +260,7 @@ render_with_liquid: false
 
         function getLightboxGroup() {
             if (lightboxPreset.value === 'custom') {
-                return customLightbox.value.trim() || 'diary';
+                return customLightbox.value.trim() || 'Journal';
             }
             return lightboxPreset.value;
         }
@@ -276,7 +276,7 @@ render_with_liquid: false
             const layout = layoutSelect.value;
             const html = layout === 'making-comparison-grid'
                 ? buildMakingComparisonHtml(cleanCards, group)
-                : buildDiaryGridHtml(cleanCards, group);
+                : buildJournalGridHtml(cleanCards, group);
 
             const yaml = buildYaml(cleanCards, {
                 articleUrl: articleUrl.value.trim(),
@@ -291,22 +291,22 @@ render_with_liquid: false
             yamlBlock.classList.add('visible');
         }
 
-        function buildDiaryGridHtml(cardData, group) {
+        function buildJournalGridHtml(cardData, group) {
             const inner = cardData.map(card => {
                 const caption = card.title || card.label || '';
                 const label = card.label || card.title || '';
                 const cld = card.cloudinaryId.trim();
                                 const blockClass = card.noGalleryButton ? ' no-gallery-button' : '';
-                                return `  <div class="diary-card${blockClass}">
+                                return `  <div class="journal-card${blockClass}">
     <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/${escapeHtml(cld)}" data-lightbox="${escapeHtml(group)}" data-title="${escapeHtml(caption)}">
       <img src="{{ site.cloudinary_url }}/w_300,h_300,c_fill,q_auto,f_auto/v1/${escapeHtml(cld)}" alt="${escapeHtml(caption)}">
     </a>
-    <div class="diary-card-info">
+    <div class="journal-card-info">
       <h4>${escapeHtml(label)}</h4>
     </div>
   </div>`;
             }).join('\n');
-            return `<div class="diary-card-grid">
+            return `<div class="journal-card-grid">
 ${inner}
 </div>`;
         }
@@ -382,10 +382,10 @@ ${inner}
             }
             const parser = new DOMParser();
             const doc = parser.parseFromString(raw, 'text/html');
-            const nodes = Array.from(doc.querySelectorAll('.diary-card, .comparison-item'));
+            const nodes = Array.from(doc.querySelectorAll('.journal-card, .comparison-item'));
 
             if (!nodes.length) {
-                alert('カード要素が見つかりませんでした (.diary-card / .comparison-item)');
+                alert('カード要素が見つかりませんでした (.journal-card / .comparison-item)');
                 return;
             }
 
@@ -418,7 +418,7 @@ ${inner}
                 return;
             }
 
-            const firstLb = parsed.find(p => p.lightbox && p.lightbox !== 'diary');
+            const firstLb = parsed.find(p => p.lightbox && p.lightbox !== 'Journal');
             if (firstLb) {
                 lightboxPreset.value = 'custom';
                 handleLightboxChange();

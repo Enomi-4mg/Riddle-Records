@@ -14,7 +14,7 @@ og_type: "website"
 
 <div class="disco-grid">
 {% for song in sorted_songs %}
-  <div class="disco-card diary-entry-animate">
+  <div class="disco-card journal-entry-animate">
     <a href="{{ song.url | relative_url }}" class="disco-card-image">
       <img src="https://img.youtube.com/vi/{{ song.youtube_id }}/sddefault.jpg" alt="{{ song.title }} thumbnail">
     </a>

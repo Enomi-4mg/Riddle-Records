@@ -10,21 +10,21 @@ og_type: "website"
 
 {% assign about_page = site.pages | where: "path", "about.html" | first %}
 {% assign info_page = site.pages | where: "path", "info.md" | first %}
-{% assign latest_diary = site.diary | sort: 'date' | reverse | first %}
+{% assign latest_journal = site.journal | sort: 'date' | reverse | first %}
 {% assign latest_song = site.songs | sort: 'date' | reverse | first %}
 {% assign latest_gallery = site.data.gallery | sort: 'date' | reverse | first %}
 
-<section class="home-intro diary-entry-animate">
+<section class="home-intro journal-entry-animate">
   <h1 class="home-welcome">ようこそ！<br>Riddle Records 公式サイトへ。</h1>
   <p>4mgのポートフォリオサイトです。</p>
   <p>ページ上部のヘッダーメニューからも各ページへ移動できます。</p>
   <p><small>最終更新：2026/01/18</small></p>
 </section>
 
-<section class="home-latest diary-entry-animate">
+<section class="home-latest journal-entry-animate">
   <h2 class="page_title">コンテンツ</h2>
   <div class="home-grid">
-    <a href="{{ '/about.html' | relative_url }}" class="home-card home-card-link diary-entry-animate">
+    <a href="{{ '/about.html' | relative_url }}" class="home-card home-card-link journal-entry-animate">
       <div class="home-card-head">
         <span class="home-card-label">About</span>
       </div>
@@ -33,22 +33,22 @@ og_type: "website"
       <span class="home-card-cta">About を見る →</span>
     </a>
 
-    {% if latest_diary %}
-    <article class="home-card diary-entry-animate">
-      <a href="{{ latest_diary.url | relative_url }}" class="home-card-clickable">
+    {% if latest_journal %}
+    <article class="home-card journal-entry-animate">
+      <a href="{{ latest_journal.url | relative_url }}" class="home-card-clickable">
         <div class="home-card-head">
-          <span class="home-card-label">Diary</span>
-          <time class="home-card-date" datetime="{{ latest_diary.date | date: '%Y-%m-%d' }}">{{ latest_diary.date | date: "%Y年%m月%d日" }}</time>
+          <span class="home-card-label">Journal</span>
+          <time class="home-card-date" datetime="{{ latest_journal.date | date: '%Y-%m-%d' }}">{{ latest_journal.date | date: "%Y年%m月%d日" }}</time>
         </div>
-        <h3 class="home-card-title">{{ latest_diary.title }}</h3>
-        <p class="home-card-desc">{{ latest_diary.content | strip_html | truncate: 70 }}</p>
+        <h3 class="home-card-title">{{ latest_journal.title }}</h3>
+        <p class="home-card-desc">{{ latest_journal.content | strip_html | truncate: 70 }}</p>
       </a>
-      <a class="home-card-cta" href="{{ '/diary.html' | relative_url }}">一覧を見る →</a>
+      <a class="home-card-cta" href="{{ '/journal.html' | relative_url }}">一覧を見る →</a>
     </article>
     {% endif %}
 
     {% if latest_gallery %}
-    <article class="home-card diary-entry-animate">
+    <article class="home-card journal-entry-animate">
       <a href="{{ '/gallery.html' | relative_url }}" class="home-card-clickable">
         <div class="home-card-head">
           <span class="home-card-label">Gallery</span>
@@ -68,7 +68,7 @@ og_type: "website"
     {% endif %}
 
     {% if latest_song %}
-    <article class="home-card diary-entry-animate">
+    <article class="home-card journal-entry-animate">
       <a href="{{ latest_song.url | relative_url }}" class="home-card-clickable">
         <div class="home-card-head">
           <span class="home-card-label">Discography</span>
@@ -86,7 +86,7 @@ og_type: "website"
     </article>
     {% endif %}
 
-    <a href="{{ '/info.html' | relative_url }}" class="home-card home-card-link diary-entry-animate">
+    <a href="{{ '/info.html' | relative_url }}" class="home-card home-card-link journal-entry-animate">
       <div class="home-card-head">
         <span class="home-card-label">Information</span>
       </div>

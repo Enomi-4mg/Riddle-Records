@@ -42,11 +42,11 @@ img {
 }
 
 /* ===================================
-   Diary画像表示機能
+   Journal画像表示機能
    ===================================== */
 
 /* 画像カード形式グリッド */
-.diary-card-grid {
+.journal-card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1.5rem;
@@ -55,7 +55,7 @@ img {
 }
 
 /* カード個別スタイル */
-.diary-card {
+.journal-card {
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
@@ -63,17 +63,17 @@ img {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.diary-card:hover {
+.journal-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.diary-card a {
+.journal-card a {
     display: block;
     overflow: hidden;
 }
 
-.diary-card img {
+.journal-card img {
     width: 100%;
     height: auto;
     display: block;
@@ -81,15 +81,15 @@ img {
     transition: transform 0.3s ease;
 }
 
-.diary-card:hover img {
+.journal-card:hover img {
     transform: scale(1.05);
 }
 
-.diary-card-info {
+.journal-card-info {
     padding: 1rem;
 }
 
-.diary-card-info h4 {
+.journal-card-info h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1rem;
     color: #333;
@@ -98,7 +98,7 @@ img {
 
 /* モバイル対応: 600px以下で1列表示 */
 @media screen and (max-width: 600px) {
-    .diary-card-grid {
+    .journal-card-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
@@ -449,7 +449,7 @@ img {
     box-sizing: border-box;
 }
 
-/* Wide container for content-heavy pages (Diary, Gallery) */
+/* Wide container for content-heavy pages (Journal, Gallery) */
 .container.wide-container {
     max-width: 1400px;
     padding: 0 15px;
@@ -1238,7 +1238,7 @@ img {
 }
 
 /* =====================================
-   Gallery & Diary 連携機能
+   Gallery & Journal 連携機能
    ===================================== */
 
 /* ギャラリーで見るボタン（記事内の画像下に表示） */

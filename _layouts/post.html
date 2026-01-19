@@ -171,7 +171,7 @@ layout: default
     {% assign related_articles = "" %}
     {% if page.tags and page.tags.size > 0 %}
         {% for tag in page.tags %}
-            {% for post in site.diary %}
+            {% for post in site.journal %}
                 {% if post.url != page.url and post.tags %}
                     {% for post_tag in post.tags %}
                         {% if post_tag == tag and related_articles != post.url %}
@@ -188,7 +188,7 @@ layout: default
             <ul>
                 {% for url in related_urls %}
                     {% if url != "" %}
-                        {% assign found_post = site.diary | where: "url", url | first %}
+                        {% assign found_post = site.journal | where: "url", url | first %}
                         {% if found_post %}
                         <li><a href="{{ found_post.url | relative_url }}">{{ found_post.title }}</a></li>
                         {% endif %}
@@ -318,7 +318,7 @@ layout: default
 </script>
 {% endunless %}
 
-<!-- Lightbox自動適用スクリプト: Diary画像にdata-lightbox属性を付与 -->
+<!-- Lightbox自動適用スクリプト: Journal画像にdata-lightbox属性を付与 -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     // .post-content 内の全ての img タグを取得

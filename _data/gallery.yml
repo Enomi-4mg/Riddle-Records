@@ -45,9 +45,9 @@
   description: "被写界深度を適用"
   categories:
     - "3DCG"
-  article_url: "/diary/2025-06-06/"
+  article_url: "/journal/2025-06-06/"
   thumbnail: true
-  making_article_url: "/diary/2025-06-06/five-apples-making/"
+  making_article_url: "/journal/2025-06-06/five-apples-making/"
 
 - title: "四コマ漫画：目撃"
   date: 2025-10-01
@@ -56,7 +56,7 @@
   categories:
     - "四コマ漫画"
   thumbnail: true
-  article_url: "/diary/2025-10-01/"
+  article_url: "/journal/2025-10-01/"
 
 - title: "四コマ漫画：宿題"
   date: 2025-10-01
@@ -65,14 +65,14 @@
   categories:
     - "四コマ漫画"
   thumbnail: true
-  article_url: "/diary/2025-10-01/"
+  article_url: "/journal/2025-10-01/"
 
 - title: "Cry"
   date: 2026-01-17
   cloudinary_id: "Cry_vvf90d.png"
   description: "夏コミ2025寄稿イラスト"
   categories: ["イラスト"]
-  article_url: "/diary/2026-01-17/"
+  article_url: "/journal/2026-01-17/"
   thumbnail: false
   comparison_group: "diary/2026-01-17/"
   comparison_label: "Cry"
@@ -82,7 +82,7 @@
   cloudinary_id: "Light_ldkae3.png"
   description: "冬コミ2025寄稿イラスト"
   categories: ["イラスト"]
-  article_url: "/diary/2026-01-17/"
+  article_url: "/journal/2026-01-17/"
   thumbnail: true
   comparison_group: "diary/2026-01-17/"
   comparison_label: "Light"

@@ -2,7 +2,7 @@
 layout: default
 title: "Journal"
 description: "日記・活動報告の一覧。"
-og_title: "Diary | Riddle Records"
+og_title: "Journal | Riddle Records"
 og_description: "最新の日記・活動報告を掲載。"
 image: "/favicon/icon.jpg"
 og_type: "website"
@@ -11,7 +11,7 @@ og_type: "website"
 <div style="max-width: 900px; margin: 0 auto; padding: 0 1rem;">
   <h1 class="web_title">{{ page.title }}</h1>
 
-  {% assign sorted_entries = site.diary | sort: 'date' | reverse %}
+  {% assign sorted_entries = site.journal | sort: 'date' | reverse %}
 
   {% for entry in sorted_entries %}
     {% assign thumbnail_image = nil %}
@@ -45,7 +45,7 @@ og_type: "website"
       {% endfor %}
     {% endif %}
     
-    <div class="diary-entry-animate" style="display: flex; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e0e0e0;">
+    <div class="journal-entry-animate" style="display: flex; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e0e0e0;">
       <!-- Thumbnail -->
       <a href="{{ entry.url | relative_url }}" style="flex-shrink: 0;">
         {% if found_thumbnail %}

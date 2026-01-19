@@ -26,8 +26,8 @@ Riddle Records は、日記・音楽記録・ギャラリーを統合したポ�
 ### [Cloudinary URL 変換ツール→]({{ '/tools/cloudinary-url-converter.html' | relative_url }})
 - Cloudinary の URL を生成・変換します
 
-### [Diary Card Generator→]({{ '/tools/diary-card-generator.html' | relative_url }})
-- DiaryカードのHTMLとYAMLを生成し、比較ラベルやLightbox切替、記事解析に対応します
+### [Journal Card Generator→]({{ '/tools/journal-card-generator.html' | relative_url }})
+- JournalカードのHTMLとYAMLを生成し、比較ラベルやLightbox切替、記事解析に対応します
 
 ## ソースコード
 

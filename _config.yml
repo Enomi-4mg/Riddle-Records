@@ -1,11 +1,11 @@
 title: Riddle Records
-description: A site for diary, music, and art
+description: A site for journal, music, and art
 author: 4mg
 
 collections:
-  diary:
+  journal:
     output: true
-    permalink: /diary/:name/
+    permalink: /journal/:name/
   
   songs:
     output: true

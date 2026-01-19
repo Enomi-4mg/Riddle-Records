@@ -83,7 +83,7 @@ function getPageCategory(url) {
   
   if (path === '/' || path.endsWith('/index.html')) return 'home';
   if (path.includes('/about')) return 'about';
-  if (path.includes('/diary')) return 'diary'; // Includes both /diary.html and /diary/YYYY-MM-DD/
+  if (path.includes('/journal')) return 'journal'; // Includes both /journal.html and /journal/YYYY-MM-DD/
   if (path.includes('/gallery')) return 'gallery';
   if (path.includes('/disco')) return 'disco'; // Includes both /disco.html and /disco/YYYY-MM-DD/
   if (path.includes('/info')) return 'info';
@@ -114,8 +114,8 @@ function updateSidebarActiveState() {
     else if ((currentPath.includes('/about')) && href.includes('/about')) {
       link.classList.add('active');
     }
-    // Diary
-    else if ((currentPath.includes('/diary')) && href.includes('/diary')) {
+    // Journal
+    else if ((currentPath.includes('/journal')) && href.includes('/journal')) {
       link.classList.add('active');
     }
     // Gallery
@@ -373,7 +373,7 @@ if (sidebarLinks.length > 0) {
 
 // Intersection Observer: Trigger animation when element enters viewport
 function initScrollAnimations() {
-  const entries = document.querySelectorAll('.diary-entry-animate');
+  const entries = document.querySelectorAll('.journal-entry-animate');
   
   if (entries.length === 0) return;
   
