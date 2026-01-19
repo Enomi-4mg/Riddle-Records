@@ -118,7 +118,7 @@ Riddle-Records/
 ## 🖼️ Cloudinary 画像運用ガイド（簡易版）
 
 - **設定**: `_config.yml` に `cloudinary_cloud_name` と `cloudinary_url` を定義済み。参照は `{{ site.cloudinary_url }}` を使用。
-- **アップロード**: CloudinaryのMedia Libraryで `riddle-records/jpg/...`・`riddle-records/png/...` に配置。`Public ID`（拡張子なし）を控える。
+- **アップロード**: CloudinaryのMedia Libraryで `riddle-records/jpg/...`・`riddle-records/png/...` に配置。`Public ID`（拡張子込み: `.png` / `.jpg` など）を控える。
 - **Markdown参照（記事）**: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg` を推奨（幅800px・品質自動・形式自動）。
 - **サムネイル（ギャラリー）**: `{{ site.cloudinary_url }}/w_400,h_400,c_fill,q_auto,f_auto/v1/<cloudinary_id>.jpg` を推奨（正方形にトリミング）。
 - **データ駆動**: `_data/gallery.yml` に `title/date/cloudinary_id/description/categories[]` を追記すると [gallery.md](gallery.md) から自動表示可能（カテゴリは複数可）。
@@ -138,7 +138,7 @@ Riddle-Records/
 1. **Cloudinaryに画像をアップロード**
    - [Cloudinary Dashboard](https://cloudinary.com/console) にログイン
    - Media Library から画像をアップロード
-   - Public ID（拡張子なし）をメモ（例: `my_artwork_abc123`）
+  - Public ID（拡張子込み）をメモ（例: `my_artwork_abc123.png`）
 
 2. **`_data/gallery.yml` に新しいエントリを追加**
     ```yaml
@@ -201,7 +201,9 @@ Gallery ページの各作品カードに、関連する記事へのリンクボ
 記事ページの末尾に「関連作品」セクションが自動的に表示されます。
 
 - **📌 おすすめ**: 手動で指定した関連作品（`featured_related` で指定）
-- **📅 同じ日の作品**: 記事と同じ日付の Gallery 作品を自動抽出
+- **📅 関連作品**: 記事と同じ日付の Gallery 作品を自動抽出
+- **� 記事内の作品**: 記事内で使用された画像を自動検出
+- **�📖 関連記事**: `tags` が一致する記事を自動抽出
 
 ### 設定方法
 

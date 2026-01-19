@@ -1,6 +1,6 @@
 # ギャラリー自動生成用データ（サンプル）
 # Cloudinary へアップロード後、以下形式で追記してください。
-# cloudinary_id は拡張子なしで記入します（参照時に .jpg / .png を付与します）。
+# cloudinary_id は拡張子込み（例: my_artwork.png / photo_abc123.jpg）。
 # making_article_url: メイキング記事へのリンク（任意）
 
 - title: "つまらない授業"

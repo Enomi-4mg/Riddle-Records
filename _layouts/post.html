@@ -64,7 +64,13 @@ layout: default
             </div>
         </div>
         {% endif %}
-        
+
+        <!-- 記事内に登場した作品（自動検出） -->
+        <div id="content-related-works" style="display: none;">
+            <h3>📸 記事内で登場</h3>
+            <div class="related-grid" id="content-works-grid"></div>
+        </div>
+
         <!-- 自動抽出: 同じ日付の作品 -->
         {% assign same_date_works = site.data.gallery | where: "date", page.date | sort: "title" %}
         {% if same_date_works.size > 0 %}
@@ -83,6 +89,38 @@ layout: default
         </div>
         {% endif %}
     </section>
+
+    <!-- 関連記事セクション -->
+    {% assign related_articles = "" %}
+    {% if page.tags and page.tags.size > 0 %}
+        {% for tag in page.tags %}
+            {% for post in site.diary %}
+                {% if post.url != page.url and post.tags %}
+                    {% for post_tag in post.tags %}
+                        {% if post_tag == tag and related_articles != post.url %}
+                            {% assign related_articles = related_articles | append: post.url | append: "," %}
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        {% assign related_urls = related_articles | split: "," | uniq %}
+        {% if related_urls.size > 0 %}
+        <section class="post-related-articles">
+            <h2>📖 関連記事</h2>
+            <ul>
+                {% for url in related_urls %}
+                    {% if url != "" %}
+                        {% assign found_post = site.diary | where: "url", url | first %}
+                        {% if found_post %}
+                        <li><a href="{{ found_post.url | relative_url }}">{{ found_post.title }}</a></li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+    {% endif %}
     {% endif %}
     
     <nav class="post-nav" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc;">
@@ -128,7 +166,8 @@ layout: default
       return;
     }
     
-    // 記事内の全ての img タグを取得
+    // 記事内で使用された作品を収集
+    const contentWorksSet = new Set();
     const images = document.querySelectorAll('article.post img');
     
     images.forEach(img => {
@@ -153,6 +192,8 @@ layout: default
         );
         
         if (galleryItem) {
+          contentWorksSet.add(cloudinaryId);
+          
           // ボタンを作成
           const btn = document.createElement('a');
           btn.href = '{{ site.baseurl }}/gallery#' + cloudinaryId.replace(/\./g, '-');
@@ -167,6 +208,35 @@ layout: default
         }
       }
     });
+
+    // 記事内に登場した作品セクションを生成
+    if (contentWorksSet.size > 0) {
+      const contentWorksDiv = document.getElementById('content-related-works');
+      const grid = document.getElementById('content-works-grid');
+      
+      contentWorksSet.forEach(cloudinaryId => {
+        const item = window.galleryData.find(
+          g => g.cloudinary_id === cloudinaryId
+        );
+        
+        if (item) {
+          const link = document.createElement('a');
+          link.href = '{{ site.baseurl }}/gallery#' + cloudinaryId.replace(/\./g, '-');
+          link.className = 'related-item';
+          link.innerHTML = `
+            <img src="{{ site.cloudinary_url }}/w_200,h_200,c_fill,q_auto,f_auto/v1/${cloudinaryId}" 
+                 alt="${item.title || '作品'}"
+                 loading="lazy">
+            <p>${item.title || cloudinaryId}</p>
+          `;
+          grid.appendChild(link);
+        }
+      });
+      
+      if (grid.children.length > 0) {
+        contentWorksDiv.style.display = 'block';
+      }
+    }
   });
 </script>
 {% endunless %}

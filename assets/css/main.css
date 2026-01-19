@@ -1363,6 +1363,43 @@ img {
     font-size: 1.3rem;
 }
 
+/* 関連記事セクション */
+.post-related-articles {
+    margin: 3rem 0 2rem;
+    padding: 2rem;
+    background: #f9f9f9;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.post-related-articles h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+.post-related-articles ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.post-related-articles li {
+    margin: 0.75rem 0;
+}
+
+.post-related-articles a {
+    color: #1f8b6d;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.post-related-articles a:hover {
+    color: #0d5a48;
+    text-decoration: underline;
+}
+
 .featured-works,
 .auto-related-works {
     margin-bottom: 2rem;
