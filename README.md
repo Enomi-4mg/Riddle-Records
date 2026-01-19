@@ -426,6 +426,16 @@ techniques:
 2. ツールにペーストして「変換」ボタンをクリック
 3. 出力された Public ID を `_data/gallery.yml` に貼り付け
 
+### Diary Card Generator
+
+[tools/diary-card-generator.html](tools/diary-card-generator.html) - DiaryカードHTMLと gallery.yml 用YAMLを生成
+
+**特徴:**
+- 🎛 レイアウト / Lightbox グループをドロップダウンで切替（diary-card-grid / making-comparison-grid）
+- 🧮 comparison_group / comparison_label / comparison_order を含むYAML出力（任意項目）
+- 🔍 記事貼り付け解析で既存カードを抽出して再生成
+- 🔗 article_url / making_article_url をスラッグ推定しつつ手動上書き可能
+
 ---
 
 ## 📸 Diary 画像表示機能

@@ -1,0 +1,435 @@
+---
+render_with_liquid: false
+---
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diary Card Generator</title>
+    <link rel="stylesheet" href="tools.css">
+    <style>
+        .flex-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .half { flex: 1 1 260px; }
+        .card-list { margin-top: 10px; }
+        .card-box { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin-bottom: 12px; background: #fafafa; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .badge { background: #e6f4ff; color: #005a9e; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .muted { color: #666; font-size: 0.85rem; }
+        .output-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+        .output-block { background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; padding: 10px; display: none; }
+        .output-block.visible { display: block; }
+        .output-block h3 { margin-top: 0; }
+        .output-textarea { width: 100%; min-height: 200px; font-family: monospace; border: 1px solid #ccc; border-radius: 4px; padding: 10px; resize: vertical; background: #fff; }
+        .small-hint { font-size: 0.85rem; color: #555; margin-top: 4px; }
+        .pill { display: inline-block; padding: 3px 8px; border-radius: 999px; background: #eef2f7; color: #333; font-size: 0.8rem; }
+        .section-title { margin-top: 24px; border-left: 4px solid #007acc; padding-left: 8px; }
+        .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .ghost-btn { background: #f0f0f0; color: #333; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧩 Diary Card Generator</h1>
+        <p class="info">Diaryカード／比較カードのHTMLと、gallery.yml向けYAMLを自動生成します。Lightboxグループの切り替えや記事解析にも対応。</p>
+
+        <div class="example">
+            <h4>ヒント</h4>
+            <ul>
+                <li>Lightboxグループはドロップダウンで切り替え。自動ラップ対象外にする場合は、自前で&lt;a data-lightbox&gt;付きHTMLを使います。</li>
+                <li>記事URLはスラッグから推定しますが、手動上書きも可能です。</li>
+                <li>複数カード時の比較ラベル／順序は任意入力です。</li>
+            </ul>
+        </div>
+
+        <h3 class="section-title">全体設定</h3>
+        <div class="flex-row">
+            <div class="half form-group">
+                <label for="layoutSelect">レイアウト</label>
+                <select id="layoutSelect">
+                    <option value="diary-card-grid">diary-card-grid（汎用）</option>
+                    <option value="making-comparison-grid">making-comparison-grid（2列比較）</option>
+                </select>
+            </div>
+            <div class="half form-group">
+                <label for="lightboxPreset">Lightboxグループ</label>
+                <select id="lightboxPreset">
+                    <option value="diary">diary（既定）</option>
+                    <option value="gallery">gallery</option>
+                    <option value="making-comparison">making-comparison</option>
+                    <option value="custom">カスタム</option>
+                </select>
+                <input type="text" id="customLightbox" placeholder="custom-group" style="display:none; margin-top:8px;">
+                <div class="small-hint">postレイアウトの自動ラップは未ラップ画像のみを data-lightbox="diary" で包みます。カスタムグループは自前の&lt;a&gt;で回避してください。</div>
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="half form-group">
+                <label for="articleSlug">記事スラッグ（例: 2025-06-06）</label>
+                <input type="text" id="articleSlug" placeholder="2025-06-06">
+                <div class="small-hint">/diary/:name/ を推定します（上書き可）。</div>
+            </div>
+            <div class="half form-group">
+                <label for="articleDate">日付 (YAML用, 任意)</label>
+                <input type="text" id="articleDate" placeholder="2025-06-06">
+            </div>
+        </div>
+
+        <div class="flex-row">
+            <div class="half form-group">
+                <label for="articleUrl">article_url</label>
+                <input type="text" id="articleUrl" placeholder="/diary/2025-06-06/">
+            </div>
+            <div class="half form-group">
+                <label for="makingUrl">making_article_url (任意)</label>
+                <input type="text" id="makingUrl" placeholder="/diary/2025-06-06/five-apples-making/">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="comparisonGroup">comparison_group (任意, 複数カードで共有)</label>
+            <input type="text" id="comparisonGroup" placeholder="five-apples">
+        </div>
+
+        <div class="card-list" id="cardList"></div>
+        <div class="button-row">
+            <button class="ghost-btn" onclick="addCard()">＋ カードを追加</button>
+            <button onclick="generateOutputs()">HTML / YAML を生成</button>
+        </div>
+
+        <h3 class="section-title">記事解析モード</h3>
+        <div class="form-group">
+            <label for="articleInput">記事本文を貼り付け（HTML/Markdown混在OK）</label>
+            <textarea id="articleInput" placeholder="<div class=&quot;diary-card&quot;>..."></textarea>
+            <div class="button-row">
+                <button class="ghost-btn" onclick="analyzeArticle()">本文からカードを抽出</button>
+                <button class="ghost-btn" onclick="resetCards()">初期化</button>
+            </div>
+            <div class="small-hint">.diary-card / .comparison-item 内の &lt;a data-lightbox&gt; や &lt;img&gt; から Cloudinary ID・caption・label を抽出します。</div>
+        </div>
+
+        <h3 class="section-title">出力</h3>
+        <div class="output-grid">
+            <div class="output-block" id="htmlBlock">
+                <h3>HTML</h3>
+                <textarea id="htmlOutput" class="output-textarea" readonly></textarea>
+                <div class="button-row">
+                    <button class="copy-btn" onclick="copyText('htmlOutput')">📋 コピー</button>
+                </div>
+            </div>
+            <div class="output-block" id="yamlBlock">
+                <h3>YAML (gallery.yml用)</h3>
+                <textarea id="yamlOutput" class="output-textarea" readonly></textarea>
+                <div class="button-row">
+                    <button class="copy-btn" onclick="copyText('yamlOutput')">📋 コピー</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cards = [];
+        let articleUrlTouched = false;
+
+        const defaultCard = () => ({
+            title: '',
+            label: '',
+            cloudinaryId: '',
+            description: '',
+            categories: '',
+            comparisonLabel: '',
+            comparisonOrder: '',
+            noGalleryButton: true
+        });
+
+        const cardListEl = document.getElementById('cardList');
+        const layoutSelect = document.getElementById('layoutSelect');
+        const lightboxPreset = document.getElementById('lightboxPreset');
+        const customLightbox = document.getElementById('customLightbox');
+        const articleSlug = document.getElementById('articleSlug');
+        const articleUrl = document.getElementById('articleUrl');
+        const makingUrl = document.getElementById('makingUrl');
+        const articleDate = document.getElementById('articleDate');
+        const comparisonGroup = document.getElementById('comparisonGroup');
+        const htmlBlock = document.getElementById('htmlBlock');
+        const yamlBlock = document.getElementById('yamlBlock');
+        const htmlOutput = document.getElementById('htmlOutput');
+        const yamlOutput = document.getElementById('yamlOutput');
+
+        function init() {
+            addCard();
+            lightboxPreset.addEventListener('change', handleLightboxChange);
+            articleSlug.addEventListener('input', syncArticleUrl);
+            articleUrl.addEventListener('input', () => { articleUrlTouched = true; });
+        }
+
+        function handleLightboxChange() {
+            customLightbox.style.display = lightboxPreset.value === 'custom' ? 'block' : 'none';
+        }
+
+        function syncArticleUrl() {
+            const slug = articleSlug.value.trim();
+            if (!slug) return;
+            if (!articleUrlTouched) {
+                articleUrl.value = `/diary/${slug}/`;
+            }
+            if (!comparisonGroup.value.trim()) {
+                comparisonGroup.value = slug;
+            }
+            if (!articleDate.value.trim() && /^\d{4}-\d{2}-\d{2}$/.test(slug)) {
+                articleDate.value = slug;
+            }
+        }
+
+        function addCard(data = {}) {
+            cards.push({ ...defaultCard(), ...data });
+            renderCards();
+        }
+
+        function removeCard(index) {
+            if (cards.length === 1) {
+                cards[0] = defaultCard();
+            } else {
+                cards.splice(index, 1);
+            }
+            renderCards();
+        }
+
+        function updateCard(index, key, value) {
+            cards[index][key] = value;
+        }
+
+        function renderCards() {
+            cardListEl.innerHTML = '';
+            cards.forEach((card, index) => {
+                const box = document.createElement('div');
+                box.className = 'card-box';
+                box.innerHTML = `
+                    <div class="card-header">
+                        <div class="badge">Card ${index + 1}</div>
+                        <button class="ghost-btn" onclick="removeCard(${index})">削除</button>
+                    </div>
+                    <div class="form-group">
+                        <label>caption (data-title / alt)</label>
+                        <input type="text" value="${escapeHtml(card.title)}" oninput="updateCard(${index}, 'title', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>カードの見出し (h4 / comparison label)</label>
+                        <input type="text" value="${escapeHtml(card.label)}" oninput="updateCard(${index}, 'label', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Cloudinary ID (必須, 拡張子付き)</label>
+                        <input type="text" value="${escapeHtml(card.cloudinaryId)}" placeholder="music_box_pt6tr9.jpg" oninput="updateCard(${index}, 'cloudinaryId', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>description (YAML用, 任意)</label>
+                        <input type="text" value="${escapeHtml(card.description)}" oninput="updateCard(${index}, 'description', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>categories (カンマ区切り, 任意)</label>
+                        <input type="text" value="${escapeHtml(card.categories)}" placeholder="3DCG, Illustration" oninput="updateCard(${index}, 'categories', this.value)">
+                    </div>
+                    <div class="flex-row">
+                        <div class="half form-group">
+                            <label>comparison_label (任意)</label>
+                            <input type="text" value="${escapeHtml(card.comparisonLabel)}" oninput="updateCard(${index}, 'comparisonLabel', this.value)">
+                        </div>
+                        <div class="half form-group">
+                            <label>comparison_order (任意, 数値)</label>
+                            <input type="number" value="${escapeHtml(card.comparisonOrder)}" oninput="updateCard(${index}, 'comparisonOrder', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" ${card.noGalleryButton ? 'checked' : ''} onchange="updateCard(${index}, 'noGalleryButton', this.checked)">
+                            ギャラリーで見るボタンを非表示 (no-gallery-button)
+                        </label>
+                    </div>
+                `;
+                cardListEl.appendChild(box);
+            });
+        }
+
+        function getLightboxGroup() {
+            if (lightboxPreset.value === 'custom') {
+                return customLightbox.value.trim() || 'diary';
+            }
+            return lightboxPreset.value;
+        }
+
+        function generateOutputs() {
+            const cleanCards = cards.filter(c => c.cloudinaryId.trim());
+            if (!cleanCards.length) {
+                alert('少なくとも1枚のカードに Cloudinary ID を入力してください');
+                return;
+            }
+
+            const group = getLightboxGroup();
+            const layout = layoutSelect.value;
+            const html = layout === 'making-comparison-grid'
+                ? buildMakingComparisonHtml(cleanCards, group)
+                : buildDiaryGridHtml(cleanCards, group);
+
+            const yaml = buildYaml(cleanCards, {
+                articleUrl: articleUrl.value.trim(),
+                makingUrl: makingUrl.value.trim(),
+                date: articleDate.value.trim(),
+                comparisonGroup: comparisonGroup.value.trim()
+            });
+
+            htmlOutput.value = html;
+            yamlOutput.value = yaml;
+            htmlBlock.classList.add('visible');
+            yamlBlock.classList.add('visible');
+        }
+
+        function buildDiaryGridHtml(cardData, group) {
+            const inner = cardData.map(card => {
+                const caption = card.title || card.label || '';
+                const label = card.label || card.title || '';
+                const cld = card.cloudinaryId.trim();
+                                const blockClass = card.noGalleryButton ? ' no-gallery-button' : '';
+                                return `  <div class="diary-card${blockClass}">
+    <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/${escapeHtml(cld)}" data-lightbox="${escapeHtml(group)}" data-title="${escapeHtml(caption)}">
+      <img src="{{ site.cloudinary_url }}/w_300,h_300,c_fill,q_auto,f_auto/v1/${escapeHtml(cld)}" alt="${escapeHtml(caption)}">
+    </a>
+    <div class="diary-card-info">
+      <h4>${escapeHtml(label)}</h4>
+    </div>
+  </div>`;
+            }).join('\n');
+            return `<div class="diary-card-grid">
+${inner}
+</div>`;
+        }
+
+        function buildMakingComparisonHtml(cardData, group) {
+            const inner = cardData.map(card => {
+                const caption = card.title || card.label || '';
+                const label = card.label || card.comparisonLabel || caption;
+                const cld = card.cloudinaryId.trim();
+                const labelLine = label ? `\n    <p class="comparison-label">${escapeHtml(label)}</p>` : '';
+                                const blockClass = card.noGalleryButton ? ' no-gallery-button' : '';
+                                return `  <div class="comparison-item${blockClass}">
+    <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/${escapeHtml(cld)}" data-lightbox="${escapeHtml(group)}" data-title="${escapeHtml(caption)}">
+      <img src="{{ site.cloudinary_url }}/w_300,h_300,c_fill,q_auto,f_auto/v1/${escapeHtml(cld)}" alt="${escapeHtml(caption)}">
+    </a>${labelLine}
+  </div>`;
+            }).join('\n');
+            return `<div class="making-comparison-grid">
+${inner}
+</div>`;
+        }
+
+        function buildYaml(cardData, meta) {
+            const blocks = cardData.map((card, idx) => {
+                const lines = [];
+                const title = card.title || card.label || `Card ${idx + 1}`;
+                lines.push(`- title: "${yamlEscape(title)}"`);
+                if (meta.date) lines.push(`  date: ${meta.date}`);
+                lines.push(`  cloudinary_id: "${yamlEscape(card.cloudinaryId.trim())}"`);
+                if (card.description) lines.push(`  description: "${yamlEscape(card.description)}"`);
+                if (card.categories) {
+                    const cats = card.categories.split(',').map(s => s.trim()).filter(Boolean);
+                    lines.push(`  categories: [${cats.map(c => `"${yamlEscape(c)}"`).join(', ')}]`);
+                }
+                if (meta.articleUrl) lines.push(`  article_url: "${yamlEscape(meta.articleUrl)}"`);
+                if (meta.makingUrl) lines.push(`  making_article_url: "${yamlEscape(meta.makingUrl)}"`);
+                if (meta.comparisonGroup) lines.push(`  comparison_group: "${yamlEscape(meta.comparisonGroup)}"`);
+                const compLabel = card.comparisonLabel || card.label;
+                if (compLabel) lines.push(`  comparison_label: "${yamlEscape(compLabel)}"`);
+                if (card.comparisonOrder) lines.push(`  comparison_order: ${card.comparisonOrder}`);
+                return lines.join('\n');
+            });
+            return blocks.join('\n');
+        }
+
+        function copyText(id) {
+            const text = document.getElementById(id).value;
+            navigator.clipboard.writeText(text).then(() => alert('コピーしました')).catch(() => alert('コピーに失敗しました'));
+        }
+
+        function escapeHtml(str) {
+            const map = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"};
+            return (str || '').replace(/[&<>"']/g, ch => map[ch]);
+        }
+
+        function yamlEscape(str) {
+            return (str || '').replace(/"/g, '\\"');
+        }
+
+        function extractCloudinaryId(url) {
+            if (!url) return '';
+            const regex = /\/image\/upload\/(?:[^/]*\/)*([^?/\s]+)(?:\?.*)?$/;
+            const match = url.match(regex);
+            return match ? match[1] : '';
+        }
+
+        function analyzeArticle() {
+            const raw = document.getElementById('articleInput').value;
+            if (!raw.trim()) {
+                alert('記事本文を貼り付けてください');
+                return;
+            }
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(raw, 'text/html');
+            const nodes = Array.from(doc.querySelectorAll('.diary-card, .comparison-item'));
+
+            if (!nodes.length) {
+                alert('カード要素が見つかりませんでした (.diary-card / .comparison-item)');
+                return;
+            }
+
+            const parsed = nodes.map((node, idx) => {
+                const anchor = node.querySelector('a');
+                const img = node.querySelector('img');
+                const caption = (anchor && anchor.getAttribute('data-title')) || (img && img.alt) || '';
+                const labelNode = node.querySelector('h4') || node.querySelector('.comparison-label');
+                const label = labelNode ? labelNode.textContent.trim() : caption;
+                const lightbox = anchor ? anchor.getAttribute('data-lightbox') || '' : '';
+                const cld = extractCloudinaryId(anchor ? anchor.href : img ? img.src : '');
+                const noGalleryButton = node.classList.contains('no-gallery-button') || (img && img.classList.contains('no-gallery-button'));
+                return {
+                    title: caption,
+                    label: label,
+                    cloudinaryId: cld,
+                    description: '',
+                    categories: '',
+                    comparisonLabel: label,
+                    comparisonOrder: idx + 1,
+                    lightbox,
+                    noGalleryButton
+                };
+            }).filter(c => c.cloudinaryId);
+
+            if (!parsed.length) {
+                alert('Cloudinary IDを持つカードが見つかりませんでした');
+                return;
+            }
+
+            const firstLb = parsed.find(p => p.lightbox && p.lightbox !== 'diary');
+            if (firstLb) {
+                lightboxPreset.value = 'custom';
+                handleLightboxChange();
+                customLightbox.value = firstLb.lightbox;
+            }
+
+            cards = parsed;
+            renderCards();
+            generateOutputs();
+        }
+
+        function resetCards() {
+            cards = [defaultCard()];
+            renderCards();
+            htmlOutput.value = '';
+            yamlOutput.value = '';
+            htmlBlock.classList.remove('visible');
+            yamlBlock.classList.remove('visible');
+        }
+
+        init();
+    </script>
+</body>
+</html>

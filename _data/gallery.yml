@@ -61,17 +61,19 @@
   article_url: "/diary/2025-10-01/"
 
 - title: "Cry"
-  date: 2026-01-19
+  date: 2026-01-17
   cloudinary_id: "Cry_vvf90d.png"
   description: "夏コミ2025寄稿イラスト"
-  categories:
-    - "イラスト"
-  article_url: ""
+  categories: ["イラスト"]
+  article_url: "/diary/2026-01-17/"
+  comparison_group: "diary/2026-01-17/"
+  comparison_label: "Cry"
 
 - title: "Light"
-  date: 2026-01-19
+  date: 2026-01-17
   cloudinary_id: "Light_ldkae3.png"
   description: "冬コミ2025寄稿イラスト"
-  categories:
-    - "イラスト"
-  article_url: ""
+  categories: ["イラスト"]
+  article_url: "/diary/2026-01-17/"
+  comparison_group: "diary/2026-01-17/"
+  comparison_label: "Light"
