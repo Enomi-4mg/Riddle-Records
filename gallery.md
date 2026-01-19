@@ -22,6 +22,7 @@ title: "Gallery"
     <button class="filter-btn active" data-filter="イラスト">イラスト</button>
     <button class="filter-btn active" data-filter="3DCG">3DCG</button>
     <button class="filter-btn" data-filter="写真">写真</button>
+    <button class="filter-btn" data-filter="四コマ漫画">四コマ漫画</button>
   </div>
 </div>
 
@@ -29,7 +30,7 @@ title: "Gallery"
 <div class="gallery-grid" id="gallery-container">
 {% assign sorted_gallery = site.data.gallery | sort: 'date' | reverse %}
 {% for item in sorted_gallery %}
-  <div class="gallery-item" data-date="{{ item.date }}" data-category="{{ item.category }}">
+  <div class="gallery-item" data-date="{{ item.date }}" data-categories="{{ item.categories | join: ',' }}">
     <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/{{ item.cloudinary_id }}" 
        data-lightbox="gallery" 
        data-title="{{ item.title }} - {{ item.description }}"
@@ -42,7 +43,11 @@ title: "Gallery"
       <h3>{{ item.title }}</h3>
       <p class="date">📅 {{ item.date | date: "%Y年%m月%d日" }}</p>
       <p class="description">{{ item.description }}</p>
-      <span class="category category-{{ item.category }}">{{ item.category }}</span>
+      <div class="category-list">
+        {% for category in item.categories %}
+          <span class="category category-{{ category }}">{{ category }}</span>
+        {% endfor %}
+      </div>
       
       {% if item.article_url and item.article_url != "" %}
         <a href="{{ item.article_url | relative_url }}" class="article-link-btn">

@@ -1,0 +1,212 @@
+/* Tools共通スタイル */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 900px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #f5f5f5;
+}
+
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.info {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+/* フォーム要素 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+textarea {
+    min-height: 100px;
+    font-family: monospace;
+    resize: vertical;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    margin-right: 8px;
+}
+
+/* ボタン */
+button {
+    background: #007acc;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+button:hover:not(:disabled) {
+    background: #005a9e;
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.copy-btn {
+    background: #51cf66;
+}
+
+.copy-btn:hover {
+    background: #40c057;
+}
+
+/* 出力エリア */
+.output {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: none;
+}
+
+.output.visible {
+    display: block;
+}
+
+.output h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.output-text {
+    background: white;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* 例・ヒント */
+.example {
+    background: #f0f7ff;
+    padding: 15px;
+    border-left: 4px solid #007acc;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.example h4 {
+    margin-top: 0;
+    color: #007acc;
+}
+
+.example code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: monospace;
+}
+
+.example ol,
+.example ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+/* エラーメッセージ */
+.error-message {
+    background: #fff5f5;
+    border: 1px solid #ff6b6b;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 20px 0;
+    color: #c92a2a;
+}
+
+.error-message strong {
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* ローディング */
+.loading {
+    text-align: center;
+    padding: 30px;
+    display: none;
+}
+
+.loading.visible {
+    display: block;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007acc;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #007acc;
+    font-weight: bold;
+}
+
+/* ユーティリティ */
+.text-center {
+    text-align: center;
+}
+
+.mt-10 { margin-top: 10px; }
+.mt-20 { margin-top: 20px; }
+.mb-10 { margin-bottom: 10px; }
+.mb-20 { margin-bottom: 20px; }

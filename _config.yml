@@ -58,5 +58,5 @@ author_profile:
   youtube_handle: "@enomi2514"
 
 # Local development settings for mobile access
-host: 0.0.0.0
-port: 4000
+# host: 0.0.0.0
+# port: 4000

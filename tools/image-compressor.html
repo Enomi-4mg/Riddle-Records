@@ -1,0 +1,526 @@
+---
+render_with_liquid: false
+---
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>画像圧縮ツール - ImageMagick WASM</title>
+    <link rel="stylesheet" href="tools.css">
+    <link rel="stylesheet" href="image-compressor.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ 画像圧縮ツール</h1>
+        <p class="info">ブラウザ内で画像を圧縮（ImageMagick WASM使用）<br>対応形式: JPEG, PNG, GIF, BMP, TIFF ※WebPは現在未対応</p>
+        
+        <div class="file-input-area" id="dropZone">
+            <p style="margin: 0; font-size: 1.2rem; font-weight: bold;">📁 ここをクリックして画像を選択</p>
+            <p style="margin: 10px 0 0 0; color: #999; font-size: 0.9rem;">
+                またはドラッグ&ドロップ（複数ファイル対応）
+            </p>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple>
+        
+        <!-- 選択されたファイルリスト -->
+        <div id="fileListArea" class="file-list-area" style="display:none;">
+            <h4>選択されたファイル (<span id="fileCount">0</span>件)</h4>
+            <div id="fileList" class="file-list"></div>
+        </div>
+        
+        <div class="format-selector">
+            <button class="format-btn active" data-format="jpeg" onclick="selectFormat('jpeg')">
+                📸 JPEG
+            </button>
+            <button class="format-btn" data-format="png" onclick="selectFormat('png')">
+                🎨 PNG
+            </button>
+            <button class="format-btn disabled" data-format="webp" title="WebPは現在未対応です">
+                🚫 WebP (未対応)
+            </button>
+        </div>
+        
+        <div class="quality-control">
+            <label for="qualitySlider">圧縮品質: <span id="qualityValue">85</span></label>
+            <input type="range" id="qualitySlider" min="10" max="100" value="85" step="5">
+            <div class="quality-presets">
+                <button onclick="setPreset('low')">低 (60)</button>
+                <button onclick="setPreset('medium')">中 (75)</button>
+                <button onclick="setPreset('high')">高 (85)</button>
+                <button onclick="setPreset('maximum')">最高 (95)</button>
+            </div>
+        </div>
+        
+        <!-- JPEG詳細オプション -->
+        <div id="jpegOptions" class="format-options">
+            <h4>JPEG オプション</h4>
+            <label>
+                <input type="checkbox" id="progressive" checked>
+                プログレッシブJPEG（段階的に表示）
+            </label>
+            <label>
+                <input type="checkbox" id="stripMetadata" checked>
+                メタデータを削除（ファイルサイズ削減）
+            </label>
+        </div>
+        
+        <!-- PNG詳細オプション -->
+        <div id="pngOptions" class="format-options" style="display:none;">
+            <h4>PNG オプション</h4>
+            <label>
+                色数制限:
+                <select id="pngColors">
+                    <option value="none">制限なし</option>
+                    <option value="256">256色（8bit）</option>
+                    <option value="128">128色</option>
+                    <option value="64">64色</option>
+                </select>
+            </label>
+            <label>
+                <input type="checkbox" id="pngStrip" checked>
+                メタデータを削除
+            </label>
+        </div>
+        
+        <!-- ファイル名オプション -->
+        <div class="filename-options">
+            <h4>出力ファイル名</h4>
+            <div class="filename-preview">
+                プレビュー: <span id="filenamePreview">example_compressed.jpg</span>
+            </div>
+            <label>
+                <input type="radio" name="filenameMode" value="original" checked onchange="updateFilenamePreview()">
+                元のファイル名を保持（例: photo.jpg → photo.jpg）
+            </label>
+            <label>
+                <input type="radio" name="filenameMode" value="timestamp" onchange="updateFilenamePreview()">
+                タイムスタンプ付与
+                <small>例: photo.jpg → photo_20260119_143052.jpg</small>
+            </label>
+            <label>
+                <input type="radio" name="filenameMode" value="custom" onchange="updateFilenamePreview()">
+                カスタム接頭辞・接尾辞
+            </label>
+            <div id="customFilenameInputs" style="display:none;">
+                <label>
+                    接頭辞: <input type="text" id="filenamePrefix" placeholder="compressed_" oninput="updateFilenamePreview()">
+                </label>
+                <label>
+                    接尾辞: <input type="text" id="filenameSuffix" placeholder="_opt" oninput="updateFilenamePreview()">
+                </label>
+            </div>
+        </div>
+        
+        <button class="compress-btn" id="compressBtn" onclick="startCompression()" disabled>
+            圧縮実行
+        </button>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">画像を処理中...</div>
+            <div class="progress-info">
+                <span id="progressText">0 / 0</span>
+            </div>
+        </div>
+        
+        <div id="outputArea" class="output-area">
+            <h3>📊 圧縮結果</h3>
+            <div class="summary" id="summary">
+                <strong>処理サマリー</strong>
+                <div class="summary-stats">
+                    <div class="summary-stat">
+                        <div class="summary-stat-value" id="successCount">0</div>
+                        <div class="summary-stat-label">成功</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value" id="failCount">0</div>
+                        <div class="summary-stat-label">失敗</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-value" id="totalReduction">0%</div>
+                        <div class="summary-stat-label">平均削減率</div>
+                    </div>
+                </div>
+            </div>
+            <div class="results-list" id="resultsList"></div>
+        </div>
+
+        <footer class="tool-footer" style="margin-top:30px; color:#666; font-size:0.85rem; text-align:center;">
+            ImageMagick WASM (Apache-2.0) を使用しています。GitHub: 
+            <a href="https://github.com/KnicKnic/WASM-ImageMagick" target="_blank" rel="noopener" style="color:#007acc;">KnicKnic/WASM-ImageMagick</a>
+        </footer>
+    </div>
+
+    <script type="module">
+        import * as Magick from 'https://knicknic.github.io/wasm-imagemagick/magickApi.js';
+
+        // グローバル変数
+        let selectedFiles = [];
+        let currentFormat = 'jpeg';
+        let currentQuality = 85;
+        let processingQueue = [];
+        let processedResults = [];
+        const MAX_CONCURRENT = 3;
+
+        // WebAssembly対応チェック
+        if (!window.WebAssembly) {
+            document.body.innerHTML = '<div class="error-message" style="max-width:800px;margin:50px auto;padding:20px;"><strong>エラー</strong>お使いのブラウザはWebAssemblyに対応していません。Chrome、Firefox、Safari、Edgeの最新版をご利用ください。</div>';
+        }
+
+        // ファイル選択
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            handleFiles(Array.from(e.target.files));
+        });
+
+        document.getElementById('dropZone').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+
+        // ドラッグ&ドロップ
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        function handleFiles(files) {
+            selectedFiles = files;
+            document.getElementById('compressBtn').disabled = false;
+            updateFilenamePreview();
+            displayFileList();
+        }
+
+        function displayFileList() {
+            const fileListArea = document.getElementById('fileListArea');
+            const fileList = document.getElementById('fileList');
+            const fileCount = document.getElementById('fileCount');
+            
+            if (selectedFiles.length === 0) {
+                fileListArea.style.display = 'none';
+                return;
+            }
+            
+            fileListArea.style.display = 'block';
+            fileCount.textContent = selectedFiles.length;
+            
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-item-info">
+                        <span class="file-item-icon">🖼️</span>
+                        <span class="file-item-name">${file.name}</span>
+                        <span class="file-item-size">${formatBytes(file.size)}</span>
+                    </div>
+                    <button class="file-item-remove" onclick="removeFile(${index})" title="削除">×</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        window.removeFile = function(index) {
+            selectedFiles = Array.from(selectedFiles).filter((_, i) => i !== index);
+            displayFileList();
+            updateFilenamePreview();
+            
+            if (selectedFiles.length === 0) {
+                document.getElementById('compressBtn').disabled = true;
+            }
+        };
+
+        // 形式選択
+        window.selectFormat = function(format) {
+            if (format === 'webp') return;
+            currentFormat = format;
+            
+            document.querySelectorAll('.format-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-format="${format}"]`).classList.add('active');
+            
+            // オプション表示切り替え
+            document.getElementById('jpegOptions').style.display = format === 'jpeg' ? 'block' : 'none';
+            document.getElementById('pngOptions').style.display = format === 'png' ? 'block' : 'none';
+            
+            updateFilenamePreview();
+        };
+
+        // 品質調整
+        document.getElementById('qualitySlider').addEventListener('input', function(e) {
+            currentQuality = parseInt(e.target.value);
+            document.getElementById('qualityValue').textContent = e.target.value;
+        });
+
+        window.setPreset = function(preset) {
+            const presets = { low: 60, medium: 75, high: 85, maximum: 95 };
+            const quality = presets[preset];
+            document.getElementById('qualitySlider').value = quality;
+            currentQuality = quality;
+            document.getElementById('qualityValue').textContent = quality;
+        };
+
+        // ファイル名プレビュー更新
+        window.updateFilenamePreview = function() {
+            const mode = document.querySelector('input[name="filenameMode"]:checked').value;
+            const customInputs = document.getElementById('customFilenameInputs');
+            customInputs.style.display = mode === 'custom' ? 'block' : 'none';
+            
+            if (selectedFiles.length === 0) {
+                document.getElementById('filenamePreview').textContent = 'example_compressed.jpg';
+                return;
+            }
+            
+            const exampleFile = selectedFiles[0].name;
+            const newName = generateFilename(exampleFile, mode);
+            document.getElementById('filenamePreview').textContent = newName;
+        };
+
+        function generateFilename(originalName, mode = null) {
+            if (!mode) {
+                mode = document.querySelector('input[name="filenameMode"]:checked').value;
+            }
+            
+            const nameWithoutExt = originalName.replace(/\.[^/.]+$/, '');
+            const outputExt = currentFormat === 'jpeg' ? 'jpg' : currentFormat;
+            
+            switch(mode) {
+                case 'original':
+                    return `${nameWithoutExt}.${outputExt}`;
+                    
+                case 'timestamp':
+                    const now = new Date();
+                    const timestamp = now.toISOString()
+                        .replace(/[-:]/g, '')
+                        .replace('T', '_')
+                        .split('.')[0];
+                    return `${nameWithoutExt}_${timestamp}.${outputExt}`;
+                    
+                case 'custom':
+                    const prefix = document.getElementById('filenamePrefix').value || '';
+                    const suffix = document.getElementById('filenameSuffix').value || '';
+                    return `${prefix}${nameWithoutExt}${suffix}.${outputExt}`;
+                    
+                default:
+                    return `${nameWithoutExt}.${outputExt}`;
+            }
+        }
+
+        // 圧縮実行
+        window.startCompression = async function() {
+            if (selectedFiles.length === 0) return;
+            
+            document.getElementById('compressBtn').disabled = true;
+            document.getElementById('loading').classList.add('visible');
+            document.getElementById('outputArea').classList.remove('visible');
+            
+            processedResults = [];
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            
+            // バッチ処理
+            await processFilesInBatches(selectedFiles);
+            
+            // 結果表示
+            displayResults();
+            
+            document.getElementById('loading').classList.remove('visible');
+            document.getElementById('outputArea').classList.add('visible');
+            document.getElementById('compressBtn').disabled = false;
+        };
+
+        async function processFilesInBatches(files) {
+            const total = files.length;
+            let processed = 0;
+            
+            for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
+                const batch = files.slice(i, i + MAX_CONCURRENT);
+                const promises = batch.map(file => compressImage(file));
+                const results = await Promise.allSettled(promises);
+                
+                results.forEach((result, index) => {
+                    processed++;
+                    document.getElementById('progressText').textContent = `${processed} / ${total}`;
+                    
+                    if (result.status === 'fulfilled') {
+                        processedResults.push(result.value);
+                    } else {
+                        processedResults.push({
+                            success: false,
+                            filename: batch[index].name,
+                            error: result.reason.message || '処理に失敗しました'
+                        });
+                    }
+                });
+            }
+        }
+
+        async function compressImage(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const sourceBytes = new Uint8Array(arrayBuffer);
+                
+                const inputExt = file.name.split('.').pop().toLowerCase();
+                const outputExt = currentFormat === 'jpeg' ? 'jpg' : currentFormat;
+                
+                // ImageMagickコマンド構築
+                const command = buildImageMagickCommand(inputExt, outputExt);
+                
+                const result = await Magick.Call(
+                    [{ name: `input.${inputExt}`, content: sourceBytes }],
+                    command
+                );
+                
+                if (result.length === 0) {
+                    throw new Error('画像処理に失敗しました');
+                }
+                
+                const mimeType = currentFormat === 'jpeg' ? 'image/jpeg' : `image/${currentFormat}`;
+                const compressedBlob = new Blob([result[0].buffer], { type: mimeType });
+                
+                const originalSize = file.size;
+                const compressedSize = compressedBlob.size;
+                const reduction = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+                
+                return {
+                    success: true,
+                    filename: file.name,
+                    originalBlob: file,
+                    compressedBlob: compressedBlob,
+                    originalSize: originalSize,
+                    compressedSize: compressedSize,
+                    reduction: reduction,
+                    outputFilename: generateFilename(file.name)
+                };
+                
+            } catch (error) {
+                throw new Error(`${file.name}: ${error.message}`);
+            }
+        }
+
+        function buildImageMagickCommand(inputExt, outputExt) {
+            const command = ['convert', `input.${inputExt}`];
+            
+            // 品質設定
+            command.push('-quality', currentQuality.toString());
+            
+            if (currentFormat === 'jpeg') {
+                // JPEG オプション
+                if (document.getElementById('progressive').checked) {
+                    command.push('-interlace', 'Plane');
+                }
+                if (document.getElementById('stripMetadata').checked) {
+                    command.push('-strip');
+                }
+            } else if (currentFormat === 'png') {
+                // PNG オプション
+                const colors = document.getElementById('pngColors').value;
+                if (colors !== 'none') {
+                    command.push('-colors', colors);
+                }
+                if (document.getElementById('pngStrip').checked) {
+                    command.push('-strip');
+                }
+                command.push('-define', 'png:compression-level=9');
+            }
+            
+            command.push(`output.${outputExt}`);
+            return command;
+        }
+
+        function displayResults() {
+            const resultsList = document.getElementById('resultsList');
+            resultsList.innerHTML = '';
+            
+            let successCount = 0;
+            let failCount = 0;
+            let totalReduction = 0;
+            
+            processedResults.forEach((result, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.className = result.success ? 'result-item' : 'result-item error';
+                
+                if (result.success) {
+                    successCount++;
+                    totalReduction += parseFloat(result.reduction);
+                    
+                    const originalUrl = URL.createObjectURL(result.originalBlob);
+                    const compressedUrl = URL.createObjectURL(result.compressedBlob);
+                    
+                    resultItem.innerHTML = `
+                        <div class="result-header">
+                            <div class="result-filename">${result.filename}</div>
+                            <div class="result-status success">✓ 成功</div>
+                        </div>
+                        <div class="comparison">
+                            <div class="image-card">
+                                <h5>元画像</h5>
+                                <img src="${originalUrl}" alt="元画像">
+                                <div class="image-info">
+                                    <div>サイズ: <strong>${formatBytes(result.originalSize)}</strong></div>
+                                </div>
+                            </div>
+                            <div class="image-card">
+                                <h5>圧縮後</h5>
+                                <img src="${compressedUrl}" alt="圧縮後">
+                                <div class="image-info">
+                                    <div>サイズ: <strong>${formatBytes(result.compressedSize)}</strong></div>
+                                    <div>削減率: <span class="reduction-rate">${result.reduction}%</span></div>
+                                </div>
+                                <button class="download-btn" onclick="downloadImage(${index})">
+                                    💾 ダウンロード
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    failCount++;
+                    resultItem.innerHTML = `
+                        <div class="result-header">
+                            <div class="result-filename">${result.filename}</div>
+                            <div class="result-status error">✗ 失敗</div>
+                        </div>
+                        <div class="error-message">${result.error}</div>
+                    `;
+                }
+                
+                resultsList.appendChild(resultItem);
+            });
+            
+            // サマリー更新
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('failCount').textContent = failCount;
+            document.getElementById('totalReduction').textContent = 
+                successCount > 0 ? (totalReduction / successCount).toFixed(1) + '%' : '0%';
+        }
+
+        window.downloadImage = function(index) {
+            const result = processedResults[index];
+            if (!result.success) return;
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(result.compressedBlob);
+            a.download = result.outputFilename;
+            a.click();
+        };
+
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+    </script>
+</body>
+</html>

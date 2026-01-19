@@ -142,6 +142,12 @@
   margin-bottom: 0.5rem;
 }
 
+.category-list {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
 .category-3DCG {
   background: #007acc;
   color: white;
@@ -154,6 +160,11 @@
 
 .category-写真 {
   background: #51cf66;
+  color: white;
+}
+
+.category-四コマ漫画 {
+  background: #ffa94d;
   color: white;
 }
 

@@ -45,13 +45,19 @@ function initGallery() {
   // =====================================
   const filterButtons = document.querySelectorAll('.filter-btn');
   const galleryItems = document.querySelectorAll('.gallery-item');
+
+  // Parse comma-separated categories into an array
+  const getCategories = (item) => {
+    const raw = item.dataset.categories || '';
+    return raw.split(',').map(c => c.trim()).filter(Boolean);
+  };
   
   // 初期表示：イラストと3DCGのみ表示
   function initializeFilters() {
     const activeFilters = ['イラスト', '3DCG'];
     galleryItems.forEach(item => {
-      const category = item.dataset.category;
-      if (activeFilters.includes(category)) {
+      const categories = getCategories(item);
+      if (activeFilters.some(filter => categories.includes(filter))) {
         item.style.display = '';
       } else {
         item.style.display = 'none';
@@ -91,9 +97,9 @@ function initGallery() {
       
       // フィルタリング処理
       document.querySelectorAll('.gallery-item').forEach(item => {
-        const category = item.dataset.category;
+        const categories = getCategories(item);
         
-        if (activeFilters.length === 0 || activeFilters.includes(category)) {
+        if (activeFilters.length === 0 || activeFilters.some(filter => categories.includes(filter))) {
           item.style.display = '';
         } else {
           item.style.display = 'none';

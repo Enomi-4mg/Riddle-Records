@@ -121,7 +121,7 @@ Riddle-Records/
 - **アップロード**: CloudinaryのMedia Libraryで `riddle-records/jpg/...`・`riddle-records/png/...` に配置。`Public ID`（拡張子なし）を控える。
 - **Markdown参照（記事）**: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg` を推奨（幅800px・品質自動・形式自動）。
 - **サムネイル（ギャラリー）**: `{{ site.cloudinary_url }}/w_400,h_400,c_fill,q_auto,f_auto/v1/<cloudinary_id>.jpg` を推奨（正方形にトリミング）。
-- **データ駆動**: `_data/gallery.yml` に `title/date/cloudinary_id/description/category` を追記すると [gallery.md](gallery.md) から自動表示可能。
+- **データ駆動**: `_data/gallery.yml` に `title/date/cloudinary_id/description/categories[]` を追記すると [gallery.md](gallery.md) から自動表示可能（カテゴリは複数可）。
 - **暫定運用**: プロジェクトサイトの`baseurl`都合で、ローカル画像は `{{ '/path' | relative_url }}` を使うと404を回避できます。
 
 トラブル時は以下を確認してください：
@@ -141,14 +141,16 @@ Riddle-Records/
    - Public ID（拡張子なし）をメモ（例: `my_artwork_abc123`）
 
 2. **`_data/gallery.yml` に新しいエントリを追加**
-   ```yaml
-   - title: "作品タイトル"
-     date: 2026-01-17
-     cloudinary_id: "your_public_id.png"  # 拡張子を含める
-     description: "作品の説明"
-     category: "イラスト"  # または 3DCG / 写真
-     article_url: "/diary/2026-01-17/"  # オプション（関連記事がない場合は ""）
-   ```
+    ```yaml
+    - title: "作品タイトル"
+       date: 2026-01-17
+       cloudinary_id: "your_public_id.png"  # 拡張子を含める
+       description: "作品の説明"
+       categories:
+          - "イラスト"  # 例: イラスト / 3DCG / 写真
+          # - "3DCG"    # 複数カテゴリを付けたい場合は行を追加
+       article_url: "/diary/2026-01-17/"  # オプション（関連記事がない場合は ""）
+    ```
 
 3. **Git にコミット & プッシュ**
    ```bash
@@ -172,6 +174,7 @@ Riddle-Records/
 
 - **インデント**: YAML は半角スペース2個でインデント（タブ禁止）
 - **引用符**: ダブルクォート `"` で統一
+- **カテゴリ複数対応**: `categories` は配列。主要カテゴリは「イラスト」「3DCG」「写真」。（フィルタはこの3種で動作）
 - **相対パス**: `/diary/2025-06-06/` のように先頭に `/` を付ける
 - **空値**: 関連記事がない場合は `article_url: ""` または省略
 
@@ -231,5 +234,43 @@ Riddle-Records/
 補足:
 - 一覧ページは [diary.md](diary.md) のコレクションループで自動更新されます。
 - `_site/` 配下は自動生成物なので手動編集不要です。
+
+---
+
+## 🛠️ 開発ツール
+
+このリポジトリには、画像管理を効率化する便利なツールが含まれています。
+
+### 画像圧縮ツール
+
+[tools/image-compressor.html](tools/image-compressor.html) - ブラウザ内で画像を圧縮できるオフラインツール
+
+**特徴:**
+- 📦 **完全オフライン処理** - ImageMagick WASM を使用し、画像データは外部に送信されません
+- 🎯 **対応形式** - JPEG, PNG, GIF, BMP, TIFF（WebP は現在未対応）
+- ⚡ **バッチ処理** - 複数画像を同時に圧縮（最大3並行）
+- 🎨 **詳細設定** - 品質調整（10-100）、プログレッシブJPEG、メタデータ削除、PNG色数削減
+- 📁 **柔軟なファイル名** - 元ファイル名保持、タイムスタンプ付与、カスタム接頭辞・接尾辞
+
+**使い方:**
+1. ブラウザで `tools/image-compressor.html` を開く
+2. 画像をドラッグ&ドロップまたはファイル選択
+3. 形式（JPEG/PNG）と品質を選択
+4. 「圧縮実行」ボタンをクリック
+5. 圧縮前後の比較を確認し、個別にダウンロード
+
+**推奨設定:**
+- **Web用画像**: JPEG品質75-85、プログレッシブ有効
+- **イラスト・透過PNG**: PNG品質85、色数制限なし
+- **写真アーカイブ**: JPEG品質90-95
+
+### Cloudinary URL変換ツール
+
+[tools/cloudinary-url-converter.html](tools/cloudinary-url-converter.html) - Cloudinary URL から Public ID を抽出
+
+**使い方:**
+1. Cloudinary ダッシュボードから画像URLをコピー
+2. ツールにペーストして「変換」ボタンをクリック
+3. 出力された Public ID を `_data/gallery.yml` に貼り付け
 
 ---
