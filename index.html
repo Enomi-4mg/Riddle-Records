@@ -9,17 +9,17 @@ title: "Riddle Records"
 {% assign latest_song = site.songs | sort: 'date' | reverse | first %}
 {% assign latest_gallery = site.data.gallery | sort: 'date' | reverse | first %}
 
-<section class="home-intro">
+<section class="home-intro diary-entry-animate">
   <h1 class="home-welcome">ようこそ！<br>Riddle Records 公式サイトへ。</h1>
   <p>4mgのポートフォリオサイトです。</p>
   <p>ページ上部のヘッダーメニューからも各ページへ移動できます。</p>
   <p><small>最終更新：2026/01/18</small></p>
 </section>
 
-<section class="home-latest">
+<section class="home-latest diary-entry-animate">
   <h2 class="page_title">コンテンツ</h2>
   <div class="home-grid">
-    <a href="{{ '/about.html' | relative_url }}" class="home-card home-card-link">
+    <a href="{{ '/about.html' | relative_url }}" class="home-card home-card-link diary-entry-animate">
       <div class="home-card-head">
         <span class="home-card-label">About</span>
       </div>
@@ -29,7 +29,7 @@ title: "Riddle Records"
     </a>
 
     {% if latest_diary %}
-    <article class="home-card">
+    <article class="home-card diary-entry-animate">
       <a href="{{ latest_diary.url | relative_url }}" class="home-card-clickable">
         <div class="home-card-head">
           <span class="home-card-label">Diary</span>
@@ -43,7 +43,7 @@ title: "Riddle Records"
     {% endif %}
 
     {% if latest_gallery %}
-    <article class="home-card">
+    <article class="home-card diary-entry-animate">
       <a href="{{ '/gallery.html' | relative_url }}" class="home-card-clickable">
         <div class="home-card-head">
           <span class="home-card-label">Gallery</span>
@@ -63,7 +63,7 @@ title: "Riddle Records"
     {% endif %}
 
     {% if latest_song %}
-    <article class="home-card">
+    <article class="home-card diary-entry-animate">
       <a href="{{ latest_song.url | relative_url }}" class="home-card-clickable">
         <div class="home-card-head">
           <span class="home-card-label">Discography</span>
@@ -81,7 +81,7 @@ title: "Riddle Records"
     </article>
     {% endif %}
 
-    <a href="{{ '/info.html' | relative_url }}" class="home-card home-card-link">
+    <a href="{{ '/info.html' | relative_url }}" class="home-card home-card-link diary-entry-animate">
       <div class="home-card-head">
         <span class="home-card-label">Information</span>
       </div>

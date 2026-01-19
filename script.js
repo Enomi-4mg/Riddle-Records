@@ -224,7 +224,7 @@ function initializeEventListeners() {
               // Fallback to normal navigation on AJAX failure
               window.location.href = url;
             }
-          }, 300); // Wait for descend animation
+          }, 350); // Wait for descend animation
         } else {
           // Direct navigation without animation for same-category moves
           // Mark that we're using internal navigation (no transition needed)
