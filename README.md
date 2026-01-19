@@ -179,7 +179,160 @@ Riddle-Records/
 - **空値**: 関連記事がない場合は `article_url: ""` または省略
 
 ---
+## 🔗 Gallery & Diary 連携機能
 
+このサイトでは、Gallery と Diary が密接に連携しており、作品と記事を横断的に閲覧できます。
+
+### 機能概要
+
+#### 1. Gallery → Diary へのリンク
+
+Gallery ページの各作品カードに、関連する記事へのリンクボタンが表示されます。
+
+- **📖 作品記事**: 作品の制作背景や使用した記事へのリンク（`article_url` で指定）
+- **📝 メイキング**: 制作過程の詳細を解説した記事へのリンク（`making_article_url` で指定）
+
+#### 2. Diary → Gallery への自動リンク
+
+記事内で使用された画像を自動検出し、対応する Gallery 作品へのリンクボタン（📸 ギャラリーで見る）が画像の下に表示されます。
+
+#### 3. 関連作品の自動表示
+
+記事ページの末尾に「関連作品」セクションが自動的に表示されます。
+
+- **📌 おすすめ**: 手動で指定した関連作品（`featured_related` で指定）
+- **📅 同じ日の作品**: 記事と同じ日付の Gallery 作品を自動抽出
+
+### 設定方法
+
+#### Gallery データ（`_data/gallery.yml`）
+
+```yaml
+- title: "作品タイトル"
+  date: 2025-06-06
+  cloudinary_id: "your_image_id.png"
+  description: "作品の説明"
+  categories:
+    - "3DCG"
+  article_url: "/diary/2025-06-06/"                        # 作品記事へのリンク
+  making_article_url: "/diary/2025-06-06/five-apples-making/"  # メイキング記事へのリンク（任意）
+```
+
+#### 記事の FrontMatter（`_diary/*.md`）
+
+```yaml
+---
+layout: post
+title: "5月の報告書"
+date: 2025-06-06
+
+# 手動で指定する関連作品（任意）
+featured_related:
+  - "five_apples_spot_angle2_xmytbf.png"  # 五つのりんご（被写界深度なし）
+  - "mt.fuji_b82xur.jpg"                   # 富士山
+---
+```
+
+**ポイント:**
+- `featured_related` には gallery.yml の `cloudinary_id` を配列で指定
+- コメント（`#`）で作品名を併記すると管理しやすい
+- 指定しない場合は、同じ日付の作品のみが自動表示される
+
+#### メイキング記事の作成
+
+メイキング記事は通常の Diary 記事と同じ方法で作成し、`permalink` で URL を指定します。
+
+**ファイル名**: `_diary/YYYY-MM-DD-[作品名]-making.md`（例: `2025-06-06-five-apples-making.md`）
+
+```yaml
+---
+layout: post
+title: "五つのりんご - メイキング"
+date: 2025-06-06
+permalink: /diary/2025-06-06/five-apples-making/
+---
+
+## 制作過程
+
+...メイキング内容...
+```
+
+**URL構造**: `/diary/2025-06-06/five-apples-making/` のように、日付ディレクトリ内に配置されます。
+
+### 動作の仕組み
+
+1. **自動画像検出**: 記事内の Cloudinary URL を JavaScript で抽出し、`gallery.yml` と照合
+2. **Gallery リンク生成**: 一致する作品が見つかった場合、画像下に「ギャラリーで見る」ボタンを自動挿入
+3. **関連作品表示**: `featured_related` と同日付作品を Liquid テンプレートで自動取得・表示
+
+---
+
+## 🚧 今後の改善案
+
+以下は、将来的に実装を検討している機能です。
+
+### 1. メイキング記事の permalink 自動化
+
+**現状**: メイキング記事の `permalink` を手動で指定する必要がある
+
+**改善案**: `_config.yml` で以下のようなパターンを設定し、ファイル名から自動生成
+
+```yaml
+collections:
+  diary:
+    output: true
+    permalink: /diary/:year-:month-:day/:title/
+```
+
+これにより、`2025-06-06-five-apples-making.md` から `/diary/2025-06-06/five-apples-making/` が自動生成される。
+
+### 2. featured_related の空配列対応
+
+**現状**: `featured_related: []` の場合でも「おすすめ」セクションが表示される可能性
+
+**改善案**: Liquid テンプレート内で `page.featured_related.size > 0` の条件分岐を追加し、空の場合は非表示にする。
+
+### 3. サイドバーへの関連作品表示
+
+**現状**: 関連作品は記事本文内にのみ表示
+
+**改善案**: `_includes/sidebar.html` に関連作品ウィジェットを追加し、記事閲覧中に常に表示。ただし、情報の二重表示を避けるため、デザイン上の検討が必要。
+
+### 4. Gallery でのメイキング画像プレビュー
+
+**現状**: メイキング記事へのリンクボタンのみ
+
+**改善案**: `gallery.yml` に `making_preview_images` フィールドを追加し、Gallery カードにメイキング画像のサムネイルを表示。
+
+```yaml
+making_preview_images:
+  - "five_apples_sketch_abc123"
+  - "five_apples_wip_def456"
+```
+
+### 5. CMS 統一管理
+
+**現状**: 記事と Gallery データを別々に手動管理
+
+**改善案**: Contentful、Forestry、NetlifyCMS などの Headless CMS を導入し、ブラウザの管理画面から記事・Gallery・メイキングを一元管理。記事作成時に Gallery データを自動生成。
+
+### 6. タグ・技法による関連作品検索
+
+**現状**: 日付ベースの関連作品抽出のみ
+
+**改善案**: `gallery.yml` に `tags` や `techniques` フィールドを追加し、同じ技法・テーマの作品をクロスリンク表示。
+
+```yaml
+tags:
+  - "被写界深度"
+  - "Blender"
+  - "静物"
+techniques:
+  - name: "Cycles レンダリング"
+    description: "被写界深度の適用方法"
+```
+
+---
 ## 🔄 GitHub Actions による自動デプロイ
 
 このサイトは `.github/workflows/jekyll.yml` によって自動デプロイされます。
@@ -272,5 +425,107 @@ Riddle-Records/
 1. Cloudinary ダッシュボードから画像URLをコピー
 2. ツールにペーストして「変換」ボタンをクリック
 3. 出力された Public ID を `_data/gallery.yml` に貼り付け
+
+---
+
+## 📸 Diary 画像表示機能
+
+Diary投稿内の画像は**カード形式**で統一表示されます。Galleryと同じデザインで、サムネイル表示とLightbox拡大機能に対応しています。
+
+### 画像の配置方法
+
+#### **単独画像**
+
+```html
+<div class="diary-card-grid">
+  <div class="diary-card">
+    <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/cloudinary_id.jpg" data-lightbox="diary" data-title="画像説明">
+      <img src="{{ site.cloudinary_url }}/w_300,h_300,c_fill,q_auto,f_auto/v1/cloudinary_id.jpg" alt="画像説明">
+    </a>
+    <div class="diary-card-info">
+      <h4>画像タイトル</h4>
+    </div>
+  </div>
+</div>
+```
+
+#### **複数画像グリッド（2-3列）**
+
+```html
+<div class="diary-card-grid">
+  <div class="diary-card">
+    <!-- カード1 -->
+  </div>
+  <div class="diary-card">
+    <!-- カード2 -->
+  </div>
+  <div class="diary-card">
+    <!-- カード3 -->
+  </div>
+</div>
+```
+
+### 主要なパラメータ
+
+| パラメータ | 説明 | 例 |
+|-----------|------|-----|
+| `w_300,h_300,c_fill` | サムネイル: 300×300px（正方形） | 表示用 |
+| `w_1920,q_auto,f_auto` | フル解像度: 1920px幅（Lightbox用） | クリック時に表示 |
+| `data-lightbox="diary"` | Lightboxグループ化（全Diary画像が統一） | クリック拡大機能 |
+| `data-title` | Lightboxでの画像説明 | `alt`と同じ値を推奨 |
+
+### スタイル機能
+
+- **レスポンシブ**: 250px幅の自動グリッド、600px以下で1列表示
+- **ホバーエフェクト**: マウスオーバーで上に浮上、画像が1.05倍に拡大
+- **カード枠**: 白背景+ボーダー+シャドウ（Gallery互換デザイン）
+- **自動Lightbox**: JavaScript自動適用により、Markdownの`![...](...)`は自動的にLightbox対応
+
+### ギャラリーで見るボタンの制御
+
+Diary投稿にGalleryに登録されている画像が含まれる場合、自動的に「📸 ギャラリーで見る」ボタンが表示されます。
+
+#### ボタンを非表示にする
+
+Front Matterに `hide_gallery_buttons: true` を追加：
+
+```yaml
+---
+layout: post
+title: "投稿タイトル"
+date: 2025-10-01
+hide_gallery_buttons: true
+---
+```
+
+#### 特定の画像だけボタンを非表示にする
+
+画像やラッパー要素に `no-gallery-button` クラスを追加：
+
+```html
+<!-- 単独の画像 -->
+<img class="no-gallery-button" src="..." alt="...">
+
+<!-- カード形式 -->
+<div class="diary-card no-gallery-button">
+  <a href="...">
+    <img src="..." alt="...">
+  </a>
+  <div class="diary-card-info">
+    <h4>タイトル</h4>
+  </div>
+</div>
+
+<!-- メイキング比較グリッド全体 -->
+<div class="making-comparison-grid no-gallery-button">
+  <!-- 画像... -->
+</div>
+```
+
+#### ボタンのスタイル
+
+- **色**: サイトメインカラー（ターコイズグリーン）のグラデーション
+- **テキスト**: 「📸 ギャラリーで見る」のみ（作品タイトルは非表示）
+- **配置**: 画像の直後、中央揃え
 
 ---

@@ -33,3 +33,8 @@
         <div class="menu_toggle">☰</div>
     </div>
 </header>
+
+<!-- Gallery データをJavaScriptで利用可能にする -->
+<script>
+  window.galleryData = {{ site.data.gallery | jsonify }};
+</script>

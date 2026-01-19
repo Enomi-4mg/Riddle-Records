@@ -1,6 +1,7 @@
 # ギャラリー自動生成用データ（サンプル）
 # Cloudinary へアップロード後、以下形式で追記してください。
 # cloudinary_id は拡張子なしで記入します（参照時に .jpg / .png を付与します）。
+# making_article_url: メイキング記事へのリンク（任意）
 
 - title: "つまらない授業"
   date: 2025-04-25
@@ -34,29 +35,14 @@
     - "イラスト"
   article_url: ""
 
-- title: "五つのりんご（被写界深度なし）"
-  date: 2025-06-06
-  cloudinary_id: "five_apples_spot_angle2_xmytbf.png"
-  description: "Blenderチュートリアルで作成した静物"
-  categories:
-    - "3DCG"
-  article_url: "/diary/2025-06-06/"
-
-- title: "五つのりんご（被写界深度あり）"
+- title: "五つのりんご"
   date: 2025-06-06
   cloudinary_id: "five_apples_spot_angle2_pint_mgaggo.png"
   description: "被写界深度を適用"
   categories:
     - "3DCG"
   article_url: "/diary/2025-06-06/"
-
-- title: "富士山"
-  date: 2025-06-06
-  cloudinary_id: "mt.fuji_b82xur.jpg"
-  description: "河口湖で撮影"
-  categories:
-    - "写真"
-  article_url: "/diary/2025-06-06/"
+  making_article_url: "/diary/2025-06-06/five-apples-making/"
 
 - title: "四コマ漫画：目撃"
   date: 2025-10-01

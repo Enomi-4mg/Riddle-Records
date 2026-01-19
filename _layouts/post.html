@@ -40,6 +40,51 @@ layout: default
     </section>
     {% endif %}
     
+    {% if page.date %}
+    <!-- 関連作品セクション -->
+    <section class="post-related">
+        <h2>🔗 関連作品</h2>
+        
+        <!-- 手動指定の関連作品 (featured_related) -->
+        {% if page.featured_related and page.featured_related.size > 0 %}
+        <div class="featured-works">
+            <h3>📌 おすすめ</h3>
+            <div class="related-grid">
+                {% for cloudinary_id in page.featured_related %}
+                    {% assign item = site.data.gallery | where: "cloudinary_id", cloudinary_id | first %}
+                    {% if item %}
+                    <a href="{{ site.baseurl }}/gallery#{{ item.cloudinary_id | slugify }}" class="related-item">
+                        <img src="{{ site.cloudinary_url }}/w_200,h_200,c_fill,q_auto,f_auto/v1/{{ item.cloudinary_id }}" 
+                             alt="{{ item.title }}"
+                             loading="lazy">
+                        <p>{{ item.title }}</p>
+                    </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- 自動抽出: 同じ日付の作品 -->
+        {% assign same_date_works = site.data.gallery | where: "date", page.date | sort: "title" %}
+        {% if same_date_works.size > 0 %}
+        <div class="auto-related-works">
+            <h3>📅 同じ日の作品</h3>
+            <div class="related-grid">
+                {% for item in same_date_works %}
+                <a href="{{ site.baseurl }}/gallery#{{ item.cloudinary_id | slugify }}" class="related-item">
+                    <img src="{{ site.cloudinary_url }}/w_200,h_200,c_fill,q_auto,f_auto/v1/{{ item.cloudinary_id }}" 
+                         alt="{{ item.title }}"
+                         loading="lazy">
+                    <p>{{ item.title }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+    
     <nav class="post-nav" style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc;">
         {% if page.previous %}
         <a href="{{ page.previous.url | relative_url }}" style="margin-right: 1rem;">← {{ page.previous.title }}</a>
@@ -72,3 +117,82 @@ layout: default
     border: none;
 }
 </style>
+
+<!-- 画像自動検出スクリプト: 記事内の Cloudinary 画像にギャラリーリンクボタンを追加 -->
+{% unless page.hide_gallery_buttons %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // ギャラリーデータが読み込まれているか確認
+    if (typeof window.galleryData === 'undefined') {
+      console.warn('Gallery data not loaded');
+      return;
+    }
+    
+    // 記事内の全ての img タグを取得
+    const images = document.querySelectorAll('article.post img');
+    
+    images.forEach(img => {
+      // 画像または親要素に no-gallery-button クラスがある場合はスキップ
+      if (img.classList.contains('no-gallery-button') || 
+          img.closest('.no-gallery-button')) {
+        return;
+      }
+      
+      const src = img.src;
+      
+      // Cloudinary URL からファイル名（cloudinary_id）を抽出
+      // 例: https://res.cloudinary.com/.../v1/five_apples_spot_angle2_pint_mgaggo.png
+      const match = src.match(/\/v1\/([^?]+)/);
+      
+      if (match) {
+        const cloudinaryId = match[1];
+        
+        // gallery.yml のデータから該当する作品を検索
+        const galleryItem = window.galleryData.find(
+          item => item.cloudinary_id === cloudinaryId
+        );
+        
+        if (galleryItem) {
+          // ボタンを作成
+          const btn = document.createElement('a');
+          btn.href = '{{ site.baseurl }}/gallery#' + cloudinaryId.replace(/\./g, '-');
+          btn.className = 'gallery-link-btn';
+          btn.innerHTML = '📸 ギャラリーで見る';
+          
+          // 画像の親要素（p タグなど）の直後に挿入
+          const parent = img.parentNode;
+          if (parent) {
+            parent.insertAdjacentElement('afterend', btn);
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endunless %}
+
+<!-- Lightbox自動適用スクリプト: Diary画像にdata-lightbox属性を付与 -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // .post-content 内の全ての img タグを取得
+    const postContent = document.querySelector('.post-content');
+    if (!postContent) return;
+    
+    const images = postContent.querySelectorAll('img');
+    
+    images.forEach(img => {
+      // 既に <a> タグで囲まれていない かつ、data-lightbox属性がない画像のみ処理
+      if (img.parentNode.tagName !== 'A' && !img.hasAttribute('data-lightbox')) {
+        // 画像を <a> タグで囲む
+        const link = document.createElement('a');
+        link.href = img.src;
+        link.setAttribute('data-lightbox', 'diary');
+        link.setAttribute('data-title', img.alt || '');
+        
+        // 画像の親要素に挿入
+        img.parentNode.insertBefore(link, img);
+        link.appendChild(img);
+      }
+    });
+  });
+</script>

@@ -83,6 +83,115 @@ img {
     border-radius: 0.5rem;
     display: block;
 }
+
+/* ===================================
+   Diary画像表示機能
+   ===================================== */
+
+/* 画像カード形式グリッド */
+.diary-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin: 1.5rem auto;
+    max-width: 1000px;
+}
+
+/* カード個別スタイル */
+.diary-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.diary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.diary-card a {
+    display: block;
+    overflow: hidden;
+}
+
+.diary-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 0;
+    transition: transform 0.3s ease;
+}
+
+.diary-card:hover img {
+    transform: scale(1.05);
+}
+
+.diary-card-info {
+    padding: 1rem;
+}
+
+.diary-card-info h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    color: #333;
+    word-break: break-word;
+}
+
+/* モバイル対応: 600px以下で1列表示 */
+@media screen and (max-width: 600px) {
+    .diary-card-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+}
+
+/* メイキング比較グリッド */
+.making-comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin: 2rem auto;
+    max-width: 1200px;
+}
+
+.comparison-item {
+    text-align: center;
+}
+
+.comparison-item a {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.comparison-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.comparison-item img:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.comparison-label {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+@media screen and (max-width: 768px) {
+    .making-comparison-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
 .web_title {
     top: 0%;
     left: auto;
@@ -1168,5 +1277,168 @@ img {
 @media screen and (max-width: 600px) {
     .home-intro {
         margin-left: 0;
+    }
+}
+
+/* =====================================
+   Gallery & Diary 連携機能
+   ===================================== */
+
+/* ギャラリーで見るボタン（記事内の画像下に表示） */
+.gallery-link-btn {
+    display: block;
+    width: fit-content;
+    margin: 0.8rem auto 1.5rem;
+    padding: 0.6rem 1.2rem;
+    background: linear-gradient(135deg, #2adca3 0%, #1db88a 100%);
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(42, 220, 163, 0.3);
+    transition: all 0.3s ease;
+}
+
+.gallery-link-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(42, 220, 163, 0.5);
+    background: linear-gradient(135deg, #1db88a 0%, #179a74 100%);
+}
+
+/* Gallery ページ: 横並びボタン */
+.article-links-horizontal {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.article-links-horizontal .article-link-btn {
+    display: inline-block;
+    width: auto;
+    text-align: center;
+    padding: 0.5rem 0.8rem;
+    background: #007acc;
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: background 0.3s ease;
+}
+
+.article-links-horizontal .article-link-btn:hover {
+    background: #005a9e;
+}
+
+.article-links-horizontal .article-link-btn.making-link {
+    background: #28a745;
+}
+
+.article-links-horizontal .article-link-btn.making-link:hover {
+    background: #218838;
+}
+
+/* 関連作品セクション */
+.post-related {
+    margin: 3rem 0 2rem;
+    padding: 2rem;
+    background: #f9f9f9;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.post-related h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+.post-related h3 {
+    margin: 1.5rem 0 1rem;
+    color: #555;
+    font-size: 1.3rem;
+}
+
+.featured-works,
+.auto-related-works {
+    margin-bottom: 2rem;
+}
+
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.related-item {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.related-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.related-item img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+}
+
+.related-item p {
+    padding: 0.8rem;
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: center;
+    color: #333;
+}
+
+/* レスポンシブ対応 */
+@media screen and (max-width: 768px) {
+    .related-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+    
+    .post-related {
+        padding: 1.5rem;
+    }
+    
+    .post-related h2 {
+        font-size: 1.5rem;
+    }
+    
+    .post-related h3 {
+        font-size: 1.1rem;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .related-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .article-links-horizontal {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+    
+    .article-links-horizontal .article-link-btn {
+        width: auto;
+        flex-shrink: 0;
     }
 }

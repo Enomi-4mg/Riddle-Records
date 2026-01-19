@@ -49,10 +49,19 @@ title: "Gallery"
         {% endfor %}
       </div>
       
-      {% if item.article_url and item.article_url != "" %}
-        <a href="{{ item.article_url | relative_url }}" class="article-link-btn">
-          📖 元記事リンク
-        </a>
+      {% if item.article_url and item.article_url != "" or item.making_article_url and item.making_article_url != "" %}
+      <div class="article-links-horizontal">
+        {% if item.article_url and item.article_url != "" %}
+          <a href="{{ item.article_url | relative_url }}" class="article-link-btn">
+            📖 作品記事
+          </a>
+        {% endif %}
+        {% if item.making_article_url and item.making_article_url != "" %}
+          <a href="{{ item.making_article_url | relative_url }}" class="article-link-btn making-link">
+            📝 メイキング
+          </a>
+        {% endif %}
+      </div>
       {% endif %}
     </div>
   </div>
