@@ -1587,3 +1587,41 @@ main.container ul ul li::marker {
         flex-shrink: 0;
     }
 }
+
+/* Journal一覧のモバイル最適化 */
+@media screen and (max-width: 600px) {
+    .journal-entry-animate {
+        display: flex !important;
+        gap: 0.75rem !important;
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+    
+    .journal-entry-animate img {
+        width: 100px !important;
+        height: 100px !important;
+        object-fit: cover !important;
+        flex-shrink: 0 !important;
+    }
+    
+    .journal-entry-animate h3 {
+        font-size: 1rem !important;
+    }
+    
+    .journal-entry-animate div[style*="color: #666"] {
+        font-size: 0.9rem !important;
+    }
+    
+    .journal-entry-animate p {
+        font-size: 0.95rem !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 3 !important;
+        -webkit-box-orient: vertical !important;
+        line-clamp: 3 !important;
+        overflow: hidden !important;
+    }
+    
+    .journal-entry-animate a[style] {
+        flex-shrink: 0 !important;
+    }
+}
