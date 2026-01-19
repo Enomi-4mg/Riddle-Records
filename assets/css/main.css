@@ -1212,11 +1212,32 @@ img {
     font-weight: 700;
     font-size: 0.95rem;
     text-decoration: none;
+    position: relative;
+    display: inline-block;
+    transition: color 0.2s ease;
     align-self: flex-start;
 }
 
 .home-card-cta:hover {
-    text-decoration: underline;
+    color: #179a74;
+}
+
+.home-card-cta::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.15em;
+    width: 100%;
+    height: 2px;
+    background-color: #1bb48e;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+}
+
+.home-card-cta:hover::after {
+    transform: scaleX(1);
+    background-color: #179a74;
 }
 
 @media screen and (max-width: 768px) {
@@ -1235,6 +1256,136 @@ img {
     .home-intro {
         margin-left: 0;
     }
+}
+
+/* Markdown content: links and lists */
+.post p a,
+.post li a,
+.post h1 a,
+.post h2 a,
+.post h3 a,
+.post h4 a,
+.post blockquote a,
+main.container p a,
+main.container li a,
+main.container h1 a,
+main.container h2 a,
+main.container h3 a,
+main.container h4 a,
+main.container blockquote a {
+    color: #1bb48e;
+    text-decoration: none;
+    position: relative;
+    display: inline-block;
+    transition: color 0.2s ease;
+}
+
+.post p a:hover,
+.post li a:hover,
+.post h1 a:hover,
+.post h2 a:hover,
+.post h3 a:hover,
+.post h4 a:hover,
+.post blockquote a:hover,
+main.container p a:hover,
+main.container li a:hover,
+main.container h1 a:hover,
+main.container h2 a:hover,
+main.container h3 a:hover,
+main.container h4 a:hover,
+main.container blockquote a:hover {
+    color: #179a74;
+}
+
+.post p a::after,
+.post li a::after,
+.post h1 a::after,
+.post h2 a::after,
+.post h3 a::after,
+.post h4 a::after,
+.post blockquote a::after,
+main.container p a::after,
+main.container li a::after,
+main.container h1 a::after,
+main.container h2 a::after,
+main.container h3 a::after,
+main.container h4 a::after,
+main.container blockquote a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -0.15em;
+    width: 100%;
+    height: 2px;
+    background-color: #1bb48e;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+}
+
+.post p a:hover::after,
+.post li a:hover::after,
+.post h1 a:hover::after,
+.post h2 a:hover::after,
+.post h3 a:hover::after,
+.post h4 a:hover::after,
+.post blockquote a:hover::after,
+main.container p a:hover::after,
+main.container li a:hover::after,
+main.container h1 a:hover::after,
+main.container h2 a:hover::after,
+main.container h3 a:hover::after,
+main.container h4 a:hover::after,
+main.container blockquote a:hover::after {
+    transform: scaleX(1);
+    background-color: #179a74;
+}
+
+.post ul,
+main.container ul {
+    list-style-type: disc;
+    list-style-position: outside;
+    padding-left: 1.5em;
+    margin: 1rem 0;
+}
+
+.post ol,
+main.container ol {
+    list-style-type: decimal;
+    list-style-position: outside;
+    padding-left: 1.5em;
+    margin: 1rem 0;
+}
+
+.post li,
+main.container li {
+    color: #0a1510;
+    margin: 0.5rem 0;
+}
+
+.post ul li::marker,
+main.container ul li::marker {
+    color: #1bb48e;
+    font-size: 1.1em;
+}
+
+.post ol li::marker,
+main.container ol li::marker {
+    color: #1db88a;
+    font-weight: 700;
+}
+
+.post ul ul,
+.post ol ul,
+main.container ul ul,
+main.container ol ul {
+    list-style-type: circle;
+    margin-top: 0.25rem;
+}
+
+.post ul ul li::marker,
+main.container ul ul li::marker {
+    color: #2adca3;
 }
 
 /* =====================================
