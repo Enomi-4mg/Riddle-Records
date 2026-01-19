@@ -5,6 +5,8 @@ title: "技術基盤"
 
 <h1 class="web_title">{{ page.title }}</h1>
 
+<section class="diary-entry-animate">
+
 ## 基盤技術：Jekyll
 
 このサイトは **Jekyll** という静的サイトジェネレーターで構築されています。Jekyll は Markdown や HTML ファイルをテンプレートエンジン（Liquid）で処理し、純粋な HTML 出力として変換します。
@@ -14,6 +16,10 @@ Markdown で記述した日記や曲情報は、Jekyll のコレクション機�
 Liquid テンプレート言語を使用することで、ページやコンポーネント間でコンテンツを動的に挿入できます。ヘッダー・フッター・サイドバーといった共通要素は `_includes` ディレクトリで一元管理し、DRY（Do not Repeat Yourself）原則に従って効率的に保守しています。
 
 GitHub Pages との統合により、リポジトリへの push と同時に Jekyll ビルドと自動デプロイが実行されます。これにより、データベースサーバーの維持管理やデプロイ手順が最小化されます。
+
+</section>
+
+<section class="diary-entry-animate">
 
 ## マークアップ言語
 
@@ -26,6 +32,10 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 ### YAML での設定管理
 
 サイト全体の設定は `_config.yml` で一元管理されています。サイトのタイトル、URL、プラグイン、ビルド対象のディレクトリなど、重要な設定が YAML 形式で宣言されており、変更時は設定ファイルの更新のみで対応できます。
+
+</section>
+
+<section class="diary-entry-animate">
 
 ## スタイリング：CSS3
 
@@ -45,6 +55,10 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 
 このアプローチにより、あらゆるデバイスで最適な表示を実現しています。
 
+</section>
+
+<section class="diary-entry-animate">
+
 ## インタラクティブ機能：JavaScript
 
 ### ES6+ と非同期処理
@@ -58,6 +72,10 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 ### アバター自動読み込み
 
 サイト作者の SNS プロフィール（X・YouTube）から自動的にアバター情報を取得する機能を実装しています。Unavatar API を利用し、複数の非同期リクエストを Promise で処理し、ページの読み込み完了後に段階的にコンテンツを表示します。
+
+</section>
+
+<section class="diary-entry-animate">
 
 ## 外部ライブラリ・サービス
 
@@ -76,6 +94,10 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 ### Cloudinary
 
 画像の最適化・変換サービスとして Cloudinary を活用しています。複数の解像度・フォーマットに対応した画像配信により、ネットワーク帯域幅の効率化と読み込み速度の向上を実現しています。
+
+</section>
+
+<section class="diary-entry-animate">
 
 ## パフォーマンス・デプロイ
 
@@ -97,3 +119,5 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 ---
 
 このサイトは、静的生成の効率性とモダンなフロントエンド技術を組み合わせた実装例です。[GitHub リポジトリ](https://github.com/enomi-4mg/Riddle-Records) で全ソースコードを公開しています。
+
+</section>

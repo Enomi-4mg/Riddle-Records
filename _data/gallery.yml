@@ -10,6 +10,7 @@
   categories:
     - "イラスト"
   article_url: ""
+  thumbnail: true
 
 - title: "友達"
   date: 2025-04-25
@@ -18,6 +19,7 @@
   categories:
     - "イラスト"
   article_url: ""
+  thumbnail: true
 
 - title: "迎えに来たよ"
   date: 2025-04-25
@@ -26,6 +28,7 @@
   categories:
     - "イラスト"
   article_url: ""
+  thumbnail: true
 
 - title: "ボート"
   date: 2025-04-25
@@ -33,6 +36,7 @@
   description: "ボートのイラスト"
   categories:
     - "イラスト"
+  thumbnail: true
   article_url: ""
 
 - title: "五つのりんご"
@@ -42,6 +46,7 @@
   categories:
     - "3DCG"
   article_url: "/diary/2025-06-06/"
+  thumbnail: true
   making_article_url: "/diary/2025-06-06/five-apples-making/"
 
 - title: "四コマ漫画：目撃"
@@ -50,6 +55,7 @@
   description: "お絵描き練習"
   categories:
     - "四コマ漫画"
+  thumbnail: true
   article_url: "/diary/2025-10-01/"
 
 - title: "四コマ漫画：宿題"
@@ -58,6 +64,7 @@
   description: "お絵描き練習"
   categories:
     - "四コマ漫画"
+  thumbnail: true
   article_url: "/diary/2025-10-01/"
 
 - title: "Cry"
@@ -66,6 +73,7 @@
   description: "夏コミ2025寄稿イラスト"
   categories: ["イラスト"]
   article_url: "/diary/2026-01-17/"
+  thumbnail: false
   comparison_group: "diary/2026-01-17/"
   comparison_label: "Cry"
 
@@ -75,5 +83,6 @@
   description: "冬コミ2025寄稿イラスト"
   categories: ["イラスト"]
   article_url: "/diary/2026-01-17/"
+  thumbnail: true
   comparison_group: "diary/2026-01-17/"
   comparison_label: "Light"

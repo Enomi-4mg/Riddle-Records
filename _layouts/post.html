@@ -2,6 +2,83 @@
 layout: default
 ---
 
+<style>
+  /* Content fade-in animation */
+  @keyframes contentFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .post h1,
+  .post h2,
+  .post h3,
+  .post h4,
+  .post h5,
+  .post h6,
+  .post p,
+  .post ul,
+  .post ol,
+  .post blockquote,
+  .post pre,
+  .post table,
+  .post-info,
+  .post-lyrics,
+  .post-related {
+    animation: contentFadeIn 0.6s ease-out forwards;
+    opacity: 0;
+  }
+  
+  /* Staggered animation delays */
+  .post h1 { animation-delay: 0.1s; }
+  .post-date { animation-delay: 0.15s; }
+  
+  .post > h2:nth-of-type(1) { animation-delay: 0.2s; }
+  .post > h2:nth-of-type(2) { animation-delay: 0.4s; }
+  .post > h2:nth-of-type(3) { animation-delay: 0.6s; }
+  .post > h2:nth-of-type(4) { animation-delay: 0.8s; }
+  
+  .post > h3:nth-of-type(1) { animation-delay: 0.25s; }
+  .post > h3:nth-of-type(2) { animation-delay: 0.45s; }
+  .post > h3:nth-of-type(3) { animation-delay: 0.65s; }
+  
+  .post > p:nth-of-type(1) { animation-delay: 0.3s; }
+  .post > p:nth-of-type(2) { animation-delay: 0.35s; }
+  .post > p:nth-of-type(3) { animation-delay: 0.4s; }
+  .post > p:nth-of-type(4) { animation-delay: 0.45s; }
+  .post > p:nth-of-type(5) { animation-delay: 0.5s; }
+  
+  .post > ul,
+  .post > ol { animation-delay: 0.35s; }
+  .post > blockquote { animation-delay: 0.4s; }
+  .post > pre { animation-delay: 0.45s; }
+  
+  .post-date { 
+    display: inline-block;
+    opacity: 0;
+  }
+  
+  .post-info { animation-delay: 1.0s; }
+  .post-lyrics { animation-delay: 1.1s; }
+  .post-related { animation-delay: 1.2s; }
+  
+  /* Lyrics content animation */
+  .post-lyrics pre {
+    opacity: 0;
+    animation: none; /* Don't animate on page load */
+  }
+  
+  .post-lyrics details[open] pre {
+    animation: contentFadeIn 0.5s ease-out forwards;
+    opacity: 0;
+  }
+</style>
+
 <article class="post">
     <h1 class="page_title">{{ page.title }}</h1>
     
@@ -33,7 +110,7 @@ layout: default
     
     {% if page.lyrics %}
     <section class="post-lyrics">
-        <details>
+        <details id="lyrics-details">
             <summary>歌詞</summary>
             <pre>{{ page.lyrics }}</pre>
         </details>
@@ -264,5 +341,22 @@ layout: default
         link.appendChild(img);
       }
     });
+    
+    // Lyrics details animation reset
+    const lyricsDetails = document.getElementById('lyrics-details');
+    if (lyricsDetails) {
+      lyricsDetails.addEventListener('toggle', function() {
+        if (this.open) {
+          const pre = this.querySelector('pre');
+          if (pre) {
+            // Force animation restart
+            pre.style.animation = 'none';
+            // Trigger reflow to restart animation
+            void pre.offsetWidth;
+            pre.style.animation = 'contentFadeIn 0.5s ease-out forwards';
+          }
+        }
+      });
+    }
   });
 </script>

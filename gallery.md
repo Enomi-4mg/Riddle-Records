@@ -5,13 +5,13 @@ title: "Gallery"
 
 <h1 class="web_title">{{ page.title }}</h1>
 
-<div class="gallery-intro">
+<div class="gallery-intro diary-entry-animate">
   <p>作品ギャラリーです。Blenderで作成した3DCG、イラスト、写真などを掲載しています。</p>
   <p>現在{{ site.data.gallery | size }}点の作品があります。</p>
 </div>
 
 <!-- コントロールパネル -->
-<div class="gallery-controls">
+<div class="gallery-controls diary-entry-animate">
   <div class="sort-controls">
     <button id="sort-newest" class="control-btn active">新しい順</button>
     <button id="sort-oldest" class="control-btn">古い順</button>
@@ -30,7 +30,7 @@ title: "Gallery"
 <div class="gallery-grid" id="gallery-container">
 {% assign sorted_gallery = site.data.gallery | sort: 'date' | reverse %}
 {% for item in sorted_gallery %}
-  <div class="gallery-item" data-date="{{ item.date }}" data-categories="{{ item.categories | join: ',' }}">
+  <div class="gallery-item diary-entry-animate" data-date="{{ item.date }}" data-categories="{{ item.categories | join: ',' }}">
     <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/{{ item.cloudinary_id }}" 
        data-lightbox="gallery" 
        data-title="{{ item.title }} - {{ item.description }}"

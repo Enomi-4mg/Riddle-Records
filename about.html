@@ -6,7 +6,7 @@ title: "About"
 <h1 class="web_title">{{ page.title }}</h1>
 
 <!-- Profile Card -->
-<section class="profile-card">
+<section class="profile-card diary-entry-animate">
   <div class="profile-avatar-wrap">
     <img class="profile-avatar" alt="プロフィール画像" src="{{ '/favicon/icon.jpg' | relative_url }}">
   </div>
@@ -74,7 +74,7 @@ title: "About"
 </section>
 
 <!-- Site Internal Links (カテゴリ別リンク) -->
-<section class="profile-links">
+<section class="profile-links diary-entry-animate">
   <h3 class="page_title" style="margin-top: 1rem;">リンク集</h3>
   <ul class="link-list">
     <li class="platform-icons" aria-label="プラットフォーム">
@@ -86,7 +86,7 @@ title: "About"
 </section>
 
 <!-- Works preview -->
-<section class="works-preview">
+<section class="works-preview diary-entry-animate">
   <h3 class="page_title" style="margin-top: 1rem;">作品紹介</h3>
   <div class="works-grid">
     {% assign sorted_songs = site.songs | sort: 'date' | reverse %}

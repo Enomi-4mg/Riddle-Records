@@ -1,0 +1,79 @@
+/* ==========================================
+   Site-wide Animation Styles
+   ========================================== */
+
+/* Fade-in + Slide-up animation for content entries */
+@keyframes slideUpFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.diary-entry-animate {
+    opacity: 0; /* Start invisible */
+}
+
+.diary-entry-animate.visible {
+    animation: slideUpFadeIn 0.4s ease-out forwards;
+}
+
+/* Staggered animation delays for sequential appearance */
+.diary-entry-animate:nth-child(1).visible { animation-delay: 0s; }
+.diary-entry-animate:nth-child(2).visible { animation-delay: 0.1s; }
+.diary-entry-animate:nth-child(3).visible { animation-delay: 0.2s; }
+.diary-entry-animate:nth-child(4).visible { animation-delay: 0.3s; }
+.diary-entry-animate:nth-child(5).visible { animation-delay: 0.4s; }
+.diary-entry-animate:nth-child(6).visible { animation-delay: 0.5s; }
+.diary-entry-animate:nth-child(7).visible { animation-delay: 0.6s; }
+.diary-entry-animate:nth-child(8).visible { animation-delay: 0.7s; }
+.diary-entry-animate:nth-child(9).visible { animation-delay: 0.8s; }
+.diary-entry-animate:nth-child(10).visible { animation-delay: 0.9s; }
+.diary-entry-animate:nth-child(n+11).visible { animation-delay: 1s; }
+
+/* Transition Curtain */
+.transition-curtain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(42, 220, 163, 1);
+    z-index: 998;
+    transform: translateY(-100%);
+    pointer-events: none;
+}
+
+.transition-curtain.initial {
+    transform: translateY(0%);
+}
+
+.transition-curtain.descending {
+    animation: curtainDescend 0.5s cubic-bezier(0.76, 0, 0.14, 1) forwards;
+}
+
+.transition-curtain.ascending {
+    animation: curtainAscend 0.6s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+@keyframes curtainDescend {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(0%);
+    }
+}
+
+@keyframes curtainAscend {
+    0% {
+        transform: translateY(0%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}

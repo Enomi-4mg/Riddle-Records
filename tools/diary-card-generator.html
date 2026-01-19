@@ -140,6 +140,7 @@ render_with_liquid: false
             categories: '',
             comparisonLabel: '',
             comparisonOrder: '',
+            thumbnail: true,
             noGalleryButton: true
         });
 
@@ -242,6 +243,12 @@ render_with_liquid: false
                     </div>
                     <div class="form-group">
                         <label>
+                            <input type="checkbox" ${card.thumbnail ? 'checked' : ''} onchange="updateCard(${index}, 'thumbnail', this.checked)">
+                            サムネイル対象 (diary一覧で表示)
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>
                             <input type="checkbox" ${card.noGalleryButton ? 'checked' : ''} onchange="updateCard(${index}, 'noGalleryButton', this.checked)">
                             ギャラリーで見るボタンを非表示 (no-gallery-button)
                         </label>
@@ -340,6 +347,7 @@ ${inner}
                 const compLabel = card.comparisonLabel || card.label;
                 if (compLabel) lines.push(`  comparison_label: "${yamlEscape(compLabel)}"`);
                 if (card.comparisonOrder) lines.push(`  comparison_order: ${card.comparisonOrder}`);
+                if (card.thumbnail) lines.push(`  thumbnail: true`);
                 return lines.join('\n');
             });
             return blocks.join('\n');
@@ -389,6 +397,7 @@ ${inner}
                 const label = labelNode ? labelNode.textContent.trim() : caption;
                 const lightbox = anchor ? anchor.getAttribute('data-lightbox') || '' : '';
                 const cld = extractCloudinaryId(anchor ? anchor.href : img ? img.src : '');
+                const hasThumbnailAttr = node.dataset.thumbnail !== undefined;
                 const noGalleryButton = node.classList.contains('no-gallery-button') || (img && img.classList.contains('no-gallery-button'));
                 return {
                     title: caption,
@@ -399,7 +408,8 @@ ${inner}
                     comparisonLabel: label,
                     comparisonOrder: idx + 1,
                     lightbox,
-                    noGalleryButton
+                    thumbnail: hasThumbnailAttr || true,
+                    noGalleryButton: noGalleryButton
                 };
             }).filter(c => c.cloudinaryId);
 

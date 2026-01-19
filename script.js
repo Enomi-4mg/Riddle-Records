@@ -147,6 +147,8 @@ function initializeEventListeners() {
     initGallery();
   }
   
+  // Note: initScrollAnimations() is called after curtain transition completes
+  
   links.forEach(link => {
     // Skip if already has listener (check by a custom attribute)
     if (link.dataset.listenerAdded) return;
@@ -203,8 +205,17 @@ function initializeEventListeners() {
               // Update browser history
               window.history.pushState({ url }, '', url);
               
-              // Wait a bit more for images to settle
-              await new Promise(resolve => setTimeout(resolve, 200));
+              // Wait a bit for images to load
+              await new Promise(resolve => setTimeout(resolve, 100));
+              
+              // Listen for curtain ascend completion
+              curtain.addEventListener('animationend', function onTransitionComplete(e) {
+                if (e.animationName === 'curtainAscend') {
+                  // Curtain has finished ascending, trigger content animations
+                  initScrollAnimations();
+                  curtain.removeEventListener('animationend', onTransitionComplete);
+                }
+              });
               
               // Start ascending animation
               curtain.classList.remove('descending');
@@ -233,10 +244,22 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Only show transition on true initial page load (not if already hidden)
   if (curtain && !curtain.hasAttribute('data-hidden')) {
+    // Wait for curtain to finish ascending before showing content
+    curtain.addEventListener('animationend', function onAscendComplete(e) {
+      if (e.animationName === 'curtainAscend') {
+        // Curtain has finished ascending, now trigger content animations
+        initScrollAnimations();
+        curtain.removeEventListener('animationend', onAscendComplete);
+      }
+    });
+    
     setTimeout(() => {
       curtain.classList.remove('initial');
       curtain.classList.add('ascending');
     }, 100);
+  } else {
+    // No curtain transition, start animations immediately
+    initScrollAnimations();
   }
   
   // Initialize event listeners
@@ -347,6 +370,50 @@ if (sidebarLinks.length > 0) {
     });
   });
 }
+
+// Intersection Observer: Trigger animation when element enters viewport
+function initScrollAnimations() {
+  const entries = document.querySelectorAll('.diary-entry-animate');
+  
+  if (entries.length === 0) return;
+  
+  // Intersection Observer for scroll-triggered animations
+  const observer = new IntersectionObserver(function(elements) {
+    elements.forEach(function(element) {
+      if (element.isIntersecting) {
+        // Add visible class to trigger animation
+        element.target.classList.add('visible');
+        // Stop observing this element (animation plays once)
+        observer.unobserve(element.target);
+      }
+    });
+  }, {
+    threshold: 0.05,  // Trigger when 5% of element is visible (earlier trigger)
+    rootMargin: '0px 0px -30px 0px'
+  });
+  
+  // Immediately animate elements already in viewport
+  entries.forEach(function(entry, index) {
+    const rect = entry.getBoundingClientRect();
+    const isInViewport = (
+      rect.top >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+    );
+    
+    if (isInViewport) {
+      // Element is already visible, animate immediately
+      entry.classList.add('visible');
+    } else {
+      // Element not in viewport, observe for scroll trigger
+      observer.observe(entry);
+    }
+  });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  initializeEventListeners();
+});
 
 
 

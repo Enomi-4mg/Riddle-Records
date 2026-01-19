@@ -201,6 +201,7 @@ Riddle-Records/
        - "イラスト"  # イラスト / 3DCG / 写真
      article_url: "/diary/2026-01-17/"  # 関連記事（オプション）
      making_article_url: "/diary/2026-01-17/making/"  # メイキング（オプション）
+     thumbnail: true  # Diary一覧にサムネイル表示する場合（オプション）
    ```
 
 3. **コミット & プッシュ**
@@ -215,6 +216,73 @@ Riddle-Records/
 - 引用符: ダブルクォーテーション `"` で統一
 - 相対パス: 先頭に `/` を付ける
 - カテゴリ複数設定の場合は配列で追加
+
+---
+
+### 🖼️ Diary一覧のサムネイル表示
+
+Diary一覧ページ（`diary.md`）では、各日記エントリーにサムネイル画像を表示できます。
+
+#### サムネイル表示の仕組み
+
+**方法1: サムネイルクラスで指定（推奨）**
+
+1. **`_data/gallery.yml` に `thumbnail_class` を追加**
+   ```yaml
+   - title: "サムネイル画像"
+     cloudinary_id: "thumbnail_abc123.png"
+     thumbnail_class: "diary-thumb"  # ← カスタムクラス
+     article_url: "/diary/2025-06-06/"
+     # ギャラリーに表示しない場合は categories を省略可能
+   ```
+
+2. **Diary記事のフロントマターで指定**
+   ```yaml
+   ---
+   layout: post
+   title: "記事タイトル"
+   date: 2025-06-06
+   thumbnail_class: "diary-thumb"  # ← 使用するクラスを指定
+   ---
+   ```
+
+3. **マッチング**: 記事の `thumbnail_class` と一致する画像をサムネイルとして使用
+
+**方法2: デフォルトのサムネイル（フォールバック）**
+
+1. **`_data/gallery.yml` に `thumbnail: true` を追加**
+   ```yaml
+   - title: "作品タイトル"
+     date: 2025-06-06
+     cloudinary_id: "artwork_abc123.png"
+     categories: ["イラスト"]
+     article_url: "/diary/2025-06-06/"
+     thumbnail: true  # ← デフォルトサムネイル
+   ```
+
+2. **マッチング**: `thumbnail_class` が指定されていない場合、`thumbnail: true` の画像を使用
+
+**画像がない場合のフォールバック**
+- 該当する画像がない場合は `/favicon/icon.jpg` をプレースホルダーとして表示
+
+#### ツールで簡単設定
+
+**diary-card-generator.html** を使用すると、GUIでサムネイル対応フラグを設定できます：
+
+1. `tools/diary-card-generator.html` をブラウザで開く
+2. カード情報を入力
+3. 「サムネイル対象 (diary一覧で表示)」にチェック
+4. 生成された YAML をコピーして `_data/gallery.yml` に追加
+
+#### 重要なポイント
+
+- **優先順位**: `thumbnail_class` 指定 > `thumbnail: true` > プレースホルダー
+- **記事URLの一致**: `gallery.yml` の `article_url` と Diary 記事の URL が一致する必要があります
+- **柔軟な使い分け**: 
+  - ギャラリー表示用の画像とサムネイル用の画像を分けられる
+  - サムネイル専用画像（ギャラリーに表示しない）も設定可能
+  - 複数の記事で同じサムネイルクラスを使い回せる
+- **Cloudinary URL**: `_plugins/cloudinary.rb` カスタムフィルタが自動でURLを生成します
 
 ---
 
