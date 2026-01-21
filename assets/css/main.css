@@ -442,7 +442,6 @@ img {
 
 .disco-card-title a:hover {
     color: #1bb48e;
-    text-decoration: underline;
 }
 
 .disco-card-date {
@@ -998,27 +997,7 @@ img {
         padding: 1rem 0;
     }
     body {
-        padding-top: 60px;
-        padding-left: 14px;
-        padding-right: 14px;
-    }
-    p {
-        font-size: 16px;
-    }
-    .page_title {
-        font-size: 1.8rem;
-        padding: 0 15px;
-        margin: 1.2rem auto;
-    }
-    .home-intro {
-        margin: 2rem 0 1.5rem 0;
-        padding: 0 15px;
-    }
-    .home-intro p {
-        font-size: 1.1rem;
-    }
-    .home-welcome {
-        font-size: 1.6rem;
+        padding-top: 85px;
     }
 }
 
