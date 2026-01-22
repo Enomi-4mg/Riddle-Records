@@ -3,21 +3,12 @@ layout: default
 ---
 
 <style>
-  /* Content fade-in animation logic moved to assets/css/animations.css */
-  /* This ensures global consistency for scroll-triggered animations */
-  
+  /* 日付表示のレイアウト */
   .post-date { 
     display: inline-block;
-    /* Opacity handled by global animation script now */
   }
   
-  /* Lyrics content animation (inside details) can stay special if needed, 
-     but initial state should be handled carefully */
-  .post-lyrics pre {
-    /* Let the details/summary interaction handle visibility normally, 
-       or use a specific animation for when it opens */
-  }
-  
+  /* 歌詞を開いたときのアニメーション */
   .post-lyrics details[open] pre {
     animation: contentFadeIn 0.5s ease-out forwards;
   }
