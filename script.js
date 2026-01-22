@@ -373,7 +373,17 @@ if (sidebarLinks.length > 0) {
 
 // Intersection Observer: Trigger animation when element enters viewport
 function initScrollAnimations() {
-  const entries = document.querySelectorAll('.journal-entry-animate');
+  // Select manually animated elements
+  const manualEntries = document.querySelectorAll('.journal-entry-animate');
+  
+  // Select auto-animated elements (article content and main direct children)
+  // Exclude script, style, and already animated elements
+  const autoEntries = document.querySelectorAll(`
+    article.post > *:not(script):not(style):not(.journal-entry-animate),
+    main > *:not(article):not(script):not(style):not(.gallery-grid):not(.related-grid):not(.journal-entry-animate)
+  `);
+
+  const entries = [...manualEntries, ...autoEntries];
   
   if (entries.length === 0) return;
   
@@ -394,6 +404,11 @@ function initScrollAnimations() {
   
   // Immediately animate elements already in viewport
   entries.forEach(function(entry, index) {
+    // Ensure opacity is 0 initially for auto-detected elements (in case CSS didn't catch it)
+    if (!entry.classList.contains('journal-entry-animate') && !entry.classList.contains('visible')) {
+        entry.style.opacity = '0';
+    }
+
     const rect = entry.getBoundingClientRect();
     const isInViewport = (
       rect.top >= 0 &&
@@ -403,6 +418,8 @@ function initScrollAnimations() {
     if (isInViewport) {
       // Element is already visible, animate immediately
       entry.classList.add('visible');
+      // Reset inline opacity so CSS animation takes over
+      entry.style.opacity = '';
     } else {
       // Element not in viewport, observe for scroll trigger
       observer.observe(entry);

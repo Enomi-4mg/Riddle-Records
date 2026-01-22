@@ -5,7 +5,7 @@ title: "技術基盤"
 
 <h1 class="web_title">{{ page.title }}</h1>
 
-<section class="journal-entry-animate">
+<section class="journal-entry-animate" markdown="1">
 
 ## 基盤技術：Jekyll
 
@@ -19,7 +19,7 @@ GitHub Pages との統合により、リポジトリへの push と同時に Jek
 
 </section>
 
-<section class="journal-entry-animate">
+<section class="journal-entry-animate" markdown="1">
 
 ## マークアップ言語
 
@@ -35,7 +35,7 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 
 </section>
 
-<section class="journal-entry-animate">
+<section class="journal-entry-animate" markdown="1">
 
 ## スタイリング：CSS3
 
@@ -57,7 +57,7 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 
 </section>
 
-<section class="journal-entry-animate">
+<section class="journal-entry-animate" markdown="1">
 
 ## インタラクティブ機能：JavaScript
 
@@ -75,7 +75,7 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 
 </section>
 
-<section class="journal-entry-animate">
+<section class="journal-entry-animate" markdown="1">
 
 ## 外部ライブラリ・サービス
 
@@ -97,7 +97,7 @@ Markdown による記述は、プレーンテキストでコンテンツに集�
 
 </section>
 
-<section class="journal-entry-animate">
+<section class="journal-entry-animate" markdown="1">
 
 ## パフォーマンス・デプロイ
 

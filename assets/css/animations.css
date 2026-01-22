@@ -22,18 +22,42 @@
     animation: slideUpFadeIn 0.4s ease-out forwards;
 }
 
+/* 
+   Auto-applied scroll animations
+   Use :where to lower specificity so JS can override/manage classes easily
+*/
+:where(article.post > *, main > *:not(article):not(.gallery-grid):not(.related-grid)) {
+    opacity: 0;
+    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+:where(article.post > *.visible, main > *:not(article):not(.gallery-grid):not(.related-grid).visible) {
+    animation: slideUpFadeIn 0.4s ease-out forwards;
+}
+
 /* Staggered animation delays for sequential appearance */
-.journal-entry-animate:nth-child(1).visible { animation-delay: 0s; }
-.journal-entry-animate:nth-child(2).visible { animation-delay: 0.05s; }
-.journal-entry-animate:nth-child(3).visible { animation-delay: 0.1s; }
-.journal-entry-animate:nth-child(4).visible { animation-delay: 0.15s; }
-.journal-entry-animate:nth-child(5).visible { animation-delay: 0.2s; }
-.journal-entry-animate:nth-child(6).visible { animation-delay: 0.25s; }
-.journal-entry-animate:nth-child(7).visible { animation-delay: 0.3s; }
-.journal-entry-animate:nth-child(8).visible { animation-delay: 0.35s; }
-.journal-entry-animate:nth-child(9).visible { animation-delay: 0.4s; }
-.journal-entry-animate:nth-child(10).visible { animation-delay: 0.45s; }
-.journal-entry-animate:nth-child(n+11).visible { animation-delay: 0.5s; }
+.journal-entry-animate:nth-child(1).visible,
+article.post > *:nth-child(1).visible { animation-delay: 0s; }
+.journal-entry-animate:nth-child(2).visible,
+article.post > *:nth-child(2).visible { animation-delay: 0.05s; }
+.journal-entry-animate:nth-child(3).visible,
+article.post > *:nth-child(3).visible { animation-delay: 0.1s; }
+.journal-entry-animate:nth-child(4).visible,
+article.post > *:nth-child(4).visible { animation-delay: 0.15s; }
+.journal-entry-animate:nth-child(5).visible,
+article.post > *:nth-child(5).visible { animation-delay: 0.2s; }
+.journal-entry-animate:nth-child(6).visible,
+article.post > *:nth-child(6).visible { animation-delay: 0.25s; }
+.journal-entry-animate:nth-child(7).visible,
+article.post > *:nth-child(7).visible { animation-delay: 0.3s; }
+.journal-entry-animate:nth-child(8).visible,
+article.post > *:nth-child(8).visible { animation-delay: 0.35s; }
+.journal-entry-animate:nth-child(9).visible,
+article.post > *:nth-child(9).visible { animation-delay: 0.4s; }
+.journal-entry-animate:nth-child(10).visible,
+article.post > *:nth-child(10).visible { animation-delay: 0.45s; }
+.journal-entry-animate:nth-child(n+11).visible,
+article.post > *:nth-child(n+11).visible { animation-delay: 0.5s; }
 
 /* Transition Curtain */
 .transition-curtain {
