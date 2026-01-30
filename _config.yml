@@ -23,6 +23,7 @@ exclude:
   - vendor/bundle
   - vendor/cache
   - vendor
+  - README_ja.md
 
 url: "https://enomi-4mg.github.io"
 baseurl: "/Riddle-Records"
@@ -62,3 +63,9 @@ author_profile:
 # Local development settings for mobile access
 host: 0.0.0.0
 port: 4000
+
+# WEBrick server headers for SharedArrayBuffer support
+webrick:
+  headers:
+    "Cross-Origin-Opener-Policy": "same-origin"
+    "Cross-Origin-Embedder-Policy": "require-corp"

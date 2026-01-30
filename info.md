@@ -29,6 +29,12 @@ Riddle Records は、日記・音楽記録・ギャラリーを統合したポ�
 ### [Journal Card Generator→]({{ '/tools/journal-card-generator.html' | relative_url }})
 - JournalカードのHTMLとYAMLを生成し、比較ラベルやLightbox切替、記事解析に対応します
 
+### [Journal Markdown Generator→]({{ '/tools/journal-md-generator.html' | relative_url }})
+- Journal記事のMarkdownファイルをテンプレートから生成します
+
+### [動画GIF変換ツール→]({{ '/tools/video-to-gif-converter.html' | relative_url }})
+- 動画ファイルの一部を切り出してGIFアニメーションに変換します
+
 ## ソースコード
 
 このサイトの全ソースコードは [GitHub リポジトリ](https://github.com/enomi-4mg/Riddle-Records) で公開しています。

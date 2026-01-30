@@ -1,181 +1,184 @@
 # Riddle Records
 
-**4mg** のポートフォリオサイト。日記、音楽作品、イラスト、情報をまとめたサイトです。
+This is the portfolio site for **4mg**, featuring a collection of diaries, music, illustrations, and information.
 
-- 🎵 ボカロ楽曲の発表
-- 📔 活動日記・報告書
-- 🎨 イラスト・作品ギャラリー
-- 👤 プロフィール・情報ページ
-
----
-
-# 📍 外部向け情報
-
-## サイト構成
-
-トップページから以下の各ページにアクセスできます：
-
-- **日記（Journal.md）** - 活動日記・報告書
-- **音楽（disco.md）** - 音楽作品一覧
-- **ギャラリー（gallery.html）** - イラスト・作品ギャラリー
-- **プロフィール（about.html）** - 4mg について
-- **情報（info.html）** - その他情報
+- 🎵 Vocaloid Music Releases
+- 📔 Activity Logs & Reports
+- 🎨 Illustration & Artwork Gallery
+- 👤 Profile & Information
 
 ---
 
-## 🎨 ギャラリー機能
+# 📍 Public Information
 
-- **日時ソート**: 「新しい順」「古い順」で並び替え
-- **カテゴリフィルター**: イラスト、3DCG、写真の3種類でフィルター
-- **Lightbox拡大**: 画像クリックでモーダル表示（ESCキーで閉じる）
-- **関連記事リンク**: 作品と関連する記事・メイキング記事へのリンク
+## Site Structure
 
----
+You can access the following pages from the top page:
 
-## 🔗 Gallery & Journal 連携
-
-Gallery と Journal は密接に連携しており、作品と記事を横断的に閲覧できます。
-
-### 主な機能
-
-- **Gallery → Journal**: 各作品カードから関連記事・メイキング記事へリンク
-- **Journal → Gallery**: 記事内で使用された画像に「📸 ギャラリーで見る」ボタンを自動表示
-- **関連作品**: 記事ページ末尾に関連作品セクションを自動表示
+- **Journal (Journal.md)** - Activity logs and reports
+- **Music (disco.md)** - A list of music works
+- **Gallery (gallery.html)** - An illustration and artwork gallery
+- **Profile (about.html)** - About 4mg
+- **Info (info.html)** - Other information
 
 ---
 
+## 🎨 Gallery Features
+
+- **Sort by Date**: Arrange works in "Newest" or "Oldest" order.
+- **Category Filter**: Filter by three categories: Illustration, 3DCG, and Photography.
+- **Lightbox View**: Click on an image to open it in a modal view (close with the ESC key).
+- **Related Article Links**: Links to related articles and making-of posts.
+
 ---
 
-# 🔧 開発者・管理者向けガイド
+## 🔗 Gallery & Journal Integration
 
-## 🚀 セットアップ
+The Gallery and Journal are closely integrated, allowing you to browse works and articles seamlessly.
 
-### 初期セットアップ
+### Key Features
+
+- **Gallery → Journal**: Link from each artwork card to related articles and making-of posts.
+- **Journal → Gallery**: A "📸 View in Gallery" button is automatically displayed for images used in articles.
+- **Related Works**: A section for related works is automatically displayed at the end of article pages.
+
+---
+
+---
+
+# 🔧 For Developers & Administrators
+
+## 🚀 Setup
+
+### Initial Setup
 
 ```bash
-# 1. リポジトリをクローン
+# 1. Clone the repository
 git clone https://github.com/miyas/Riddle-Records.git
 cd Riddle-Records
 
-# 2. Ruby と Bundler がインストール済みか確認
-ruby --version  # Ruby 2.7.0 以上
+# 2. Ensure Ruby and Bundler are installed
+ruby --version  # Ruby 2.7.0 or higher
 bundler --version
 
-# 3. 依存関係をインストール
+# 3. Install dependencies
 bundle install
 
-# 4. ローカルサーバーを起動
+# 4. Start the local server
 bundle exec jekyll serve
 
-# 5. ブラウザで確認
-# http://localhost:4000/Riddle-Records/ を開く
+# 5. Open in your browser
+# Open http://localhost:4000/Riddle-Records/
 ```
 
 ---
 
-## 🛠️ 開発ガイド
+## 🛠️ Development Guide
 
-### ディレクトリ構成
+### Directory Structure
 
 ```bash
 Riddle-Records/
-├─ _layouts/                    ← テンプレート（ページの骨組み）
-│   ├─ default.html              ← すべてのページの基本テンプレート
-│   └─ post.html                 ← 日記・曲ページ用
+├─ _layouts/                    ← Templates (page structure)
+│   ├─ default.html              ← Base template for all pages
+│   └─ post.html                 ← For journal and song pages
 │
-├─ _includes/                   ← 再利用可能なコンポーネント
-│   ├─ header.html               ← ハンバーガーメニューボタン
-│   ├─ sidebar.html              ← ナビゲーションメニュー
-│   └─ footer.html               ← ページ下部
+├─ _includes/                   ← Reusable components
+│   ├─ header.html               ← Hamburger menu button
+│   ├─ sidebar.html              ← Navigation menu
+│   └─ footer.html               ← Page footer
 │
-├─ _journal/                      ← 日記コンテンツ（Markdown）
-├─ _songs/                      ← 音楽作品データ（Markdown）
-├─ _data/gallery.yml            ← ギャラリー作品データ
+├─ _journal/                      ← Journal content (Markdown)
+├─ _songs/                      ← Music work data (Markdown)
+├─ _data/gallery.yml            ← Gallery artwork data
 │
 ├─ assets/
-│   ├─ css/                      ← スタイルシート
-│   └─ js/                       ← JavaScript機能
+│   ├─ css/                      ← Stylesheets
+│   └─ js/                       ← JavaScript features
 │
-├─ jpg/, png/                    ← ローカル画像
-├─ favicon/                      ← ファビコン
-├─ tools/                        ← 画像管理ツール
+├─ jpg/, png/                    ← Local images
+├─ favicon/                      ← Favicon
+├─ tools/                        ← Image management tools
 │
-├─ _site/                       ← ビルド後のサイト（自動生成、Git 除外）
-├─ _config.yml                  ← Jekyll 設定ファイル
-├─ Gemfile                      ← Ruby 依存関係
-├─ .gitignore                   ← Git の除外ファイル設定
-└─ script.js                    ← ハンバーガーメニュー制御用 JavaScript
+├─ _site/                       ← Built site (auto-generated, excluded from Git)
+├─ _config.yml                  ← Jekyll configuration file
+├─ Gemfile                      ← Ruby dependencies
+├─ .gitignore                   ← Git ignore file settings
+└─ script.js                    ← JavaScript for hamburger menu control
 ```
 
-### Jekyll（Liquid）基本構文
+### Basic Jekyll (Liquid) Syntax
 
 ```liquid
-{# コメント #}
+{# Comment #}
 
-{{ variable }}                          ← 変数を表示
-{{ variable | filter }}                 ← フィルターで加工
-{{ site.title }}                        ← _config.yml の値
-{{ page.title }}                        ← 各ページのフロントマター値
+{{ variable }}                          ← Display a variable
+{{ variable | filter }}                 ← Process with a filter
+{{ site.title }}                        ← Value from _config.yml
+{{ page.title }}                        ← Front matter value from a page
 
-{% if condition %}                      ← 条件分岐
+{% if condition %}                      ← Conditional branch
   content
 {% endif %}
 
-{% for item in collection %}            ← ループ
+{% for item in collection %}            ← Loop
   {{ item.name }}
 {% endfor %}
 
-{% include file.html %}                 ← ファイルを埋め込み
+{% include file.html %}                 ← Embed a file
 ```
 
-### よく使うフィルター
+### Commonly Used Filters
 
 ```liquid
-{{ entry.date | date: "%Y年%m月%d日" }}    ← 日付フォーマット
-{{ text | truncatewords: 30 }}             ← 最初の30語まで表示
-{{ html | strip_html }}                    ← HTMLタグを削除
-{{ array | sort: 'field' }}                ← フィールドでソート
-{{ array | reverse }}                      ← 配列を反転
+{{ entry.date | date: "%Y-%m-%d" }}     ← Format date
+{{ text | truncatewords: 30 }}             ← Display first 30 words
+{{ html | strip_html }}                    ← Remove HTML tags
+{{ array | sort: 'field' }}                ← Sort by a field
+{{ array | reverse }}                      ← Reverse an array
 ```
 
-### 重要なポイント
+### Important Notes
 
-- `_` で始くフォルダ（`_layouts` など）は Jekyll の特別なフォルダ
-- `_site/` は自動生成物なので手動編集不要
-- `legacy/` フォルダは GitHub Pages には含まれない（`.gitignore` で除外推奨）
+- Folders starting with `_` (e.g., `_layouts`) are special Jekyll folders.
+- `_site/` is auto-generated, so do not edit it manually.
+- The `legacy/` folder is not included on GitHub Pages (recommended to exclude via `.gitignore`).
 
 ---
 
-## 📚 コンテンツ管理手順
+## 📚 Content Management
 
-### 📝 新しい Journal 記事を追加
+### 📝 Adding a New Journal Entry
 
-1. **記事ファイルを作成**
-   - `_journal/YYYY-MM-DD.md` を新規作成（例: `_journal/2026-01-17.md`）
-   - ファイル名の年月日と `date` を揃える
+1. **Create the entry file**
+   - Name the file according to the following conventions:
+     - **Standard Entry:** `YYYY-MM-DD.md`
+     - **Making-of Entry:** `YYYY-MM-DD-[artwork-name]-making.md`
+   - Example: `_journal/2026-01-17.md` or `_journal/2025-06-06-five-apples-making.md`.
+   - The date in the filename must match the `date` in the front matter.
 
-2. **フロントマターを記述**
+2. **Write the front matter**
    ```yaml
    ---
    layout: post
-   title: "タイトルを書いてね"
+   title: "Your Title Here"
    date: 2026-01-17
    featured_related:
-     - "cloudinary_id1.png"  # ギャラリー作品を手動指定（オプション）
+     - "cloudinary_id1.png"  # Manually specify a gallery work (optional)
    ---
    ```
 
-3. **本文を書く**
-   - Markdown で自由に記述
-   - 画像: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg`
-   - 動画: `<iframe>` をそのまま貼り付け
+3. **Write the content**
+   - Use Markdown for formatting.
+   - Images: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg`
+   - Videos: Paste `<iframe>` embed code directly.
 
-4. **ローカル確認（任意）**
+4. **Preview locally (optional)**
    ```bash
    bundle exec jekyll serve
    ```
 
-5. **コミット & プッシュ**
+5. **Commit & Push**
    ```bash
    git add _journal/2026-01-17.md
    git commit -m "Add Journal 2026-01-17"
@@ -184,241 +187,273 @@ Riddle-Records/
 
 ---
 
-### 🎨 新しい作品をギャラリーに追加
+### ✍️ Using LaTeX in Journal Entries
 
-1. **Cloudinary にアップロード**
-   - [Cloudinary Dashboard](https://cloudinary.com/console) にログイン
-   - 画像をアップロード
-   - Public ID を控える（例: `my_artwork_abc123.png`）
+You can embed mathematical formulas in your journal entries using LaTeX syntax, powered by MathJax.
 
-2. **`_data/gallery.yml` にエントリを追加**
+1.  **Enable MathJax in the Front Matter**
+    - To use LaTeX in an article, add `use_math: true` to the front matter of the markdown file.
+
+    ```yaml
+    ---
+    layout: post
+    title: "My Article with Math"
+    date: 2026-01-30
+    use_math: true
+    ---
+    ```
+
+2.  **Write LaTeX Code**
+    - **Inline Math**: Wrap your formula with a single dollar sign (`$`).
+      - Example: `This is an inline formula: $E = mc^2$.`
+    - **Block Math**: Wrap your formula with double dollar signs (`$$`).
+      - Example:
+        ```
+        This is a block formula:
+        $$
+        \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+        $$
+        ```
+
+This feature is configured in `_layouts/post.html` to load the MathJax script only when `page.use_math` is set to `true`.
+
+---
+
+### 🎨 Adding New Artwork to the Gallery
+
+1. **Upload to Cloudinary**
+   - Log in to the [Cloudinary Dashboard](https://cloudinary.com/console).
+   - Upload the image.
+   - Note the Public ID (e.g., `my_artwork_abc123.png`).
+
+2. **Add an entry to `_data/gallery.yml`**
    ```yaml
-   - title: "作品タイトル"
+   - title: "Artwork Title"
      date: 2026-01-17
-     cloudinary_id: "your_public_id.png"  # 拡張子を含める
-     description: "作品の説明"
+     cloudinary_id: "your_public_id.png"  # Include the extension
+     description: "Description of the artwork"
      categories:
-       - "イラスト"  # イラスト / 3DCG / 写真
-     article_url: "/Journal/2026-01-17/"  # 関連記事（オプション）
-     making_article_url: "/Journal/2026-01-17/making/"  # メイキング（オプション）
-     thumbnail: true  # Journal一覧にサムネイル表示する場合（オプション）
+       - "Illustration"  # Illustration / 3DCG / Photography
+     article_url: "/Journal/2026-01-17/"  # Related article (optional)
+     making_article_url: "/Journal/2026-01-17/making/"  # Making-of article (optional)
+     thumbnail: true  # To display as a thumbnail in the Journal list (optional)
    ```
 
-3. **コミット & プッシュ**
+3. **Commit & Push**
    ```bash
    git add _data/gallery.yml
    git commit -m "Add new artwork to gallery"
    git push origin main
    ```
 
-**YAML 注意点:**
-- インデント: 半角スペース2個（タブ禁止）
-- 引用符: ダブルクォーテーション `"` で統一
-- 相対パス: 先頭に `/` を付ける
-- カテゴリ複数設定の場合は配列で追加
+**YAML Notes:**
+- Indentation: Use 2 spaces (no tabs).
+- Quotes: Use double quotes `"` consistently.
+- Relative Paths: Start with `/`.
+- Multiple Categories: Add them as an array.
 
 ---
 
-### 🖼️ Journal一覧のサムネイル表示
+### 🖼️ Displaying Thumbnails in the Journal List
 
-Journal一覧ページ（`Journal.md`）では、各日記エントリーにサムネイル画像を表示できます。
+On the Journal list page (`Journal.md`), you can display thumbnails for each entry.
 
-#### サムネイル表示の仕組み
+#### How Thumbnails Work
 
-**方法1: サムネイルクラスで指定（推奨）**
+**Method 1: Specify with a Thumbnail Class (Recommended)**
 
-1. **`_data/gallery.yml` に `thumbnail_class` を追加**
+1. **Add `thumbnail_class` to `_data/gallery.yml`**
    ```yaml
-   - title: "サムネイル画像"
+   - title: "Thumbnail Image"
      cloudinary_id: "thumbnail_abc123.png"
-     thumbnail_class: "Journal-thumb"  # ← カスタムクラス
+     thumbnail_class: "Journal-thumb"  # ← Custom class
      article_url: "/Journal/2025-06-06/"
-     # ギャラリーに表示しない場合は categories を省略可能
+     # You can omit categories if it's not meant to be in the gallery
    ```
 
-2. **Journal記事のフロントマターで指定**
+2. **Specify the class in the Journal entry's front matter**
    ```yaml
    ---
    layout: post
-   title: "記事タイトル"
+   title: "Article Title"
    date: 2025-06-06
-   thumbnail_class: "Journal-thumb"  # ← 使用するクラスを指定
+   thumbnail_class: "Journal-thumb"  # ← Specify the class to use
    ---
    ```
 
-3. **マッチング**: 記事の `thumbnail_class` と一致する画像をサムネイルとして使用
+3. **Matching**: The image with the matching `thumbnail_class` will be used as the thumbnail.
 
-**方法2: デフォルトのサムネイル（フォールバック）**
+**Method 2: Default Thumbnail (Fallback)**
 
-1. **`_data/gallery.yml` に `thumbnail: true` を追加**
+1. **Add `thumbnail: true` to `_data/gallery.yml`**
    ```yaml
-   - title: "作品タイトル"
+   - title: "Artwork Title"
      date: 2025-06-06
      cloudinary_id: "artwork_abc123.png"
-     categories: ["イラスト"]
+     categories: ["Illustration"]
      article_url: "/Journal/2025-06-06/"
-     thumbnail: true  # ← デフォルトサムネイル
+     thumbnail: true  # ← Default thumbnail
    ```
 
-2. **マッチング**: `thumbnail_class` が指定されていない場合、`thumbnail: true` の画像を使用
+2. **Matching**: If `thumbnail_class` is not specified, the image with `thumbnail: true` will be used.
 
-**画像がない場合のフォールバック**
-- 該当する画像がない場合は `/favicon/icon.jpg` をプレースホルダーとして表示
+**Image Fallback**
+- If no matching image is found, `/favicon/icon.jpg` will be used as a placeholder.
 
-#### ツールで簡単設定
+#### Easy Setup with a Tool
 
-**Journal-card-generator.html** を使用すると、GUIでサムネイル対応フラグを設定できます：
+You can use **Journal-card-generator.html** to set the thumbnail flag via a GUI:
 
-1. `tools/Journal-card-generator.html` をブラウザで開く
-2. カード情報を入力
-3. 「サムネイル対象 (Journal一覧で表示)」にチェック
-4. 生成された YAML をコピーして `_data/gallery.yml` に追加
+1. Open `tools/Journal-card-generator.html` in a browser.
+2. Fill in the card information.
+3. Check "Target for thumbnail (display in Journal list)".
+4. Copy the generated YAML and add it to `_data/gallery.yml`.
 
-#### 重要なポイント
+#### Key Points
 
-- **優先順位**: `thumbnail_class` 指定 > `thumbnail: true` > プレースホルダー
-- **記事URLの一致**: `gallery.yml` の `article_url` と Journal 記事の URL が一致する必要があります
-- **柔軟な使い分け**: 
-  - ギャラリー表示用の画像とサムネイル用の画像を分けられる
-  - サムネイル専用画像（ギャラリーに表示しない）も設定可能
-  - 複数の記事で同じサムネイルクラスを使い回せる
-- **Cloudinary URL**: `_plugins/cloudinary.rb` カスタムフィルタが自動でURLを生成します
+- **Priority**: `thumbnail_class` > `thumbnail: true` > Placeholder.
+- **URL Matching**: The `article_url` in `gallery.yml` must match the Journal entry's URL.
+- **Flexible Usage**: 
+  - Use different images for the gallery and for thumbnails.
+  - Set up thumbnail-only images (not displayed in the gallery).
+  - Reuse the same thumbnail class for multiple articles.
+- **Cloudinary URL**: The `_plugins/cloudinary.rb` custom filter automatically generates the URL.
 
 ---
 
-### 📖 メイキング記事を作成
+### 📖 Creating a Making-of Article
 
-ファイル名: `_journal/YYYY-MM-DD-[作品名]-making.md`（例: `2025-06-06-five-apples-making.md`）
+Filename: `_journal/YYYY-MM-DD-[artwork-name]-making.md` (e.g., `2025-06-06-five-apples-making.md`)
 
 ```yaml
 ---
 layout: post
-title: "五つのりんご - メイキング"
+title: "Five Apples - Making Of"
 date: 2025-06-06
 permalink: /Journal/2025-06-06/five-apples-making/
 ---
 
-## 制作過程
+## Production Process
 
-...メイキング内容...
+...Making-of content...
 ```
 
 ---
 
-## 🖼️ Cloudinary 画像運用ガイド
+## 🖼️ Cloudinary Image Management Guide
 
-- **設定**: `_config.yml` に `cloudinary_cloud_name` と `cloudinary_url` を定義済み
-- **参照方法**: `{{ site.cloudinary_url }}` を使用
-- **アップロード先**: `riddle-records/jpg/...` または `riddle-records/png/...`
-- **記事用**: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg`（幅800px）
-- **サムネイル**: `{{ site.cloudinary_url }}/w_400,h_400,c_fill,q_auto,f_auto/v1/<cloudinary_id>.jpg`（正方形）
+- **Configuration**: `cloudinary_cloud_name` and `cloudinary_url` are defined in `_config.yml`.
+- **Reference**: Use `{{ site.cloudinary_url }}`.
+- **Upload Destination**: `riddle-records/jpg/...` or `riddle-records/png/...`
+- **For Articles**: `{{ site.cloudinary_url }}/w_800,q_auto,f_auto/v1/<cloudinary_id>.jpg` (800px width)
+- **Thumbnails**: `{{ site.cloudinary_url }}/w_400,h_400,c_fill,q_auto,f_auto/v1/<cloudinary_id>.jpg` (square)
 
-**トラブル時:**
-- 画像が表示されない → `cloudinary_id` が正しいか / 拡張子の確認
-- 404が出る → `relative_url` または Cloudinary の絶対URL に統一
-- iframe警告 → `allow="fullscreen"` で統一（Spotify の警告は仕様）
-
----
-
-## 🔄 GitHub Actions による自動デプロイ
-
-このサイトは `.github/workflows/jekyll.yml` によって自動デプロイされます。
-
-### デプロイの流れ
-
-1. `main` ブランチに `git push`
-2. GitHub Actions が自動的に起動
-3. Jekyll ビルドを実行
-4. GitHub Pages にデプロイ
-
-### デプロイ状況の確認
-
-リポジトリの **Actions** タブでビルド状況を確認できます。
+**Troubleshooting:**
+- Image not displaying → Check if `cloudinary_id` is correct / check the extension.
+- 404 error → Ensure URLs are consistent (use `relative_url` or absolute Cloudinary URL).
+- iframe warning → Use `allow="fullscreen"` consistently (Spotify warning is by design).
 
 ---
 
-## 🛠️ 開発ツール
+## 🔄 Automatic Deployment with GitHub Actions
 
-### 画像圧縮ツール
+This site is automatically deployed via `.github/workflows/jekyll.yml`.
 
-[tools/image-compressor.html](tools/image-compressor.html) - ブラウザ内で画像を圧縮
+### Deployment Flow
 
-**特徴:**
-- 📦 完全オフライン処理（ImageMagick WASM 使用）
-- 🎯 対応形式: JPEG, PNG, GIF, BMP, TIFF
-- ⚡ バッチ処理（最大3並行）
-- 🎨 詳細設定: 品質調整、プログレッシブJPEG、メタデータ削除
+1. `git push` to the `main` branch.
+2. GitHub Actions starts automatically.
+3. A Jekyll build is executed.
+4. The site is deployed to GitHub Pages.
 
-**推奨設定:**
-- **Web用画像**: JPEG品質75-85、プログレッシブ有効
-- **イラスト・透過PNG**: PNG品質85、色数制限なし
-- **写真アーカイブ**: JPEG品質90-95
+### Checking Deployment Status
 
-### Cloudinary URL変換ツール
+You can check the build status in the **Actions** tab of the repository.
 
-[tools/cloudinary-url-converter.html](tools/cloudinary-url-converter.html) - Cloudinary URL から Public ID を抽出
+---
+
+## 🛠️ Development Tools
+
+### Image Compression Tool
+
+[tools/image-compressor.html](tools/image-compressor.html) - Compress images in the browser.
+
+**Features:**
+- 📦 Fully offline processing (uses ImageMagick WASM).
+- 🎯 Supported formats: JPEG, PNG, GIF, BMP, TIFF.
+- ⚡ Batch processing (up to 3 in parallel).
+- 🎨 Advanced settings: Quality adjustment, progressive JPEG, metadata removal.
+
+**Recommended Settings:**
+- **Web Images**: JPEG quality 75-85, progressive enabled.
+- **Illustrations/Transparent PNGs**: PNG quality 85, no color limit.
+- **Photo Archives**: JPEG quality 90-95.
+
+### Cloudinary URL Converter
+
+[tools/cloudinary-url-converter.html](tools/cloudinary-url-converter.html) - Extract the Public ID from a Cloudinary URL.
 
 ### Journal Card Generator
 
-[tools/Journal-card-generator.html](tools/Journal-card-generator.html) - JournalカードHTMLと gallery.yml 用YAMLを生成
+[tools/Journal-card-generator.html](tools/Journal-card-generator.html) - Generate HTML for Journal cards and YAML for `gallery.yml`.
 
 ---
 
-## 📸 Journal 画像表示機能
+## 📸 Journal Image Display Feature
 
-Journal投稿内の画像はカード形式で統一表示されます。
+Images in Journal posts are displayed in a uniform card format.
 
-### 画像の配置方法
+### How to Place Images
 
-#### 単独画像
+#### Single Image
 
 ```html
 <div class="Journal-card-grid">
   <div class="Journal-card">
     <a href="{{ site.cloudinary_url }}/w_1920,q_auto,f_auto/v1/cloudinary_id.jpg" 
-       data-lightbox="Journal" data-title="画像説明">
+       data-lightbox="Journal" data-title="Image description">
       <img src="{{ site.cloudinary_url }}/w_300,h_300,c_fill,q_auto,f_auto/v1/cloudinary_id.jpg" 
-           alt="画像説明">
+           alt="Image description">
     </a>
     <div class="Journal-card-info">
-      <h4>画像タイトル</h4>
+      <h4>Image Title</h4>
     </div>
   </div>
 </div>
 ```
 
-#### 複数画像グリッド
+#### Multiple Image Grid
 
 ```html
 <div class="Journal-card-grid">
-  <div class="Journal-card"><!-- カード1 --></div>
-  <div class="Journal-card"><!-- カード2 --></div>
-  <div class="Journal-card"><!-- カード3 --></div>
+  <div class="Journal-card"><!-- Card 1 --></div>
+  <div class="Journal-card"><!-- Card 2 --></div>
+  <div class="Journal-card"><!-- Card 3 --></div>
 </div>
 ```
 
-### 主要なパラメータ
+### Key Parameters
 
-| パラメータ | 説明 |
+| Parameter | Description |
 |-----------|------|
-| `w_300,h_300,c_fill` | サムネイル: 300×300px（正方形） |
-| `w_1920,q_auto,f_auto` | フル解像度: 1920px幅（Lightbox用） |
-| `data-lightbox="Journal"` | Lightboxグループ化 |
-| `data-title` | Lightboxでの画像説明 |
+| `w_300,h_300,c_fill` | Thumbnail: 300×300px (square) |
+| `w_1920,q_auto,f_auto` | Full resolution: 1920px width (for Lightbox) |
+| `data-lightbox="Journal"` | Groups images in Lightbox |
+| `data-title` | Image description in Lightbox |
 
-### ギャラリーで見るボタンの制御
+### Controlling the "View in Gallery" Button
 
-#### ボタンを非表示にする
+#### Hide the Button
 
-Front Matterに追加：
+Add to the front matter:
 
 ```yaml
 hide_gallery_buttons: true
 ```
 
-#### 特定の画像だけボタンを非表示
+#### Hide the Button for Specific Images
 
-要素に `no-gallery-button` クラスを追加：
+Add the `no-gallery-button` class to the element:
 
 ```html
 <img class="no-gallery-button" src="..." alt="...">
@@ -428,69 +463,69 @@ hide_gallery_buttons: true
 
 ---
 
-## 🔗 Gallery & Journal 連携（詳細）
+## 🔗 Gallery & Journal Integration (Detailed)
 
-### Gallery データ設定（`_data/gallery.yml`）
+### Gallery Data Settings (`_data/gallery.yml`)
 
 ```yaml
-- title: "作品タイトル"
+- title: "Artwork Title"
   date: 2025-06-06
   cloudinary_id: "your_image_id.png"
-  description: "作品の説明"
+  description: "Description of the artwork"
   categories:
     - "3DCG"
   article_url: "/Journal/2025-06-06/"
   making_article_url: "/Journal/2025-06-06/five-apples-making/"
 ```
 
-### 記事の FrontMatter（`_journal/*.md`）
+### Article Front Matter (`_journal/*.md`)
 
 ```yaml
 ---
 layout: post
-title: "5月の報告書"
+title: "May Report"
 date: 2025-06-06
 
 featured_related:
-  - "five_apples_spot_angle2_xmytbf.png"  # 作品1
-  - "mt.fuji_b82xur.jpg"                   # 作品2
+  - "five_apples_spot_angle2_xmytbf.png"  # Artwork 1
+  - "mt.fuji_b82xur.jpg"                   # Artwork 2
 ---
 ```
 
-**ポイント:**
-- `featured_related` には gallery.yml の `cloudinary_id` を配列で指定
-- コメント（`#`）で作品名を併記すると管理しやすい
-- 指定しない場合は、同じ日付の作品のみが自動表示される
+**Notes:**
+- In `featured_related`, specify an array of `cloudinary_id`s from `gallery.yml`.
+- It's helpful to add comments (`#`) with artwork names for easier management.
+- If not specified, only works with the same date will be automatically displayed.
 
-### 関連作品の自動表示
+### Automatic Display of Related Works
 
-記事ページ末尾に以下が自動表示されます：
+The following are automatically displayed at the end of an article page:
 
-- **📌 おすすめ**: 手動で指定した関連作品（`featured_related`）
-- **📅 関連作品**: 同じ日付の Gallery 作品
-- **🎨 記事内の作品**: 記事内で使用された画像
-- **📖 関連記事**: `tags` が一致する記事
+- **📌 Featured**: Manually specified related works (`featured_related`).
+- **📅 Related Works**: Gallery works with the same date.
+- **🎨 Works in this Article**: Images used in the article.
+- **📖 Related Articles**: Articles with matching `tags`.
 
 ---
 
-## 🚧 今後の改善案
+## 🚧 Future Improvements
 
-### 1. メイキング記事の permalink 自動化
-`_config.yml` で自動生成パターンを設定予定
+### 1. Automate Permalinks for Making-of Articles
+Plan to set up an auto-generation pattern in `_config.yml`.
 
-### 2. featured_related の空配列対応
-Liquid テンプレートで条件分岐を追加予定
+### 2. Handle Empty `featured_related` Array
+Plan to add a conditional branch in the Liquid template.
 
-### 3. サイドバーへの関連作品表示
-記事閲覧中に常に表示する機能を検討中
+### 3. Display Related Works in the Sidebar
+Considering a feature to always show them while viewing an article.
 
-### 4. Gallery でのメイキング画像プレビュー
-Gallery カードにメイキング画像を表示予定
+### 4. Preview Making-of Images in the Gallery
+Plan to display making-of images in Gallery cards.
 
-### 5. CMS 統一管理
-Contentful、Forestry など Headless CMS の導入検討中
+### 5. Unified CMS Management
+Considering the introduction of a Headless CMS like Contentful or Forestry.
 
-### 6. タグ・技法による関連作品検索
-同じ技法・テーマの作品をクロスリンク表示予定
+### 6. Search for Related Works by Tags/Techniques
+Plan to cross-link works with the same techniques or themes.
 
 ---

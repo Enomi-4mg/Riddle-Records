@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動画をGIFに変換</title>
+    <link rel="stylesheet" href="tools.css">
+    <style>
+        body {
+            max-width: 800px;
+        }
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        #loading-message, #progress {
+            font-size: 1.2em;
+        }
+        video, img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+        }
+        .slider-container {
+            margin: 20px 0;
+        }
+        .time-display {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">
+        <p id="loading-message">変換エンジンを準備中です...</p>
+        <progress id="progress" value="0" max="100"></progress>
+    </div>
+
+    <h1>動画をGIFに変換</h1>
+    <p>動画ファイル（mp4, movなど）を選択し、切り出す範囲を指定してGIFに変換します。</p>
+
+    <div class="control-group">
+        <label for="video-file">動画ファイル:</label>
+        <input type="file" id="video-file" accept="video/*" disabled>
+    </div>
+
+    <h2>プレビュー</h2>
+    <video id="preview" controls></video>
+
+    <div class="slider-container">
+        <label for="start-slider">開始時間: <span id="start-time" class="time-display">0.00</span>s</label>
+        <input type="range" id="start-slider" min="0" max="100" value="0" step="0.1" disabled>
+    </div>
+    <div class="slider-container">
+        <label for="end-slider">終了時間: <span id="end-time" class="time-display">0.00</span>s</label>
+        <input type="range" id="end-slider" min="0" max="100" value="0" step="0.1" disabled>
+    </div>
+
+    <div class="control-group">
+        <button id="convert-btn" disabled>GIFに変換</button>
+    </div>
+
+    <h2>結果</h2>
+    <div id="result-container" style="display: none;">
+        <img id="result-gif" src="" alt="変換後のGIF">
+        <br>
+        <a id="download-link" href="" download="result.gif">GIFをダウンロード</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+    <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({
+            log: true,
+            progress: ({ ratio }) => {
+                const progress = document.getElementById('progress');
+                if (ratio >= 0 && ratio <= 1) {
+                    progress.value = ratio * 100;
+                    loadingMessage.textContent = `変換処理中... ${Math.round(ratio * 100)}%`;
+                }
+            },
+        });
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingMessage = document.getElementById('loading-message');
+        const videoFileInput = document.getElementById('video-file');
+        const previewVideo = document.getElementById('preview');
+        const startSlider = document.getElementById('start-slider');
+        const endSlider = document.getElementById('end-slider');
+        const startTimeDisplay = document.getElementById('start-time');
+        const endTimeDisplay = document.getElementById('end-time');
+        const convertBtn = document.getElementById('convert-btn');
+        const resultContainer = document.getElementById('result-container');
+        const resultGif = document.getElementById('result-gif');
+        const downloadLink = document.getElementById('download-link');
+        let videoFile = null;
+
+        async function loadFFmpeg() {
+            loadingMessage.textContent = '変換エンジンをロード中...';
+            await ffmpeg.load();
+            loadingOverlay.style.display = 'none';
+            videoFileInput.disabled = false;
+        }
+        
+        loadFFmpeg();
+
+        videoFileInput.addEventListener('change', async (event) => {
+            videoFile = event.target.files[0];
+            if (!videoFile) return;
+
+            const url = URL.createObjectURL(videoFile);
+            previewVideo.src = url;
+            
+            previewVideo.onloadedmetadata = () => {
+                const duration = previewVideo.duration;
+                startSlider.max = duration;
+                endSlider.max = duration;
+                endSlider.value = duration;
+                startTimeDisplay.textContent = '0.00';
+                endTimeDisplay.textContent = duration.toFixed(2);
+                startSlider.disabled = false;
+                endSlider.disabled = false;
+                convertBtn.disabled = false;
+            };
+        });
+
+        function updateSliderValues() {
+            const start = parseFloat(startSlider.value);
+            const end = parseFloat(endSlider.value);
+
+            if (start > end) {
+                // 開始が終了を超えたら、値を入れ替える
+                startSlider.value = end;
+                endSlider.value = start;
+            }
+            startTimeDisplay.textContent = parseFloat(startSlider.value).toFixed(2);
+            endTimeDisplay.textContent = parseFloat(endSlider.value).toFixed(2);
+            previewVideo.currentTime = parseFloat(startSlider.value);
+        }
+
+        startSlider.addEventListener('input', updateSliderValues);
+        endSlider.addEventListener('input', updateSliderValues);
+
+        convertBtn.addEventListener('click', async () => {
+            if (!videoFile) {
+                alert('動画ファイルを選択してください。');
+                return;
+            }
+
+            loadingOverlay.style.display = 'flex';
+            loadingMessage.textContent = '変換準備中...';
+            document.getElementById('progress').value = 0;
+            
+            const startTime = parseFloat(startSlider.value);
+            const duration = parseFloat(endSlider.value) - startTime;
+            const inputFileName = 'input.mov'; // 拡張子は ffmpeg が判断
+            const outputFileName = 'output.gif';
+
+            ffmpeg.FS('writeFile', inputFileName, await fetchFile(videoFile));
+            
+            // ffmpeg -ss [start] -i [input] -t [duration] -vf "fps=15,scale=480:-1:flags=lanczos" [output]
+            await ffmpeg.run(
+                '-ss', startTime.toString(),
+                '-i', inputFileName,
+                '-t', duration.toString(),
+                '-vf', 'fps=15,scale=480:-1:flags=lanczos', // フレームレートと解像度を調整
+                outputFileName
+            );
+
+            const data = ffmpeg.FS('readFile', outputFileName);
+            const gifUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'image/gif' }));
+            
+            resultGif.src = gifUrl;
+            downloadLink.href = gifUrl;
+            resultContainer.style.display = 'block';
+
+            loadingOverlay.style.display = 'none';
+
+            ffmpeg.FS('unlink', inputFileName);
+            ffmpeg.FS('unlink', outputFileName);
+        });
+
+    </script>
+</body>
+</html>

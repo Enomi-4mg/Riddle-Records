@@ -86,3 +86,12 @@
   thumbnail: true
   comparison_group: "diary/2026-01-17/"
   comparison_label: "Light"
+
+- title: "砂の風紋シミュレーション"
+  date: 2026-01-30
+  cloudinary_id: "result-4_qptaza.gif"
+  description: "砂の風紋シミュレーション"
+  categories:
+    - "3DCG"
+  article_url: "/journal/2026-01-30/dunes-making/"
+  thumbnail: true

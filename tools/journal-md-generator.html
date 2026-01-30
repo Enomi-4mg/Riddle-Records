@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal Markdown Generator</title>
+    <!-- Marked.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; background-color: #1e1e1e; color: #d4d4d4; }
+        .container { max-width: 1200px; margin: 2em auto; background: #252526; padding: 2em; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        h1, h2 { color: #d4d4d4; border-bottom: 1px solid #3e3e42; padding-bottom: 0.5em; }
+        .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2em; margin-top: 2em; }
+        .form-section, .preview-section, .output-section { display: flex; flex-direction: column; gap: 0.5em; }
+        label { margin-top: 0.5em; font-weight: bold; color: #cccccc; }
+        input, select, textarea { width: 100%; padding: 0.7em; box-sizing: border-box; border: 1px solid #3e3e42; border-radius: 4px; background-color: #3c3c3c; color: #d4d4d4; }
+        textarea { min-height: 120px; font-family: "SF Mono", "Consolas", "Courier New", monospace; line-height: 1.5; }
+        #preview { border: 1px solid #3e3e42; padding: 1em; min-height: 300px; background-color: #1e1e1e; border-radius: 4px; overflow-y: auto; }
+        #preview h1, #preview h2, #preview h3 { border-bottom: 1px solid #3e3e42; }
+        #preview a { color: #3794ff; }
+        #preview code { background: #3c3c3c; padding: 0.2em 0.4em; border-radius: 3px; }
+        #preview pre { background: #252526; padding: 1em; border-radius: 4px; overflow-x: auto; }
+        button { background-color: #0e639c; color: white; border: none; padding: 0.8em 1.2em; border-radius: 4px; cursor: pointer; margin-top: 1em; transition: background-color 0.2s; }
+        button:hover { background-color: #1177bb; }
+        .output-area { position: relative; }
+        .copy-button { position: absolute; top: 8px; right: 8px; background: #4e4e50; color: #ccc; border: 1px solid #666; font-size: 0.8em; padding: 0.4em 0.6em; border-radius: 3px; cursor: pointer; }
+        .copy-button:hover { background: #5a6268; }
+        .copy-button:active { background: #3e3e42; }
+        #permalink-group { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Journal Markdown Generator</h1>
+        
+        <div class="form-section">
+            <h2>1. Select Template & Input Details</h2>
+            <label for="template-select">Template</label>
+            <select id="template-select">
+                <option value="journal">Journal</option>
+                <option value="making">Making</option>
+            </select>
+
+            <label for="title">Title</label>
+            <input type="text" id="title" placeholder="記事のタイトル">
+
+            <label for="date">Date</label>
+            <input type="date" id="date">
+
+            <label for="slug">Slug (for file name & permalink)</label>
+            <input type="text" id="slug" placeholder="e.g., my-awesome-post">
+            
+            <div id="permalink-group">
+                <label for="permalink">Permalink</label>
+                <input type="text" id="permalink" readonly>
+            </div>
+
+            <label for="og_description">OG Description</label>
+            <textarea id="og_description" placeholder="記事の簡単な説明"></textarea>
+            
+            <label for="image">Image URL (Cloudinary path)</label>
+            <input type="text" id="image" placeholder="v123.../image.jpg (no domain)">
+
+            <label for="featured_related">Featured Related (comma separated IDs)</label>
+            <input type="text" id="featured_related" placeholder="item-id-1, item-id-2">
+
+            <label for="body">Body (Markdown)</label>
+            <textarea id="body" placeholder="ここに本文をMarkdownで記述..."></textarea>
+        </div>
+
+        <div class="grid-container">
+            <div class="preview-section">
+                <h2>2. Live Preview</h2>
+                <div id="preview"></div>
+            </div>
+
+            <div class="output-section">
+                <h2>3. Generated Output</h2>
+                <label for="output-filename">File Name</label>
+                <div class="output-area">
+                    <textarea id="output-filename" readonly rows="1"></textarea>
+                    <button class="copy-button" data-target="output-filename">Copy</button>
+                </div>
+
+                <label for="output-content">Markdown Content</label>
+                 <div class="output-area">
+                    <textarea id="output-content" readonly style="min-height: 250px;"></textarea>
+                    <button class="copy-button" data-target="output-content">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const elements = {
+                templateSelect: document.getElementById('template-select'),
+                title: document.getElementById('title'),
+                date: document.getElementById('date'),
+                slug: document.getElementById('slug'),
+                permalinkGroup: document.getElementById('permalink-group'),
+                permalink: document.getElementById('permalink'),
+                ogDescription: document.getElementById('og_description'),
+                image: document.getElementById('image'),
+                featuredRelated: document.getElementById('featured_related'),
+                body: document.getElementById('body'),
+                preview: document.getElementById('preview'),
+                outputFilename: document.getElementById('output-filename'),
+                outputContent: document.getElementById('output-content'),
+                copyButtons: document.querySelectorAll('.copy-button'),
+            };
+
+            // --- Templates ---
+            const templates = {
+                journal: {
+                    name: 'Journal',
+                    hasPermalink: false,
+                    body: `ここに日記の内容を記述します。`,
+                },
+                making: {
+                    name: 'Making',
+                    hasPermalink: true,
+                    body: `## 概要\n\n## こだわり\n\n## 制作TIPS\n\n## 関連\n\n- [作品名](/gallery/#作品ID)`,
+                }
+            };
+
+            const generate = () => {
+                const selectedTemplate = templates[elements.templateSelect.value];
+                const dateVal = elements.date.value;
+                const slugVal = elements.slug.value || 'untitled';
+
+                // --- 1. Update Permalink ---
+                if (selectedTemplate.hasPermalink && dateVal) {
+                    const [year, month, day] = dateVal.split('-');
+                    elements.permalink.value = `/journal/${year}/${month}/${day}/${slugVal}/`;
+                }
+                
+                // --- 2. Build Front Matter ---
+                const frontMatter = {
+                    layout: 'post',
+                    title: `"${elements.title.value || 'Untitled'}"`,
+                    date: dateVal,
+                    og_description: elements.ogDescription.value ? `"${elements.ogDescription.value}"` : null,
+                    image: elements.image.value || null,
+                    featured_related: elements.featuredRelated.value ? `[${elements.featuredRelated.value}]` : null,
+                    permalink: selectedTemplate.hasPermalink ? elements.permalink.value : null,
+                };
+                
+                let fmString = '---\n';
+                for (const key in frontMatter) {
+                    if (frontMatter[key]) {
+                        fmString += `${key}: ${frontMatter[key]}\n`;
+                    }
+                }
+                fmString += '---\n\n';
+
+                const finalContent = fmString + elements.body.value;
+                
+                // --- 3. Update Outputs ---
+                elements.outputFilename.value = dateVal ? `${dateVal}-${slugVal}.md` : '';
+                elements.outputContent.value = finalContent;
+
+                // --- 4. Update Preview ---
+                elements.preview.innerHTML = marked.parse(elements.body.value);
+            };
+            
+            const handleTemplateChange = () => {
+                const selectedTemplate = templates[elements.templateSelect.value];
+                elements.permalinkGroup.style.display = selectedTemplate.hasPermalink ? 'block' : 'none';
+                if (elements.body.value.trim() === '' || Object.values(templates).some(t => t.body === elements.body.value)) {
+                    elements.body.value = selectedTemplate.body;
+                }
+                generate();
+            };
+
+            const initialize = () => {
+                // Set today's date
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                elements.date.value = `${yyyy}-${mm}-${dd}`;
+                
+                handleTemplateChange();
+
+                // Add event listeners
+                Object.values(elements).forEach(el => {
+                    if (el.nodeName === 'INPUT' || el.nodeName === 'TEXTAREA') {
+                         el.addEventListener('input', generate);
+                    }
+                });
+                elements.templateSelect.addEventListener('change', handleTemplateChange);
+
+                elements.copyButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const targetId = e.target.dataset.target;
+                        const textarea = document.getElementById(targetId);
+                        textarea.select();
+                        document.execCommand('copy');
+                        
+                        const originalText = e.target.textContent;
+                        e.target.textContent = 'Copied!';
+                        setTimeout(() => { e.target.textContent = originalText; }, 1500);
+                    });
+                });
+            };
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
