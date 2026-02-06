@@ -82,13 +82,13 @@ layout: default
         
         <!-- 手動指定の関連作品 (featured_related) -->
         {% if page.featured_related and page.featured_related.size > 0 %}
-        <div class="featured-works">
+        <div class="featured-works" data-section-type="featured">
             <h3>📌 おすすめ</h3>
             <div class="related-grid">
                 {% for cloudinary_id in page.featured_related %}
                     {% assign item = site.data.gallery | where: "cloudinary_id", cloudinary_id | first %}
                     {% if item %}
-                    <a href="{{ site.baseurl }}/gallery#{{ item.cloudinary_id | slugify }}" class="related-item">
+                    <a href="{% if item.article_url %}{{ item.article_url | relative_url }}{% else %}{{ site.baseurl }}/gallery#{{ item.cloudinary_id | slugify }}{% endif %}" class="related-item">
                         <img src="{{ site.cloudinary_url }}/w_200,h_200,c_fill,q_auto,f_auto/v1/{{ item.cloudinary_id }}" 
                              alt="{{ item.title }}"
                              loading="lazy">
@@ -101,7 +101,7 @@ layout: default
         {% endif %}
 
         <!-- 記事内に登場した作品（自動検出） -->
-        <div id="content-related-works" style="display: none;">
+        <div id="content-related-works" data-section-type="content" style="display: none;">
             <h3>📸 記事内で登場</h3>
             <div class="related-grid" id="content-works-grid"></div>
         </div>
@@ -109,7 +109,7 @@ layout: default
         <!-- 自動抽出: 同じ日付の作品 -->
         {% assign same_date_works = site.data.gallery | where: "date", page.date | sort: "title" %}
         {% if same_date_works.size > 0 %}
-        <div class="auto-related-works">
+        <div class="auto-related-works" data-section-type="same-date">
             <h3>📅 同じ日の作品</h3>
             <div class="related-grid">
                 {% for item in same_date_works %}
@@ -123,6 +123,11 @@ layout: default
             </div>
         </div>
         {% endif %}
+        
+        <!-- 関連作品なしメッセージ（JavaScript で制御） -->
+        <div id="no-related-message" style="display: none;">
+            <p class="no-related-text">この記事に関連する作品はまだ登録されていません。</p>
+        </div>
     </section>
 
     <!-- 関連記事セクション -->
@@ -271,6 +276,11 @@ layout: default
       if (grid.children.length > 0) {
         contentWorksDiv.style.display = 'block';
       }
+    }
+    
+    // 関連作品チェック関数を呼び出し（gallery.jsで定義）
+    if (typeof window.checkRelatedWorks === 'function') {
+      window.checkRelatedWorks();
     }
   });
 </script>

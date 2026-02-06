@@ -121,7 +121,30 @@ function initGallery() {
   initializeFilters();
 }
 
+// =====================================
+// Journal記事の関連作品チェック機能
+// =====================================
+function checkRelatedWorks() {
+  const contentWorksDiv = document.getElementById('content-related-works');
+  const featuredWorks = document.querySelector('[data-section-type="featured"]');
+  const sameDateWorks = document.querySelector('[data-section-type="same-date"]');
+  const noRelatedMessage = document.getElementById('no-related-message');
+  
+  if (!noRelatedMessage) return; // Journal記事ページでない場合は終了
+  
+  // 各セクションの表示状態をチェック
+  const hasContentWorks = contentWorksDiv && contentWorksDiv.style.display !== 'none';
+  const hasFeaturedWorks = !!featuredWorks;
+  const hasSameDateWorks = !!sameDateWorks;
+  
+  // 全て空の場合のみメッセージを表示
+  if (!hasContentWorks && !hasFeaturedWorks && !hasSameDateWorks) {
+    noRelatedMessage.style.display = 'block';
+  }
+}
+
 // Export for global use
 if (typeof window !== 'undefined') {
   window.initGallery = initGallery;
+  window.checkRelatedWorks = checkRelatedWorks;
 }

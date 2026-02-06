@@ -1849,6 +1849,16 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     color: #333;
 }
 
+/* 関連作品なしメッセージ */
+.no-related-text {
+    text-align: center;
+    color: #888;
+    font-size: 0.95rem;
+    padding: 2rem 1rem;
+    margin: 0;
+    font-style: italic;
+}
+
 /* レスポンシブ対応 */
 @media screen and (max-width: 768px) {
     .related-grid {
