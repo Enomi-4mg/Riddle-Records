@@ -1415,6 +1415,277 @@ main.container ul ul li::marker {
 }
 
 /* =====================================
+   コード表示スタイル
+   ===================================== */
+
+/* インラインコード */
+.post code,
+.post p code,
+.post li code,
+main.container code,
+main.container p code,
+main.container li code {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-size: 0.9em;
+    color: #c7254e;
+    word-break: break-word;
+}
+
+/* コードブロック */
+.post pre,
+main.container pre {
+    background-color: #282c34;
+    border: 1px solid #3a3f47;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    line-height: 1.6;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-size: 0.95rem;
+    position: relative;
+}
+
+/* 言語ラベル表示 */
+.post pre[class*="language-"]::before,
+main.container pre[class*="language-"]::before {
+    content: attr(class);
+    content: attr(class) / "";
+    display: block;
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #abb2bf;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+}
+
+/* 言語名の抽出と表示 */
+.post pre.language-cpp::before,
+main.container pre.language-cpp::before {
+    content: "C++";
+}
+
+.post pre.language-c::before,
+main.container pre.language-c::before {
+    content: "C";
+}
+
+.post pre.language-javascript::before,
+main.container pre.language-javascript::before {
+    content: "JavaScript";
+}
+
+.post pre.language-js::before,
+main.container pre.language-js::before {
+    content: "JavaScript";
+}
+
+.post pre.language-python::before,
+main.container pre.language-python::before {
+    content: "Python";
+}
+
+.post pre.language-python3::before,
+main.container pre.language-python3::before {
+    content: "Python";
+}
+
+.post pre.language-java::before,
+main.container pre.language-java::before {
+    content: "Java";
+}
+
+.post pre.language-html::before,
+main.container pre.language-html::before {
+    content: "HTML";
+}
+
+.post pre.language-css::before,
+main.container pre.language-css::before {
+    content: "CSS";
+}
+
+.post pre.language-scss::before,
+main.container pre.language-scss::before {
+    content: "SCSS";
+}
+
+.post pre.language-sql::before,
+main.container pre.language-sql::before {
+    content: "SQL";
+}
+
+.post pre.language-bash::before,
+main.container pre.language-bash::before {
+    content: "Bash";
+}
+
+.post pre.language-shell::before,
+main.container pre.language-shell::before {
+    content: "Shell";
+}
+
+.post pre.language-json::before,
+main.container pre.language-json::before {
+    content: "JSON";
+}
+
+.post pre.language-yaml::before,
+main.container pre.language-yaml::before {
+    content: "YAML";
+}
+
+.post pre.language-xml::before,
+main.container pre.language-xml::before {
+    content: "XML";
+}
+
+.post pre.language-markdown::before,
+main.container pre.language-markdown::before {
+    content: "Markdown";
+}
+
+.post pre.language-md::before,
+main.container pre.language-md::before {
+    content: "Markdown";
+}
+
+.post pre.language-plaintext::before,
+main.container pre.language-plaintext::before {
+    content: "Text";
+}
+
+.post pre.language-text::before,
+main.container pre.language-text::before {
+    content: "Text";
+}
+
+/* コピーボタン */
+.post pre .copy-button,
+main.container pre .copy-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background-color: rgba(27, 180, 142, 0.8);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    min-width: 80px;
+}
+
+.post pre .copy-button::after,
+main.container pre .copy-button::after {
+    content: "Copy";
+}
+
+.post pre .copy-button:hover,
+main.container pre .copy-button:hover {
+    background-color: rgba(27, 180, 142, 1);
+    transform: translateY(-1px);
+}
+
+.post pre .copy-button.copied,
+main.container pre .copy-button.copied {
+    background-color: rgba(152, 195, 121, 0.9);
+}
+
+.post pre .copy-button.copied::after,
+main.container pre .copy-button.copied::after {
+    content: "✓ Copied";
+}
+
+.post pre code,
+main.container pre code {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    color: #abb2bf;
+    font-size: 0.95rem;
+}
+
+/* コードブロック内のシンタックスハイライト対応 */
+.post pre code .hljs-string,
+main.container pre code .hljs-string {
+    color: #98c379;
+}
+
+.post pre code .hljs-number,
+main.container pre code .hljs-number {
+    color: #d19a66;
+}
+
+.post pre code .hljs-literal,
+main.container pre code .hljs-literal {
+    color: #56b6c2;
+}
+
+.post pre code .hljs-attr,
+main.container pre code .hljs-attr {
+    color: #e06c75;
+}
+
+.post pre code .hljs-keyword,
+main.container pre code .hljs-keyword {
+    color: #c678dd;
+}
+
+.post pre code .hljs-function,
+main.container pre code .hljs-function {
+    color: #61afef;
+}
+
+.post pre code .hljs-type,
+main.container pre code .hljs-type {
+    color: #56b6c2;
+}
+
+.post pre code .hljs-comment,
+main.container pre code .hljs-comment {
+    color: #5c6370;
+}
+
+/* スクロール可能なコードブロックのスタイル */
+.post pre::-webkit-scrollbar,
+main.container pre::-webkit-scrollbar {
+    height: 8px;
+}
+
+.post pre::-webkit-scrollbar-track,
+main.container pre::-webkit-scrollbar-track {
+    background: #1e2228;
+    border-radius: 4px;
+}
+
+.post pre::-webkit-scrollbar-thumb,
+main.container pre::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.post pre::-webkit-scrollbar-thumb:hover,
+main.container pre::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* =====================================
    Gallery & Journal 連携機能
    ===================================== */
 

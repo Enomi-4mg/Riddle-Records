@@ -52,9 +52,9 @@ function initGallery() {
     return raw.split(',').map(c => c.trim()).filter(Boolean);
   };
   
-  // 初期表示：イラストと3DCGのみ表示
+  // 初期表示：イラストと四コマ漫画のみ表示
   function initializeFilters() {
-    const activeFilters = ['イラスト', '3DCG'];
+    const activeFilters = ['イラスト', '四コマ漫画'];
     galleryItems.forEach(item => {
       const categories = getCategories(item);
       if (activeFilters.some(filter => categories.includes(filter))) {

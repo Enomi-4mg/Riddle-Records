@@ -147,8 +147,9 @@ function initializeEventListeners() {
     initGallery();
   }
   
-  // Note: initScrollAnimations() is called after curtain transition completes
-  
+  // Initialize copy buttons for code blocks
+  initializeCopyButtons();
+
   links.forEach(link => {
     // Skip if already has listener (check by a custom attribute)
     if (link.dataset.listenerAdded) return;
@@ -431,6 +432,53 @@ function initScrollAnimations() {
 document.addEventListener('DOMContentLoaded', function() {
   initializeEventListeners();
 });
+
+// Initialize copy buttons for code blocks
+function initializeCopyButtons() {
+  // Get all code blocks in post and main container
+  const codeBlocks = document.querySelectorAll('.post pre:not([data-copy-button-added]), main.container pre:not([data-copy-button-added])');
+  
+  codeBlocks.forEach(pre => {
+    // Mark this element as processed
+    pre.setAttribute('data-copy-button-added', 'true');
+    
+    // Create copy button
+    const button = document.createElement('button');
+    button.className = 'copy-button';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'Copy code');
+    
+    // Insert button into pre element
+    pre.appendChild(button);
+    
+    // Add click event listener
+    button.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        // Get code text (excluding the button)
+        const codeElement = pre.querySelector('code');
+        const codeText = codeElement ? codeElement.textContent : pre.textContent;
+        
+        // Copy to clipboard
+        await navigator.clipboard.writeText(codeText);
+        
+        // Show feedback
+        button.classList.add('copied');
+        
+        // Remove feedback after 2 seconds
+        setTimeout(() => {
+          button.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        console.error('Failed to copy code:', err);
+        button.classList.add('error');
+        setTimeout(() => {
+          button.classList.remove('error');
+        }, 2000);
+      }
+    });
+  });
+}
 
 
 
