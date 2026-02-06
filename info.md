@@ -23,6 +23,12 @@ Riddle Records は、日記・音楽記録・ギャラリーを統合したポ�
 ### [画像圧縮ツール→]({{ '/tools/image-compressor.html' | relative_url }}) 
 - 画像ファイルを効率的に圧縮します
 
+### [動画GIF変換ツール→]({{ '/tools/video-to-gif-converter.html' | relative_url }})
+- 動画ファイルの一部を切り出してGIFアニメーションに変換します
+- ※まだ使えない…、ローカルでのみ動きます。
+
+## サイト作成用のテンプレ生成ツール
+
 ### [Cloudinary URL 変換ツール→]({{ '/tools/cloudinary-url-converter.html' | relative_url }})
 - Cloudinary の URL を生成・変換します
 
@@ -32,8 +38,6 @@ Riddle Records は、日記・音楽記録・ギャラリーを統合したポ�
 ### [Journal Markdown Generator→]({{ '/tools/journal-md-generator.html' | relative_url }})
 - Journal記事のMarkdownファイルをテンプレートから生成します
 
-### [動画GIF変換ツール→]({{ '/tools/video-to-gif-converter.html' | relative_url }})
-- 動画ファイルの一部を切り出してGIFアニメーションに変換します
 
 ## ソースコード
 

@@ -25,9 +25,9 @@ og_type: "website"
   <div class="filter-controls">
     <button class="filter-btn active" data-filter="all">すべて</button>
     <button class="filter-btn active" data-filter="イラスト">イラスト</button>
-    <button class="filter-btn active" data-filter="3DCG">3DCG</button>
+    <button class="filter-btn active" data-filter="四コマ漫画">四コマ漫画</button>
+    <button class="filter-btn" data-filter="3DCG">3DCG</button>
     <button class="filter-btn" data-filter="写真">写真</button>
-    <button class="filter-btn" data-filter="四コマ漫画">四コマ漫画</button>
   </div>
 </div>
 
