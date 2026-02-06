@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動画変換ツール</title>
+    <link rel="stylesheet" href="tools.css">
+    <style>
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        #loading-message {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        #progress {
+            width: 300px;
+            height: 30px;
+        }
+        video, img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .slider-container {
+            margin: 15px 0;
+        }
+        .slider-container label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .time-display {
+            font-family: monospace;
+            color: #007acc;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 0;
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group small {
+            display: block;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+        .file-input-label {
+            display: block;
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-input-label:hover {
+            background: #e8e8e8;
+            border-color: #007acc;
+        }
+        .file-input-label.has-file {
+            background: #e6f4ff;
+            border-color: #007acc;
+            border-style: solid;
+        }
+        #result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .download-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #51cf66;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .download-link:hover {
+            background: #40c057;
+        }
+        .info-box {
+            background: #f0f7ff;
+            padding: 15px;
+            border-left: 4px solid #007acc;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .section-title {
+            margin-top: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007acc;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay">
+        <p id="loading-message">変換エンジンを準備中です...</p>
+        <progress id="progress" value="0" max="100"></progress>
+    </div>
+
+    <div class="container">
+        <h1>🎬 動画変換ツール</h1>
+        <p class="info">動画ファイル（mp4, movなど）を選択し、切り出す範囲や品質を指定して様々な形式に変換します。</p>
+
+        <div class="info-box">
+            <strong>💡 ヒント</strong>
+            <ul style="margin: 10px 0 0 20px; padding: 0;">
+                <li><strong>GIF:</strong> アニメーション対応、互換性最高、ファイルサイズ大</li>
+                <li><strong>MP4:</strong> 動画形式、高圧縮（音声なし版）</li>
+                <li><strong>WebM:</strong> Web最適化、軽量（音声なし版）</li>
+                <li><strong>APNG:</strong> 透過GIF代替、高品質、Safari非対応</li>
+                <li><strong>⚠️ 注意:</strong> HEVC/H.265動画は変換が不安定な場合があります。GIF変換をお試しください。</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label>動画ファイル</label>
+            <div class="file-input-wrapper">
+                <input type="file" id="video-file" accept="video/*" disabled>
+                <label for="video-file" id="file-label" class="file-input-label">
+                    📁 クリックして動画を選択
+                </label>
+            </div>
+        </div>
+
+        <h2>プレビュー</h2>
+        <video id="preview" controls style="display: none;"></video>
+
+        <div class="slider-container" style="display: none;" id="time-controls">
+            <h3 class="section-title">⏱️ 切り出し範囲</h3>
+            <div>
+                <label>
+                    <span>開始時間</span>
+                    <span class="time-display" id="start-time">0.00s</span>
+                </label>
+                <input type="range" id="start-slider" min="0" max="100" value="0" step="0.1">
+            </div>
+            <div style="margin-top: 15px;">
+                <label>
+                    <span>終了時間</span>
+                    <span class="time-display" id="end-time">0.00s</span>
+                </label>
+                <input type="range" id="end-slider" min="0" max="100" value="0" step="0.1">
+            </div>
+            <p style="margin-top: 10px; color: #666; font-size: 0.9rem;">
+                切り出し長: <strong id="duration-display">0.00</strong>秒
+            </p>
+        </div>
+
+        <div style="display: none;" id="quality-controls">
+            <h3 class="section-title">⚙️ 変換設定</h3>
+            <div class="form-group">
+                <label for="format">出力フォーマット</label>
+                <select id="format">
+                    <option value="gif" selected>GIF（アニメーション画像）</option>
+                    <option value="mp4">MP4（動画・音声付き）</option>
+                    <option value="webm">WebM（Web最適化）</option>
+                    <option value="apng">APNG（透過対応アニメーション）</option>
+                </select>
+                <small id="format-hint">互換性が高く、どこでも表示可能</small>
+            </div>
+            <div class="settings-grid">
+                <div class="form-group">
+                    <label for="fps">フレームレート (fps)</label>
+                    <input type="number" id="fps" value="15" min="5" max="60" step="1">
+                    <small>低い値でファイルサイズ削減</small>
+                </div>
+                <div class="form-group">
+                    <label for="width">幅 (px)</label>
+                    <input type="number" id="width" value="480" min="240" max="1920" step="10">
+                    <small>高さは自動調整されます</small>
+                </div>
+                <div class="form-group" id="quality-group">
+                    <label for="quality">品質</label>
+                    <select id="quality">
+                        <option value="low">低（小容量）</option>
+                        <option value="medium" selected>中（推奨）</option>
+                        <option value="high">高（大容量）</option>
+                    </select>
+                    <small id="quality-hint">ディザリングの精度</small>
+                </div>
+                <div class="form-group" id="audio-group" style="display: none;">
+                    <label for="audio">音声</label>
+                    <select id="audio">
+                        <option value="none" selected>なし</option>
+                        <option value="with">あり</option>
+                    </select>
+                    <small>音声ありで容量が増加します</small>
+                </div>
+            </div>
+            
+            <!-- GIF専用圧縮設定 -->
+            <div id="gif-compression" style="display: none;">
+                <h4 style="color: #007acc; margin-top: 20px; margin-bottom: 10px;">🎨 GIF圧縮設定</h4>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="gif-colors">パレット色数</label>
+                        <input type="number" id="gif-colors" value="256" min="16" max="256" step="16">
+                        <small>少ないほど容量削減、色が制限されます</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="gif-dither">ディザリング</label>
+                        <select id="gif-dither">
+                            <option value="none">なし</option>
+                            <option value="bayer">Bayer（軽量）</option>
+                            <option value="sierra">Sierra2（推奨）</option>
+                            <option value="floyd">Floyd-Steinberg（高品質）</option>
+                        </select>
+                        <small>圧縮時の色表現方式</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MP4/WebM専用圧縮設定 -->
+            <div id="video-compression" style="display: none;">
+                <h4 style="color: #007acc; margin-top: 20px; margin-bottom: 10px;">🎬 動画圧縮設定</h4>
+                <div class="settings-grid">
+                    <div class="form-group">
+                        <label for="bitrate-mode">ビットレート設定</label>
+                        <select id="bitrate-mode">
+                            <option value="preset" selected>プリセット</option>
+                            <option value="custom">カスタム</option>
+                        </select>
+                        <small>プリセット or 手動指定</small>
+                    </div>
+                    <div class="form-group" id="preset-select">
+                        <label for="bitrate-preset">プリセット</label>
+                        <select id="bitrate-preset">
+                            <option value="ultra-low">超低（500kbps）</option>
+                            <option value="low">低（1Mbps）</option>
+                            <option value="medium" selected>中（2Mbps）</option>
+                            <option value="high">高（4Mbps）</option>
+                            <option value="ultra-high">超高（8Mbps）</option>
+                        </select>
+                        <small>容量とタイムシェアのバランス</small>
+                    </div>
+                    <div class="form-group" id="custom-bitrate" style="display: none;">
+                        <label for="bitrate-value">ビットレート (kbps)</label>
+                        <input type="number" id="bitrate-value" value="2000" min="500" max="10000" step="500">
+                        <small>値が小さいほど容量削減</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" style="display: none;" id="convert-section">
+            <button id="convert-btn">🎨 変換開始</button>
+        </div>
+
+        <div id="result-container" style="display: none;">
+            <h2>✨ 変換完了</h2>
+            <div id="result-preview"></div>
+            <p id="file-size" style="color: #666; margin-top: 10px;"></p>
+            <a id="download-link" href="" download="result.gif" class="download-link">📥 ダウンロード</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+    <script>
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({
+            log: true,
+            corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+            progress: ({ ratio }) => {
+                const progress = document.getElementById('progress');
+                if (ratio >= 0 && ratio <= 1) {
+                    progress.value = ratio * 100;
+                    loadingMessage.textContent = `変換処理中... ${Math.round(ratio * 100)}%`;
+                }
+            },
+        });
+
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingMessage = document.getElementById('loading-message');
+        const videoFileInput = document.getElementById('video-file');
+        const fileLabel = document.getElementById('file-label');
+        const previewVideo = document.getElementById('preview');
+        const timeControls = document.getElementById('time-controls');
+        const qualityControls = document.getElementById('quality-controls');
+        const convertSection = document.getElementById('convert-section');
+        const startSlider = document.getElementById('start-slider');
+        const endSlider = document.getElementById('end-slider');
+        const startTimeDisplay = document.getElementById('start-time');
+        const endTimeDisplay = document.getElementById('end-time');
+        const durationDisplay = document.getElementById('duration-display');
+        const fpsInput = document.getElementById('fps');
+        const widthInput = document.getElementById('width');
+        const qualitySelect = document.getElementById('quality');
+        const formatSelect = document.getElementById('format');
+        const formatHint = document.getElementById('format-hint');
+        const qualityGroup = document.getElementById('quality-group');
+        const qualityHint = document.getElementById('quality-hint');
+        const audioGroup = document.getElementById('audio-group');
+        const audioSelect = document.getElementById('audio');
+        const gifCompression = document.getElementById('gif-compression');
+        const videoCompression = document.getElementById('video-compression');
+        const gifColorsInput = document.getElementById('gif-colors');
+        const gifDitherSelect = document.getElementById('gif-dither');
+        const bitrateMode = document.getElementById('bitrate-mode');
+        const bitratePresetSelect = document.getElementById('preset-select');
+        const bitratePreset = document.getElementById('bitrate-preset');
+        const customBitrate = document.getElementById('custom-bitrate');
+        const bitrateValue = document.getElementById('bitrate-value');
+        const convertBtn = document.getElementById('convert-btn');
+        const resultContainer = document.getElementById('result-container');
+        const resultPreview = document.getElementById('result-preview');
+        const fileSizeDisplay = document.getElementById('file-size');
+        const downloadLink = document.getElementById('download-link');
+        let videoFile = null;
+
+        // フォーマット変更時のヒント更新
+        formatSelect.addEventListener('change', () => {
+            const format = formatSelect.value;
+            const hints = {
+                gif: '互換性が高く、どこでも表示可能',
+                mp4: 'MPEG4形式、音声なし（ブラウザ互換性優先）',
+                webm: 'VP8形式、音声なし（軽量・Web最適）',
+                apng: '透過対応、高品質、Safariは非対応'
+            };
+            const qualityHints = {
+                gif: 'ディザリングの精度',
+                mp4: '品質パラメータ（低=小容量）',
+                webm: '品質パラメータ（低=小容量）',
+                apng: 'PNG圧縮レベル'
+            };
+            formatHint.textContent = hints[format];
+            qualityHint.textContent = qualityHints[format];
+            
+            // GIF/MP4/WebM/APNG以外は音声オプションを非表示
+            if (format === 'mp4' || format === 'webm') {
+                audioGroup.style.display = 'block';
+                videoCompression.style.display = 'block';
+                gifCompression.style.display = 'none';
+            } else if (format === 'gif') {
+                audioGroup.style.display = 'none';
+                gifCompression.style.display = 'block';
+                videoCompression.style.display = 'none';
+            } else {
+                audioGroup.style.display = 'none';
+                gifCompression.style.display = 'none';
+                videoCompression.style.display = 'none';
+            }
+            
+            // フレームレート範囲を調整
+            if (format === 'mp4' || format === 'webm') {
+                fpsInput.max = 60;
+            } else {
+                fpsInput.max = 30;
+            }
+        });
+
+        async function loadFFmpeg() {
+            loadingMessage.textContent = '変換エンジンをロード中...';
+            await ffmpeg.load();
+            loadingOverlay.style.display = 'none';
+            videoFileInput.disabled = false;
+        }
+        
+        loadFFmpeg();
+
+        videoFileInput.addEventListener('change', async (event) => {
+            videoFile = event.target.files[0];
+            if (!videoFile) return;
+
+            fileLabel.textContent = `📹 ${videoFile.name}`;
+            fileLabel.classList.add('has-file');
+
+            const url = URL.createObjectURL(videoFile);
+            previewVideo.src = url;
+            previewVideo.style.display = 'block';
+            
+            previewVideo.onloadedmetadata = () => {
+                const duration = previewVideo.duration;
+                startSlider.max = duration;
+                endSlider.max = duration;
+                endSlider.value = duration;
+                startTimeDisplay.textContent = '0.00s';
+                endTimeDisplay.textContent = duration.toFixed(2) + 's';
+                updateDuration();
+                
+                timeControls.style.display = 'block';
+                qualityControls.style.display = 'block';
+                convertSection.style.display = 'block';
+                
+                // HEVC警告
+                if (videoFile.name.toLowerCase().includes('hevc') || videoFile.name.toLowerCase().includes('h265')) {
+                    console.warn('HEVC動画が検出されました。GIF変換を推奨します。');
+                }
+            };
+            
+            previewVideo.onerror = () => {
+                alert('動画の読み込みに失敗しました。\n別のファイルを試してください。');
+            };
+        });
+
+        function updateDuration() {
+            const start = parseFloat(startSlider.value);
+            const end = parseFloat(endSlider.value);
+            const duration = Math.max(0, end - start);
+            durationDisplay.textContent = duration.toFixed(2);
+        }
+
+        function updateSliderValues() {
+            const start = parseFloat(startSlider.value);
+            const end = parseFloat(endSlider.value);
+
+            if (start > end) {
+                startSlider.value = end;
+                endSlider.value = start;
+            }
+            startTimeDisplay.textContent = parseFloat(startSlider.value).toFixed(2) + 's';
+            endTimeDisplay.textContent = parseFloat(endSlider.value).toFixed(2) + 's';
+            updateDuration();
+            previewVideo.currentTime = parseFloat(startSlider.value);
+        }
+
+        startSlider.addEventListener('input', updateSliderValues);
+        endSlider.addEventListener('input', updateSliderValues);
+
+        // ビットレート設定モード切り替え
+        bitrateMode.addEventListener('change', () => {
+            if (bitrateMode.value === 'preset') {
+                bitratePresetSelect.style.display = 'block';
+                customBitrate.style.display = 'none';
+            } else {
+                bitratePresetSelect.style.display = 'none';
+                customBitrate.style.display = 'block';
+            }
+        });
+
+        function formatBytes(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+            else return (bytes / 1048576).toFixed(2) + ' MB';
+        }
+
+        convertBtn.addEventListener('click', async () => {
+            if (!videoFile) {
+                alert('動画ファイルを選択してください。');
+                return;
+            }
+
+            loadingOverlay.style.display = 'flex';
+            loadingMessage.textContent = '変換準備中...';
+            document.getElementById('progress').value = 0;
+            
+            const startTime = parseFloat(startSlider.value);
+            const duration = parseFloat(endSlider.value) - startTime;
+            const fps = parseInt(fpsInput.value);
+            const width = parseInt(widthInput.value);
+            const quality = qualitySelect.value;
+            const format = formatSelect.value;
+            const includeAudio = audioSelect.value === 'with';
+            
+            const inputFileName = 'input.mov';
+            let outputFileName, mimeType, extension;
+            
+            switch (format) {
+                case 'gif':
+                    outputFileName = 'output.gif';
+                    mimeType = 'image/gif';
+                    extension = 'gif';
+                    break;
+                case 'mp4':
+                    outputFileName = 'output.mp4';
+                    mimeType = 'video/mp4';
+                    extension = 'mp4';
+                    break;
+                case 'webm':
+                    outputFileName = 'output.webm';
+                    mimeType = 'video/webm';
+                    extension = 'webm';
+                    break;
+                case 'apng':
+                    outputFileName = 'output.png';
+                    mimeType = 'image/apng';
+                    extension = 'png';
+                    break;
+            }
+
+            ffmpeg.FS('writeFile', inputFileName, await fetchFile(videoFile));
+            
+            try {
+                if (format === 'gif') {
+                    // GIF: パレット生成＋ディザリング＋色数制限
+                    const ditherMode = gifDitherSelect.value;
+                    let ditherOptions = '';
+                    if (ditherMode === 'none') {
+                        ditherOptions = '';
+                    } else if (ditherMode === 'bayer') {
+                        ditherOptions = 'dither=bayer:bayer_scale=3';
+                    } else if (ditherMode === 'sierra') {
+                        ditherOptions = 'dither=sierra2_4a';
+                    } else {
+                        ditherOptions = 'dither=floyd_steinberg';
+                    }
+
+                    // パレット色数とfpsを取得
+                    const paletteColors = parseInt(gifColorsInput.value);
+                    const parsedFps = Math.max(5, parseInt(fpsInput.value) || 10);
+                    
+                    const paletteFile = 'palette.png';
+                    // パレット生成（色数指定で圧縮）
+                    await ffmpeg.run(
+                        '-ss', startTime.toString(),
+                        '-t', duration.toString(),
+                        '-i', inputFileName,
+                        '-vf', `scale=${width}:-1,palettegen=nbcolors=${paletteColors}`,
+                        '-y',
+                        paletteFile
+                    );
+
+                    // GIF組立て（fps別指定、メモリ最適化）
+                    const gifFilterComplex = ditherOptions 
+                        ? `scale=${width}:-1[v];[v][1:v]paletteuse=${ditherOptions}`
+                        : `scale=${width}:-1[v];[v][1:v]paletteuse`;
+                    
+                    await ffmpeg.run(
+                        '-ss', startTime.toString(),
+                        '-t', duration.toString(),
+                        '-i', inputFileName,
+                        '-i', paletteFile,
+                        '-filter_complex', gifFilterComplex,
+                        '-r', parsedFps.toString(),
+                        '-y',
+                        outputFileName
+                    );
+                    ffmpeg.FS('unlink', paletteFile);
+                    
+                } else if (format === 'mp4') {
+                    // MP4: コーデックコピー優先、失敗時はMPEG4再エンコード
+                    try {
+                        // コーデックコピー（高速、フォーマット変換のみ）
+                        // ※フィルター処理と同時には使えないため、フィルターなしで試みる
+                        const copyArgs = [
+                            '-ss', startTime.toString(),
+                            '-t', duration.toString(),
+                            '-i', inputFileName,
+                            '-c:v', 'copy'
+                        ];
+                        if (!includeAudio) copyArgs.push('-an');
+                        else copyArgs.push('-c:a', 'aac', '-b:a', '128k');
+                        copyArgs.push('-f', 'mp4', outputFileName);
+                        
+                        await ffmpeg.run(...copyArgs);
+                    } catch (copyError) {
+                        // コピー失敗時はMPEG4再エンコード（スケール処理含む）
+                        console.log('Codec copy failed, re-encoding with MPEG4...', copyError);
+                        try {
+                            ffmpeg.FS('unlink', outputFileName);
+                        } catch (e) {}
+                        
+                        // ビットレート計算
+                        let videoBitrate = '2M';
+                        if (bitrateMode.value === 'preset') {
+                            const presets = {
+                                'ultra-low': '500k',
+                                'low': '1M',
+                                'medium': '2M',
+                                'high': '4M',
+                                'ultra-high': '8M'
+                            };
+                            videoBitrate = presets[bitratePreset.value] || '2M';
+                        } else {
+                            videoBitrate = parseInt(bitrateValue.value) + 'k';
+                        }
+                        
+                        const qscale = quality === 'low' ? '8' : quality === 'medium' ? '4' : '2';
+                        const encodeArgs = [
+                            '-ss', startTime.toString(),
+                            '-t', duration.toString(),
+                            '-i', inputFileName,
+                            '-vf', `scale=${width}:-1`,
+                            '-c:v', 'mpeg4',
+                            '-q:v', qscale,
+                            '-b:v', videoBitrate
+                        ];
+                        if (!includeAudio) encodeArgs.push('-an');
+                        else encodeArgs.push('-c:a', 'libmp3lame', '-b:a', '192k');
+                        encodeArgs.push('-f', 'mp4', outputFileName);
+                        
+                        await ffmpeg.run(...encodeArgs);
+                    }
+                    
+                } else if (format === 'webm') {
+                    // WebM: VP8エンコード
+                    let videoBitrate = '1M';
+                    if (bitrateMode.value === 'preset') {
+                        const presets = {
+                            'ultra-low': '500k',
+                            'low': '1M',
+                            'medium': '2M',
+                            'high': '4M',
+                            'ultra-high': '8M'
+                        };
+                        videoBitrate = presets[bitratePreset.value] || '1M';
+                    } else {
+                        videoBitrate = parseInt(bitrateValue.value) + 'k';
+                    }
+                    
+                    const webmArgs = [
+                        '-ss', startTime.toString(),
+                        '-t', duration.toString(),
+                        '-i', inputFileName,
+                        '-vf', `scale=${width}:-1`,
+                        '-c:v', 'libvpx',
+                        '-b:v', videoBitrate,
+                        '-f', 'webm'
+                    ];
+                    if (!includeAudio) webmArgs.push('-an');
+                    else webmArgs.push('-c:a', 'libopus', '-b:a', '128k');
+                    webmArgs.push(outputFileName);
+                    
+                    await ffmpeg.run(...webmArgs);
+                    
+                } else if (format === 'apng') {
+                    // APNG: PNG連番からAPNG
+                    const compression = quality === 'low' ? '0' : quality === 'medium' ? '3' : '6';
+                    await ffmpeg.run(
+                        '-ss', startTime.toString(),
+                        '-t', duration.toString(),
+                        '-i', inputFileName,
+                        '-vf', `scale=${width}:-1`,
+                        '-f', 'apng',
+                        '-plays', '0',
+                        '-compression_level', compression,
+                        outputFileName
+                    );
+                }
+
+                const data = ffmpeg.FS('readFile', outputFileName);
+                
+                if (!data || data.length === 0) {
+                    throw new Error('変換されたファイルが空です。入力動画の形式がサポートされていない可能性があります。');
+                }
+                
+                const fileUrl = URL.createObjectURL(new Blob([data.buffer], { type: mimeType }));
+                
+                console.log('変換完了:', extension, formatBytes(data.length));
+                
+                // ローディングを消してから結果表示
+                loadingOverlay.style.display = 'none';
+                
+                // プレビュー表示
+                resultPreview.innerHTML = '';
+                if (format === 'gif' || format === 'apng') {
+                    const img = document.createElement('img');
+                    img.src = fileUrl;
+                    img.alt = `変換後の${format.toUpperCase()}`;
+                    img.style.maxWidth = '100%';
+                    img.style.border = '1px solid #ddd';
+                    img.style.borderRadius = '4px';
+                    resultPreview.appendChild(img);
+                } else {
+                    const video = document.createElement('video');
+                    video.src = fileUrl;
+                    video.controls = true;
+                    video.style.maxWidth = '100%';
+                    video.style.border = '1px solid #ddd';
+                    video.style.borderRadius = '4px';
+                    resultPreview.appendChild(video);
+                }
+                
+                downloadLink.href = fileUrl;
+                downloadLink.download = `result.${extension}`;
+                downloadLink.textContent = `📥 ${format.toUpperCase()}をダウンロード`;
+                fileSizeDisplay.textContent = `ファイルサイズ: ${formatBytes(data.length)}`;
+                resultContainer.style.display = 'block';
+
+                // クリーンアップ
+                ffmpeg.FS('unlink', inputFileName);
+                ffmpeg.FS('unlink', outputFileName);
+                
+                resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (error) {
+                loadingOverlay.style.display = 'none';
+                const errorMsg = error.message || '不明なエラー';
+                let additionalHint = '';
+                if (errorMsg.includes('OOM')) {
+                    additionalHint = '\n\n※メモリ不足エラー: エンコードに大量のメモリが必要です。\n推奨方法:\n- 動画を 5 秒以下に切り設定してください\n- 解像度を 240px 低い値にしてください\n- GIF または MP4 以外の形式を試してください';
+                }
+                alert(`変換中にエラーが発生しました。\n\nエラー詳細: ${errorMsg}\n\n対処法:\n- HEVC/H.265動画の場合はGIF変換をお試しください\n- 動画の長さを短くしてみてください（3-5秒推奨）\n- 解像度を下げてみてください（320px推奨）\n- 別のフォーマットを試してみてください${additionalHint}`);
+                console.error('Conversion error:', error);
+                
+                // クリーンアップ
+                try {
+                    ffmpeg.FS('unlink', inputFileName);
+                    ffmpeg.FS('unlink', outputFileName);
+                } catch (e) {
+                    console.log('Clean up skipped:', e.message);
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

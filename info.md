@@ -23,8 +23,8 @@ Riddle Records は、日記・音楽記録・ギャラリーを統合したポ�
 ### [画像圧縮ツール→]({{ '/tools/image-compressor.html' | relative_url }}) 
 - 画像ファイルを効率的に圧縮します
 
-### [動画GIF変換ツール→]({{ '/tools/video-to-gif-converter.html' | relative_url }})
-- 動画ファイルの一部を切り出してGIFアニメーションに変換します
+### [動画変換ツール→]({{ '/tools/video-converter.html' | relative_url }})
+- 動画ファイルの一部を切り出してgifやmp4等に変換します
 - ※まだ使えない…、ローカルでのみ動きます。
 
 ## サイト作成用のテンプレ生成ツール
