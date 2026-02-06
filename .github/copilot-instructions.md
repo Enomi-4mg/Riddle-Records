@@ -1,53 +1,34 @@
 # Copilot Instructions for Riddle-Records
 
-## 概要
-- 本リポジトリは Jekyll + Markdown によるポートフォリオ・日記・作品ギャラリーサイトです。
-- 静的サイト生成（Jekyll）を活用し、Liquid テンプレートで動的な一覧・連携を実現。
-- 旧コンテンツ（legacy/）は参考用で、編集・デプロイ対象外。
+## Big picture
+- Jekyll + Markdown ポートフォリオ。ページは Liquid で一覧生成し、Gallery と Journal が相互連携。
+- 旧HTMLは legacy/ に退避（参考のみ、編集・デプロイ対象外）。
 
-## 主要構成
-- `_journal/` : 日記記事（Markdown, FrontMatter 必須）
-- `_songs/` : 音楽作品データ（Markdown）
-- `_data/gallery.yml` : ギャラリー作品データ（YAML, Cloudinary連携）
-- `_layouts/`, `_includes/` : Liquid テンプレート・再利用部品
-- `assets/css/`, `assets/js/` : スタイル・JS機能
-- `tools/` : 画像圧縮・Cloudinary URL変換・Journalカード生成などの補助ツール
-- `_plugins/cloudinary.rb` : Cloudinary画像URL自動生成フィルタ
+## 主要ディレクトリ
+- _journal/ : 日記記事（Markdown + FrontMatter）。ファイル名は YYYY-MM-DD(.md) / YYYY-MM-DD-*-making.md。
+- _songs/ : 音楽作品データ（Markdown）。
+- _data/gallery.yml : 作品メタデータ（Gallery と Journal の連携元）。
+- _layouts/ と _includes/ : Liquid テンプレート。
+- assets/css/, assets/js/ : スタイルと機能。
+- _plugins/cloudinary.rb : Cloudinary URL 生成のカスタムフィルタ。
 
-## 開発・運用フロー
-- ローカル開発は `bundle exec jekyll serve` で起動
-- 記事追加は `_journal/YYYY-MM-DD.md` を新規作成し、FrontMatter（`layout`, `title`, `date` など）を記述
-- ギャラリー追加は Cloudinary へ画像アップ→`_data/gallery.yml` へエントリ追加
-- サムネイル表示は `thumbnail_class` または `thumbnail: true` で制御
-- 画像は Cloudinary URL（`{{ site.cloudinary_url }}`）で参照
-- コミット後は GitHub Actions（`.github/workflows/jekyll.yml`）で自動デプロイ
+## 連携ルール（重要）
+- Gallery ↔ Journal の紐付けは _data/gallery.yml の `article_url` / `making_article_url`。
+- Journal 側の関連作品は FrontMatter の `featured_related`（Cloudinary ID 指定）。
+- サムネイルは `thumbnail_class` 優先、次に `thumbnail: true`。該当なしは /favicon/icon.jpg。
+- YAMLは2スペース・ダブルクォート統一・パスは / から開始。
 
-## 重要なパターン・注意点
-- YAMLはスペース2個インデント、ダブルクォート統一、パスは `/` で始める
-- JournalとGalleryは `article_url` で連携、`featured_related` で関連作品を手動指定可能
-- 画像がない場合は `/favicon/icon.jpg` をプレースホルダー表示
-- legacy/配下は編集・デプロイ対象外
-- Liquid テンプレートでループ・条件分岐・includeを多用
-- サムネイル・関連作品は FrontMatterとgallery.ymlのマッチングで自動表示
+## Cloudinary 画像運用
+- 参照は {{ site.cloudinary_url }}。記事用は w_800、サムネは w_400,h_400,c_fill が標準。
+- ID には拡張子を含める（例: "xxx.png"）。
 
-## 参考ファイル
-- `README.md` : 全体構成・運用手順・主要パターン
-- `_data/gallery.yml` : ギャラリー連携・サムネイル制御例
-- `_journal/*.md` : FrontMatter・関連作品指定例
-- `tools/Journal-card-generator.html` : サムネイルYAML生成補助
-- `_plugins/cloudinary.rb` : Cloudinary画像URL生成
+## 開発ワークフロー
+- 依存インストール: bundle install
+- ローカル起動: bundle exec jekyll serve
+- デプロイ: main への push で GitHub Actions が自動実行（.github/workflows/jekyll.yml）。
 
-## よく使うコマンド
-- `bundle install` : 依存関係インストール
-- `bundle exec jekyll serve` : ローカルサーバー起動
-- `git add . && git commit -m "..." && git push` : 変更反映
-
-## 独自ルール・慣習
-- Markdown・YAML・Liquidの混在構成
-- 画像はCloudinary管理、URLは自動生成
-- サムネイル・関連作品はFrontMatterとgallery.ymlのマッチング
-- 旧HTMLはlegacy/に保存、参考のみ
-
----
-
-この内容で不明点・追加したいルールがあればご指摘ください。
+## 参考例
+- 連携・サムネ例: _data/gallery.yml
+- FrontMatter 例: _journal/*.md
+- MathJax 条件読み込み: _layouts/post.html（`use_math: true`）
+- 便利ツール: tools/Journal-card-generator.html
