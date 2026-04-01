@@ -28,6 +28,7 @@ exclude:
 url: "https://enomi-4mg.github.io"
 baseurl: "/Riddle-Records"
 timezone: Asia/Tokyo
+future: true
 
 # Cloudinary settings
 cloudinary_cloud_name: "dzq8y9qes"
