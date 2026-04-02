@@ -3,7 +3,11 @@ function initGallery() {
   // Get fresh DOM references on each call
   const container = document.getElementById('gallery-container');
   if (!container) return; // Exit if gallery container doesn't exist on this page
-  
+
+  // Guard against attaching duplicate event listeners on repeated calls
+  if (container.dataset.listenerAdded === 'true') return;
+  container.dataset.listenerAdded = 'true';
+
   // Re-fetch items each time (they may have changed due to AJAX)
   const items = Array.from(container.children);
   

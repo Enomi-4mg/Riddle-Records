@@ -13,6 +13,11 @@ const latestJournal = journals[0];
 const latestSong = songs[0];
 const latestGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())[0];
 const summarize = (text) => (text ? text.replace(/\s+/g, " ").trim().slice(0, 70) : "");
+const getJournalPath = (entry) =>
+  (entry.data.permalink ?? `/journal/${entry.data.date.toISOString().slice(0, 10)}/`)
+    .replace(/^\/+/, "")
+    .replace(/^journal\//, "")
+    .replace(/\/+$/, "");
 ---
 
 <BaseLayout title="Riddle Records" description="4mgのポートフォリオサイトです。">
@@ -37,7 +42,7 @@ const summarize = (text) => (text ? text.replace(/\s+/g, " ").trim().slice(0, 70
 
       {latestJournal && (
         <article class="home-card journal-entry-animate">
-          <a href={href(`/journal/${latestJournal.slug}/`)} class="home-card-clickable">
+          <a href={href(`/journal/${getJournalPath(latestJournal)}/`)} class="home-card-clickable">
             <div class="home-card-head">
               <span class="home-card-label">Journal</span>
               <time class="home-card-date" datetime={latestJournal.data.date.toISOString().slice(0, 10)}>{latestJournal.data.date.toLocaleDateString("ja-JP")}</time>

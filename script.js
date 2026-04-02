@@ -252,7 +252,17 @@ function buildSiteUrl(path) {
 }
 
 function getCloudinaryIdFromImage(src) {
-  const match = src.match(/\/v1\/([^?]+)/);
+  if (typeof src !== 'string') return null;
+
+  // Extract Cloudinary public ID (filename) from image URLs.
+  // Handles both legacy `/v1/...` URLs and newer transformation-only URLs by
+  // matching everything after `/image/upload/`, skipping any leading path
+  // segments (version or transformation strings), and capturing the final
+  // filename segment.
+  // Examples:
+  //   https://res.cloudinary.com/.../image/upload/v1/result-4_qptaza.gif  → result-4_qptaza.gif
+  //   https://res.cloudinary.com/.../image/upload/w_1920,c_fill/result-4_qptaza.gif  → result-4_qptaza.gif
+  const match = src.match(/\/image\/upload\/(?:[^/]+\/)*([^?]+)/);
   return match ? match[1] : null;
 }
 
