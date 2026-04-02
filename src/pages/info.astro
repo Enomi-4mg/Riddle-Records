@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const base = import.meta.env.BASE_URL;
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+---
+
+<BaseLayout title="Information" description="お知らせ・更新情報のページ。">
+  <h1 class="web_title">Information</h1>
+
+  <h2 class="page_title">このサイトについて</h2>
+  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+    <p>Riddle Records は、日記・音楽記録・ギャラリーを統合したポートフォリオサイトです。日常の記録から創作物まで、様々なコンテンツを管理・公開する目的で制作されました。</p>
+    <p>このサイトは Astro による静的サイト生成をベースに、HTML5・CSS3・JavaScript などのモダンなウェブ技術を組み合わせて実装されています。GitHub Pages でホスティングされており、リポジトリへの push と同時に自動ビルド・デプロイが実行されます。</p>
+    <p>技術的な詳細については、<a href={href("/tech/")}>技術基盤ページ</a>をご覧ください。</p>
+  </div>
+
+  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+    <h2 class="page_title">ツール一覧</h2>
+    <h3><a href={href("/tools/image-compressor.html")}>画像圧縮ツール→</a></h3>
+    <p>画像ファイルを効率的に圧縮します</p>
+
+    <h3><a href={href("/tools/video-converter.html")}>動画変換ツール→</a></h3>
+    <p>動画ファイルの一部を切り出してgifやmp4等に変換します</p>
+    <p>※まだ使えない…、ローカルでのみ動きます。</p>
+  </div>
+
+  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+    <h2 class="page_title">サイト作成用のテンプレ生成ツール</h2>
+    <h3><a href={href("/tools/cloudinary-url-converter.html")}>Cloudinary URL 変換ツール→</a></h3>
+    <p>Cloudinary の URL を生成・変換します</p>
+
+    <h3><a href={href("/tools/journal-card-generator.html")}>Journal Card Generator→</a></h3>
+    <p>JournalカードのHTMLとYAMLを生成し、比較ラベルやLightbox切替、記事解析に対応します</p>
+
+    <h3><a href={href("/tools/journal-md-generator.html")}>Journal Markdown Generator→</a></h3>
+    <p>Journal記事のMarkdownファイルをテンプレートから生成します</p>
+  </div>
+
+  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+    <h2 class="page_title">ソースコード</h2>
+    <p>このサイトの全ソースコードは <a href="https://github.com/enomi-4mg/Riddle-Records">GitHub リポジトリ</a> で公開しています。</p>
+  </div>
+</BaseLayout>

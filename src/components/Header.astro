@@ -1,0 +1,39 @@
+---
+import { galleryItems } from "../data/gallery";
+import faviconUrl from "../../favicon/favicon.ico?url";
+const base = import.meta.env.BASE_URL;
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+---
+
+<header class="site-header">
+  <div class="header-container">
+    <nav class="header-nav header-nav-left">
+      <ul class="nav-menu">
+        <li class="nav-item"><a href={href("/")} class={Astro.url.pathname === basePath || Astro.url.pathname === `${basePath}index.html` ? "active" : ""}>Home</a></li>
+        <li class="nav-item"><a href={href("/about/")} class={Astro.url.pathname.includes(`${basePath}about`) ? "active" : ""}>About</a></li>
+        <li class="nav-item"><a href={href("/journal/")} class={Astro.url.pathname.includes(`${basePath}journal`) ? "active" : ""}>Journal</a></li>
+      </ul>
+    </nav>
+
+    <a href={href("/")} class="header-logo">
+      <img src={faviconUrl} alt="Riddle Records" class="logo-icon" />
+      <span class="site-title">Riddle Records</span>
+    </a>
+
+    <nav class="header-nav header-nav-right">
+      <ul class="nav-menu">
+        <li class="nav-item"><a href={href("/gallery/")} class={Astro.url.pathname.includes(`${basePath}gallery`) ? "active" : ""}>Gallery</a></li>
+        <li class="nav-item"><a href={href("/disco/")} class={Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""}>Discography</a></li>
+        <li class="nav-item"><a href={href("/info/")} class={Astro.url.pathname.includes(`${basePath}info`) ? "active" : ""}>Information</a></li>
+      </ul>
+    </nav>
+
+    <div class="menu_toggle">☰</div>
+  </div>
+</header>
+
+<script is:inline define:vars={{ base, galleryItems }}>
+  window.siteBaseUrl = base;
+  window.galleryData = galleryItems;
+</script>

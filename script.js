@@ -146,6 +146,8 @@ function initializeEventListeners() {
   if (typeof initGallery === 'function') {
     initGallery();
   }
+
+  initializeJournalFeatures();
   
   // Initialize copy buttons for code blocks
   initializeCopyButtons();
@@ -237,6 +239,154 @@ function initializeEventListeners() {
     
     link.dataset.listenerAdded = 'true';
   });
+}
+
+function getSiteBaseUrl() {
+  return typeof window.siteBaseUrl === 'string' ? window.siteBaseUrl : '/';
+}
+
+function buildSiteUrl(path) {
+  const base = getSiteBaseUrl();
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`;
+  return `${normalizedBase}${path.replace(/^\/+/, '')}`;
+}
+
+function getCloudinaryIdFromImage(src) {
+  if (typeof src !== 'string') return null;
+
+  // Extract Cloudinary public ID (filename) from image URLs.
+  // Handles both legacy `/v1/...` URLs and newer transformation-only URLs by
+  // matching everything after `/image/upload/`, skipping any leading path
+  // segments (version or transformation strings), and capturing the final
+  // filename segment.
+  // Examples:
+  //   https://res.cloudinary.com/.../image/upload/v1/result-4_qptaza.gif  → result-4_qptaza.gif
+  //   https://res.cloudinary.com/.../image/upload/w_1920,c_fill/result-4_qptaza.gif  → result-4_qptaza.gif
+  const match = src.match(/\/image\/upload\/(?:[^/]+\/)*([^?]+)/);
+  return match ? match[1] : null;
+}
+
+function slugifyCloudinaryId(cloudinaryId) {
+  return cloudinaryId.replace(/\./g, '-');
+}
+
+function ensureMathJax() {
+  if (window.MathJax?.typesetPromise) {
+    return Promise.resolve(window.MathJax);
+  }
+
+  if (window.__mathJaxPromise) {
+    return window.__mathJaxPromise;
+  }
+
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.__mathJaxPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+    script.async = true;
+    script.onload = () => resolve(window.MathJax);
+    script.onerror = () => reject(new Error('Failed to load MathJax'));
+    document.head.appendChild(script);
+  });
+
+  return window.__mathJaxPromise;
+}
+
+function initializeJournalFeatures() {
+  const article = document.querySelector('article.post.journal-article');
+  if (!article) return;
+
+  const contentContainer = article.querySelector('.post-content');
+  if (!contentContainer) return;
+
+  const contentWorksSet = new Set();
+  const images = contentContainer.querySelectorAll('img');
+
+  images.forEach((img) => {
+    if (img.classList.contains('no-gallery-button') || img.closest('.no-gallery-button')) {
+      return;
+    }
+
+    if (img.parentNode?.tagName !== 'A' && !img.hasAttribute('data-lightbox')) {
+      const link = document.createElement('a');
+      link.href = img.src;
+      link.setAttribute('data-lightbox', 'diary');
+      link.setAttribute('data-title', img.alt || '');
+      img.parentNode.insertBefore(link, img);
+      link.appendChild(img);
+    }
+
+    const cloudinaryId = getCloudinaryIdFromImage(img.src);
+    const galleryItem = cloudinaryId && Array.isArray(window.galleryData)
+      ? window.galleryData.find((item) => item.cloudinary_id === cloudinaryId)
+      : null;
+
+    if (!galleryItem || !cloudinaryId) {
+      return;
+    }
+
+    contentWorksSet.add(cloudinaryId);
+
+    const parent = img.parentNode;
+    const alreadyHasButton = parent?.nextElementSibling?.classList.contains('gallery-link-btn')
+      || img.nextElementSibling?.classList.contains('gallery-link-btn');
+
+    if (!alreadyHasButton && parent) {
+      const btn = document.createElement('a');
+      btn.href = buildSiteUrl(`/gallery/#${slugifyCloudinaryId(cloudinaryId)}`);
+      btn.className = 'gallery-link-btn';
+      btn.textContent = '📸 ギャラリーで見る';
+      parent.insertAdjacentElement('afterend', btn);
+    }
+  });
+
+  const contentWorksDiv = document.getElementById('content-related-works');
+  const grid = document.getElementById('content-works-grid');
+  if (contentWorksDiv && grid && contentWorksSet.size > 0) {
+    contentWorksSet.forEach((cloudinaryId) => {
+      const item = Array.isArray(window.galleryData)
+        ? window.galleryData.find((candidate) => candidate.cloudinary_id === cloudinaryId)
+        : null;
+
+      if (!item) return;
+
+      const link = document.createElement('a');
+      link.href = buildSiteUrl(`/gallery/#${slugifyCloudinaryId(cloudinaryId)}`);
+      link.className = 'related-item';
+      link.innerHTML = `
+        <img src="https://res.cloudinary.com/dzq8y9qes/image/upload/w_200,h_200,c_fill,q_auto,f_auto/v1/${cloudinaryId}"
+             alt="${item.title || '作品'}"
+             loading="lazy">
+        <p>${item.title || cloudinaryId}</p>
+      `;
+      grid.appendChild(link);
+    });
+
+    if (grid.children.length > 0) {
+      contentWorksDiv.style.display = 'block';
+    }
+  }
+
+  if (typeof window.checkRelatedWorks === 'function') {
+    window.checkRelatedWorks();
+  }
+
+  if (article.dataset.useMath === 'true') {
+    ensureMathJax()
+      .then((mathJax) => mathJax.typesetPromise?.([article]))
+      .catch((error) => console.error(error));
+  }
 }
 
 // Page transition effect on initial load

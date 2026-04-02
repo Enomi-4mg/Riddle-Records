@@ -1,0 +1,347 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, render } from "astro:content";
+import { galleryItems } from "../../data/gallery";
+
+const base = import.meta.env.BASE_URL;
+const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
+const journalEntries = (await getCollection("journal")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+
+const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
+const toRoutePath = (path) => path.replace(/^\/+/, "").replace(/\/+$/, "").replace(/^journal\//, "");
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const getJournalPath = (entry) => toRoutePath(entry.data.permalink ?? `/journal/${entry.data.date.toISOString().slice(0, 10)}/`);
+const normalizeCredits = (credits) => Array.isArray(credits) ? credits.join("\n") : credits;
+
+export async function getStaticPaths() {
+  const journalEntriesForPaths = await getCollection("journal");
+  return journalEntriesForPaths.map((entry) => ({
+    params: {
+      slug: (entry.data.permalink ?? `/journal/${entry.data.date.toISOString().slice(0, 10)}/`)
+        .replace(/^\/+/, "")
+        .replace(/^journal\//, "")
+        .replace(/\/+$/, "")
+    },
+    props: {
+      entry
+    }
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const entryDate = formatDate(entry.data.date);
+const featuredWorks = (entry.data.featured_related ?? []).map((cloudinaryId) => galleryItems.find((item) => item.cloudinary_id === cloudinaryId)).filter(Boolean);
+const sameDateWorks = galleryItems.filter((item) => item.date === entry.data.date.toISOString().slice(0, 10));
+const relatedArticles = entry.data.tags?.length
+  ? journalEntries
+      .filter((other) => other.id !== entry.id && other.data.tags?.some((tag) => entry.data.tags.includes(tag)))
+      .sort((left, right) => right.data.date.getTime() - left.data.date.getTime())
+  : [];
+const currentIndex = journalEntries.findIndex((candidate) => candidate.id === entry.id);
+const newerEntry = currentIndex > 0 ? journalEntries[currentIndex - 1] : null;
+const olderEntry = currentIndex >= 0 && currentIndex < journalEntries.length - 1 ? journalEntries[currentIndex + 1] : null;
+---
+
+<BaseLayout
+  title={entry.data.title}
+  description={entry.data.og_description ?? entry.data.title}
+  ogTitle={entry.data.title}
+  ogDescription={entry.data.og_description ?? entry.data.title}
+  ogType="article"
+  ogImage={entry.data.image}
+  ogImageAlt={entry.data.title}
+>
+  <article class="post journal-article" data-use-math={entry.data.use_math ? "true" : undefined}>
+    <header class="journal-hero">
+      <p class="journal-date">
+        <time datetime={entry.data.date.toISOString().slice(0, 10)}>{entryDate}</time>
+      </p>
+      <h1 class="page_title">{entry.data.title}</h1>
+      {entry.data.og_description && <p class="journal-summary">{entry.data.og_description}</p>}
+    </header>
+
+    <div class="post-content journal-content">
+      <Content />
+    </div>
+
+    {(entry.data.credits || entry.data.description) && (
+      <section class="post-info">
+        {entry.data.credits && (
+          <div class="post-credits">
+            <h3>クレジット</h3>
+            <pre>{normalizeCredits(entry.data.credits)}</pre>
+          </div>
+        )}
+
+        {entry.data.description && (
+          <div class="post-description">
+            <h3>詳細情報</h3>
+            <p>{entry.data.description}</p>
+          </div>
+        )}
+      </section>
+    )}
+
+    {entry.data.lyrics && (
+      <section class="post-lyrics">
+        <details id="lyrics-details">
+          <summary>歌詞</summary>
+          <pre>{entry.data.lyrics}</pre>
+        </details>
+      </section>
+    )}
+
+    <section class="post-related">
+      <h2>関連コンテンツ</h2>
+
+      {featuredWorks.length > 0 && (
+        <div class="related-block" data-section-type="featured">
+          <h3>おすすめ</h3>
+          <div class="related-grid">
+            {featuredWorks.map((item) => (
+              <a href={item.article_url ? withBase(item.article_url) : withBase("/gallery/")} class="related-item">
+                <img src={`${cloudinaryBase}/w_200,h_200,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`} alt={item.title} loading="lazy" />
+                <p>{item.title}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div id="content-related-works" data-section-type="content" style="display: none;">
+        <h3>記事内で登場</h3>
+        <div class="related-grid" id="content-works-grid"></div>
+      </div>
+
+      {sameDateWorks.length > 0 && (
+        <div class="related-block" data-section-type="same-date">
+          <h3>同じ日の作品</h3>
+          <div class="related-grid">
+            {sameDateWorks.map((item) => (
+              <a href={item.article_url ? withBase(item.article_url) : withBase("/gallery/")} class="related-item">
+                <img src={`${cloudinaryBase}/w_200,h_200,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`} alt={item.title} loading="lazy" />
+                <p>{item.title}</p>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div id="no-related-message" style="display: none;">
+        <p class="no-related-text">この記事に関連する作品はまだ登録されていません。</p>
+      </div>
+
+      {relatedArticles.length > 0 && (
+        <section class="post-related-articles related-block">
+          <h3>関連記事</h3>
+          <ul>
+            {relatedArticles.map((item) => {
+              const relatedPath = withBase(`/journal/${getJournalPath(item)}/`);
+              return (
+                <li>
+                  <a href={relatedPath}>{item.data.title}</a>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+    </section>
+
+    <nav class="post-nav">
+      {olderEntry && (
+        <a href={withBase(`/journal/${getJournalPath(olderEntry)}/`)} class="post-nav-prev">← {olderEntry.data.title}</a>
+      )}
+
+      {newerEntry && (
+        <a href={withBase(`/journal/${getJournalPath(newerEntry)}/`)} class="post-nav-next">{newerEntry.data.title} →</a>
+      )}
+    </nav>
+  </article>
+</BaseLayout>
+
+<style>
+  .journal-article {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .journal-hero {
+    margin-bottom: 1.5rem;
+  }
+
+  .journal-date {
+    margin-bottom: 0.5rem;
+    color: rgba(20, 40, 30, 0.72);
+  }
+
+  .journal-summary {
+    color: rgba(20, 40, 30, 0.85);
+  }
+
+  .journal-content :global(.responsive-video-container) {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .journal-content :global(.responsive-video-container iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .post-info,
+  .post-related {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(20, 40, 30, 0.08);
+  }
+
+  .post-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .post-credits,
+  .post-description,
+  .post-lyrics {
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+  }
+
+  .post-credits h2,
+  .post-description h2 {
+    margin-top: 0;
+  }
+
+  .post-credits h3 {
+    margin-top: 0;
+    color: #1bb48e;
+    font-size: 1.2rem;
+  }
+
+  .post-description h3 {
+    margin-top: 0;
+    color: #0a1510;
+    font-size: 1.2rem;
+  }
+
+  .post-credits {
+    background-color: rgba(27, 180, 142, 0.1);
+    border-left: 4px solid #1bb48e;
+  }
+
+  .post-description {
+    background-color: rgba(10, 21, 16, 0.05);
+    border-left: 4px solid #0a1510;
+  }
+
+  .post-lyrics details {
+    cursor: pointer;
+  }
+
+  .post-lyrics summary {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #0a1510;
+    user-select: none;
+  }
+
+  .post-lyrics {
+    margin-top: 0;
+    padding: 1.5rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+  }
+
+  .post-lyrics summary {
+    padding: 0.5rem;
+    margin: -0.5rem -0.5rem 0 -0.5rem;
+    transition: background-color 0.2s ease;
+  }
+
+  .post-lyrics summary:hover {
+    background-color: rgba(27, 180, 142, 0.1);
+    border-radius: 0.3rem;
+  }
+
+  .post-lyrics pre {
+    margin: 1rem 0 0 0;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.3rem;
+    white-space: pre-wrap;
+  }
+
+  .post-info pre {
+    white-space: pre-wrap;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .related-item {
+    display: block;
+    text-decoration: none;
+  }
+
+  .related-item img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 0.75rem;
+  }
+
+  .related-item p {
+    margin: 0.5rem 0 0;
+  }
+
+  .post-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(20, 40, 30, 0.12);
+    flex-wrap: wrap;
+  }
+
+  .post-nav a {
+    color: #1bb48e;
+    text-decoration: none;
+  }
+
+  .post-nav a:hover {
+    text-decoration: underline;
+  }
+
+  .journal-content :global(.gallery-link-btn) {
+    margin-top: 0.8rem;
+  }
+
+  .journal-content :global(img) {
+    max-width: 100%;
+  }
+
+  @media screen and (max-width: 600px) {
+    .post-info {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+</style>

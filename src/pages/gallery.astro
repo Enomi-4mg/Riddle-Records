@@ -1,0 +1,65 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { galleryItems } from "../data/gallery";
+
+const base = import.meta.env.BASE_URL;
+const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
+const sortedGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+---
+
+<BaseLayout title="Gallery" description="イラスト・3DCG・写真などの作品ギャラリー。" wideContainer={true}>
+  <h1 class="web_title">Gallery</h1>
+
+  <div class="gallery-intro journal-entry-animate">
+    <p>作品ギャラリーです。Blenderで作成した3DCG、イラスト、写真などを掲載しています。</p>
+    <p>現在{sortedGallery.length}点の作品があります。</p>
+  </div>
+
+  <div class="gallery-controls journal-entry-animate">
+    <div class="sort-controls">
+      <button id="sort-newest" class="control-btn active">新しい順</button>
+      <button id="sort-oldest" class="control-btn">古い順</button>
+    </div>
+
+    <div class="filter-controls">
+      <button class="filter-btn active" data-filter="all">すべて</button>
+      <button class="filter-btn active" data-filter="イラスト">イラスト</button>
+      <button class="filter-btn active" data-filter="四コマ漫画">四コマ漫画</button>
+      <button class="filter-btn" data-filter="3DCG">3DCG</button>
+      <button class="filter-btn" data-filter="写真">写真</button>
+    </div>
+  </div>
+
+  <div class="gallery-grid" id="gallery-container">
+    {sortedGallery.map((item) => (
+      <div class="gallery-item journal-entry-animate" id={item.cloudinary_id.replace(/\./g, "-")} data-date={item.date} data-categories={item.categories.join(",")}>
+        <a href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link">
+          <img src={`${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`} alt={item.title} loading="lazy" />
+        </a>
+        <div class="gallery-info">
+          <h3>{item.title}</h3>
+          <p class="date">📅 {new Date(item.date).toLocaleDateString("ja-JP")}</p>
+          <p class="description">{item.description}</p>
+          <div class="category-list">
+            {item.categories.map((category) => (
+              <span class={`category category-${category}`}>{category}</span>
+            ))}
+          </div>
+
+          {(item.article_url || item.making_article_url) && (
+            <div class="article-links-horizontal">
+              {item.article_url && (
+                <a href={withBase(item.article_url)} class="article-link-btn">📖 作品記事</a>
+              )}
+              {item.making_article_url && (
+                <a href={withBase(item.making_article_url)} class="article-link-btn making-link">📝 メイキング</a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+</BaseLayout>
