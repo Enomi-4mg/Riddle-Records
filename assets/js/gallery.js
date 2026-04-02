@@ -13,30 +13,24 @@ function initGallery() {
   const sortNewestBtn = document.getElementById('sort-newest');
   const sortOldestBtn = document.getElementById('sort-oldest');
   
-  // Remove old listeners by replacing elements
+  const setActiveSortButton = (activeButton) => {
+    document.querySelectorAll('.sort-controls .control-btn').forEach(btn => btn.classList.remove('active'));
+    activeButton.classList.add('active');
+  };
+
   if (sortNewestBtn) {
-    const newSortNewestBtn = sortNewestBtn.cloneNode(true);
-    sortNewestBtn.parentNode.replaceChild(newSortNewestBtn, sortNewestBtn);
-    
-    newSortNewestBtn.addEventListener('click', function() {
+    sortNewestBtn.addEventListener('click', function() {
       items.sort((a, b) => new Date(b.dataset.date) - new Date(a.dataset.date));
       items.forEach(item => container.appendChild(item));
-      
-      document.querySelectorAll('.sort-controls .control-btn').forEach(btn => btn.classList.remove('active'));
-      this.classList.add('active');
+      setActiveSortButton(this);
     });
   }
   
   if (sortOldestBtn) {
-    const newSortOldestBtn = sortOldestBtn.cloneNode(true);
-    sortOldestBtn.parentNode.replaceChild(newSortOldestBtn, sortOldestBtn);
-    
-    newSortOldestBtn.addEventListener('click', function() {
+    sortOldestBtn.addEventListener('click', function() {
       items.sort((a, b) => new Date(a.dataset.date) - new Date(b.dataset.date));
       items.forEach(item => container.appendChild(item));
-      
-      document.querySelectorAll('.sort-controls .control-btn').forEach(btn => btn.classList.remove('active'));
-      this.classList.add('active');
+      setActiveSortButton(this);
     });
   }
   
@@ -65,12 +59,8 @@ function initGallery() {
     });
   }
   
-  // Remove old filter listeners and set up new ones
   filterButtons.forEach(button => {
-    const newButton = button.cloneNode(true);
-    button.parentNode.replaceChild(newButton, button);
-    
-    newButton.addEventListener('click', function() {
+    button.addEventListener('click', function() {
       const filter = this.dataset.filter;
       
       // 「すべて」ボタンの処理

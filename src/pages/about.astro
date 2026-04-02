@@ -1,0 +1,111 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { galleryItems } from "../data/gallery";
+import profileIconUrl from "../../favicon/icon.jpg?url";
+
+const base = import.meta.env.BASE_URL;
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+
+const songs = (await getCollection("songs")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+const latestSongs = songs.slice(0, 2);
+const latestGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime()).slice(0, 2);
+const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
+---
+
+<BaseLayout title="About" description="4mgのプロフィールとリンク集。">
+  <h1 class="web_title">About</h1>
+
+  <section class="profile-card journal-entry-animate">
+    <div class="profile-avatar-wrap">
+      <img class="profile-avatar" alt="プロフィール画像" src={profileIconUrl} />
+    </div>
+    <div class="profile-content">
+      <h2 class="profile-name">4mg</h2>
+      <p class="profile-bio">ボカロ曲・イラスト・ゲーム制作をしています。</p>
+
+      <dl class="profile-meta">
+        <div class="meta-row">
+          <dt>誕生日</dt>
+          <dd>09月26日</dd>
+        </div>
+        <div class="meta-row">
+          <dt>座右の銘</dt>
+          <dd>初心忘るべからず（仮）</dd>
+        </div>
+      </dl>
+
+      <div class="profile-tags">
+        <div class="tag-group">
+          <span class="tag-label">趣味</span>
+          <div class="tag-items">
+            <span class="tag">漫画</span>
+            <span class="tag">散歩</span>
+            <span class="tag">ゲーム</span>
+            <span class="tag">ギター</span>
+          </div>
+        </div>
+        <div class="tag-group">
+          <span class="tag-label">特技</span>
+          <div class="tag-items">
+            <span class="tag">作詞・作曲</span>
+            <span class="tag">イラスト制作</span>
+            <span class="tag">コーディング</span>
+          </div>
+        </div>
+        <div class="tag-group">
+          <span class="tag-label">好きなもの</span>
+          <div class="tag-items">
+            <span class="tag">ボーカロイド</span>
+            <span class="tag">月ノ美兎</span>
+            <span class="tag">米津玄師</span>
+            <span class="tag">星野源</span>
+            <span class="tag">いよわ</span>
+            <span class="tag">かぐ告</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="profile-links journal-entry-animate">
+    <h3 class="page_title" style="margin-top: 1rem;">リンク集</h3>
+    <ul class="link-list">
+      <li class="platform-icons" aria-label="プラットフォーム">
+        <a href="https://x.com/4mgEnomi" target="_blank" aria-label="X (旧Twitter)"><i class="fab fa-x-twitter"></i></a>
+        <a href="https://www.youtube.com/@enomi2514" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+        <a href="https://www.nicovideo.jp/user/77764856" target="_blank" aria-label="ニコニコ動画">ニコニコ動画</a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="works-preview journal-entry-animate">
+    <h3 class="page_title" style="margin-top: 1rem;">作品紹介</h3>
+    <div class="works-grid">
+      {latestSongs.map((song) => (
+        <div class="work-card">
+          <a href={href(`/disco/${song.slug}/`)} class="work-thumb">
+            <img src={`https://img.youtube.com/vi/${song.data.youtube_id}/sddefault.jpg`} alt={`${song.data.title} thumbnail`} />
+          </a>
+          <div class="work-info">
+            <p class="work_title">{song.data.title}</p>
+            <time datetime={song.data.date.toISOString().slice(0, 10)} class="work_date">{formatDate(song.data.date)}</time>
+          </div>
+        </div>
+      ))}
+
+      {latestGallery.map((item) => (
+        <div class="work-card">
+          <a href={href("/gallery/")} class="work-thumb">
+            <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`} alt={item.title} />
+          </a>
+          <div class="work-info">
+            <p class="work_title">{item.title}</p>
+            <time datetime={item.date} class="work_date">{formatDate(new Date(item.date))}</time>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

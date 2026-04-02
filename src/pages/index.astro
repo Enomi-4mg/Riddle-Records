@@ -1,0 +1,96 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { galleryItems } from "../data/gallery";
+
+const base = import.meta.env.BASE_URL;
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+
+const journals = (await getCollection("journal")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+const songs = (await getCollection("songs")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+const latestJournal = journals[0];
+const latestSong = songs[0];
+const latestGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())[0];
+const summarize = (text) => (text ? text.replace(/\s+/g, " ").trim().slice(0, 70) : "");
+---
+
+<BaseLayout title="Riddle Records" description="4mgのポートフォリオサイトです。">
+  <section class="home-intro journal-entry-animate">
+    <h1 class="home-welcome">ようこそ！<br />Riddle Records 公式サイトへ。</h1>
+    <p>4mgのポートフォリオサイトです。</p>
+    <p>ページ上部のヘッダーメニューからも各ページへ移動できます。</p>
+    <p><small>最終更新：{new Date().toLocaleDateString("ja-JP")}</small></p>
+  </section>
+
+  <section class="home-latest journal-entry-animate">
+    <h2 class="page_title">コンテンツ</h2>
+    <div class="home-grid">
+      <a href={href("/about/")} class="home-card home-card-link journal-entry-animate">
+        <div class="home-card-head">
+          <span class="home-card-label">About</span>
+        </div>
+        <h3 class="home-card-title">プロフィール</h3>
+        <p class="home-card-desc">プロフィールとリンク集を掲載しています。</p>
+        <span class="home-card-cta">About を見る →</span>
+      </a>
+
+      {latestJournal && (
+        <article class="home-card journal-entry-animate">
+          <a href={href(`/journal/${latestJournal.slug}/`)} class="home-card-clickable">
+            <div class="home-card-head">
+              <span class="home-card-label">Journal</span>
+              <time class="home-card-date" datetime={latestJournal.data.date.toISOString().slice(0, 10)}>{latestJournal.data.date.toLocaleDateString("ja-JP")}</time>
+            </div>
+            <h3 class="home-card-title">{latestJournal.data.title}</h3>
+            <p class="home-card-desc">{summarize(latestJournal.data.og_description ?? latestJournal.body)}</p>
+          </a>
+          <a class="home-card-cta" href={href("/journal/")}>一覧を見る →</a>
+        </article>
+      )}
+
+      {latestGallery && (
+        <article class="home-card journal-entry-animate">
+          <a href={href("/gallery/")} class="home-card-clickable">
+            <div class="home-card-head">
+              <span class="home-card-label">Gallery</span>
+              <time class="home-card-date" datetime={latestGallery.date}>{new Date(latestGallery.date).toLocaleDateString("ja-JP")}</time>
+            </div>
+            <div class="home-card-thumb">
+              <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${latestGallery.cloudinary_id}`} alt={latestGallery.title} loading="lazy" />
+            </div>
+            <h3 class="home-card-title">{latestGallery.title}</h3>
+            <p class="home-card-desc">{latestGallery.description}</p>
+          </a>
+          <a class="home-card-cta" href={href("/gallery/")}>一覧を見る →</a>
+        </article>
+      )}
+
+      {latestSong && (
+        <article class="home-card journal-entry-animate">
+          <a href={href(`/disco/${latestSong.slug}/`)} class="home-card-clickable">
+            <div class="home-card-head">
+              <span class="home-card-label">Discography</span>
+              <time class="home-card-date" datetime={latestSong.data.date.toISOString().slice(0, 10)}>{latestSong.data.date.toLocaleDateString("ja-JP")}</time>
+            </div>
+            <div class="home-card-thumb">
+              <img src={`https://img.youtube.com/vi/${latestSong.data.youtube_id}/maxresdefault.jpg`} alt={latestSong.data.title} loading="lazy" />
+            </div>
+            <h3 class="home-card-title">{latestSong.data.title}</h3>
+            <p class="home-card-desc">{latestSong.data.description ?? ""}</p>
+          </a>
+          <a class="home-card-cta" href={href("/disco/")}>一覧を見る →</a>
+        </article>
+      )}
+
+      <a href={href("/info/")} class="home-card home-card-link journal-entry-animate">
+        <div class="home-card-head">
+          <span class="home-card-label">Information</span>
+        </div>
+        <h3 class="home-card-title">お知らせ</h3>
+        <p class="home-card-desc">最新のお知らせや更新情報はこちらをご確認ください。</p>
+        <span class="home-card-cta">一覧を見る →</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>
