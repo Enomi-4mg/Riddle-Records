@@ -1,0 +1,957 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { galleryItems } from "../../data/gallery";
+
+const today = new Date().toISOString().slice(0, 10);
+const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
+const galleryIds = galleryItems.map((item) => item.cloudinary_id);
+---
+
+<BaseLayout title="Journal Editor" description="Riddle Records のJournal記事作成ツール。" wideContainer={true}>
+  <section class="journal-editor" data-cloudinary-base={cloudinaryBase}>
+    <header class="editor-header">
+      <h1 class="web_title">Journal Editor</h1>
+    </header>
+
+    <div class="editor-actions top-actions">
+      <button type="button" class="primary-button" data-action="copy-content">Markdownをコピー</button>
+      <button type="button" data-action="download-content">Markdownをダウンロード</button>
+      <button type="button" data-action="clear-draft">下書きを削除</button>
+      <button type="button" data-action="reset-form">初期化</button>
+      <span class="draft-status" id="draft-status" aria-live="polite"></span>
+    </div>
+
+    <div class="editor-grid">
+      <form class="editor-panel editor-form" id="journal-form">
+        <div class="panel-heading">
+          <h2>記事設定</h2>
+        </div>
+
+        <div class="field-row">
+          <label>
+            <span>テンプレート</span>
+            <select id="template">
+              <option value="journal">通常Journal</option>
+              <option value="making">制作メモ</option>
+              <option value="report">月次報告</option>
+            </select>
+          </label>
+          <label>
+            <span>日付</span>
+            <input type="date" id="date" value={today} />
+          </label>
+        </div>
+
+        <label>
+          <span>タイトル</span>
+          <input type="text" id="title" placeholder="記事タイトル" />
+        </label>
+
+        <div class="field-row">
+          <label>
+            <span>スラッグ</span>
+            <input type="text" id="slug" placeholder="例: dunes-making" />
+          </label>
+          <label>
+            <span>ファイル名</span>
+            <input type="text" id="filename" readonly />
+          </label>
+        </div>
+
+        <label>
+          <span>permalink</span>
+          <input type="text" id="permalink" placeholder="/journal/2026-04-30/sample/" />
+        </label>
+
+        <label>
+          <span>OG description</span>
+          <textarea id="og-description" rows="3" placeholder="一覧やOGPに使う短い説明"></textarea>
+        </label>
+
+        <label>
+          <span>OG image</span>
+          <input type="text" id="image" list="gallery-id-list" placeholder="Cloudinary ID または https:// から始まるURL" />
+        </label>
+
+        <div class="field-row compact-row">
+          <label>
+            <span>tags</span>
+            <input type="text" id="tags" placeholder="日記, 3DCG, 制作" />
+          </label>
+          <label>
+            <span>featured_related</span>
+            <input type="text" id="featured-related" list="gallery-id-list" placeholder="Cloudinary IDをカンマ区切り" />
+          </label>
+        </div>
+
+        <div class="field-row compact-row">
+          <label>
+            <span>thumbnail_class</span>
+            <input type="text" id="thumbnail-class" placeholder="任意" />
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" id="use-math" />
+            <span>数式を使う</span>
+          </label>
+        </div>
+
+        <label>
+          <span>本文 Markdown</span>
+          <textarea id="body" class="body-editor" spellcheck="false"></textarea>
+        </label>
+
+        <section class="card-builder">
+          <div class="panel-heading">
+            <h2>画像カード</h2>
+          </div>
+
+          <div class="field-row">
+            <label>
+              <span>Cloudinary ID</span>
+              <input type="text" id="card-cloudinary-id" list="gallery-id-list" placeholder="example_image_abcd12.jpg" />
+            </label>
+            <label>
+              <span>キャプション</span>
+              <input type="text" id="card-caption" placeholder="画像の説明" />
+            </label>
+          </div>
+
+          <div class="field-row compact-row">
+            <label>
+              <span>Lightbox group</span>
+              <input type="text" id="card-lightbox" value="Journal" />
+            </label>
+            <label>
+              <span>見出し</span>
+              <input type="text" id="card-heading" placeholder="カード内見出し" />
+            </label>
+          </div>
+
+          <div class="editor-actions">
+            <button type="button" data-action="insert-card">本文に画像カードを挿入</button>
+            <button type="button" data-action="append-featured">featured_relatedに追加</button>
+          </div>
+        </section>
+      </form>
+
+      <aside class="editor-side">
+        <section class="editor-panel">
+          <div class="panel-heading">
+            <h2>生成結果</h2>
+          </div>
+          <label>
+            <span>Markdown</span>
+            <textarea id="output-content" class="output-editor" readonly spellcheck="false"></textarea>
+          </label>
+        </section>
+
+        <section class="editor-panel">
+          <div class="panel-heading">
+            <h2>プレビュー</h2>
+          </div>
+          <article id="preview" class="preview"></article>
+        </section>
+      </aside>
+    </div>
+
+    <datalist id="gallery-id-list">
+      {galleryIds.map((id) => <option value={id} />)}
+    </datalist>
+  </section>
+</BaseLayout>
+
+<script is:inline>
+  const editorRoot = document.querySelector(".journal-editor");
+  const cloudinaryBase = editorRoot.dataset.cloudinaryBase;
+  const fields = {
+    template: document.getElementById("template"),
+    date: document.getElementById("date"),
+    title: document.getElementById("title"),
+    slug: document.getElementById("slug"),
+    filename: document.getElementById("filename"),
+    permalink: document.getElementById("permalink"),
+    ogDescription: document.getElementById("og-description"),
+    image: document.getElementById("image"),
+    tags: document.getElementById("tags"),
+    featuredRelated: document.getElementById("featured-related"),
+    thumbnailClass: document.getElementById("thumbnail-class"),
+    useMath: document.getElementById("use-math"),
+    body: document.getElementById("body"),
+    outputContent: document.getElementById("output-content"),
+    preview: document.getElementById("preview"),
+    cardCloudinaryId: document.getElementById("card-cloudinary-id"),
+    cardCaption: document.getElementById("card-caption"),
+    cardLightbox: document.getElementById("card-lightbox"),
+    cardHeading: document.getElementById("card-heading"),
+    draftStatus: document.getElementById("draft-status")
+  };
+
+  const storageKey = "riddle-records:journal-editor-draft";
+  let isRestoringDraft = false;
+
+  const templates = {
+    journal: {
+      body: "# 見出し\n\nここに本文を書きます。\n",
+      permalink: ({ date }) => `/journal/${date}/`,
+      filename: ({ date, slug }) => slug ? `${date}-${slug}.md` : `${date}.md`
+    },
+    making: {
+      body: "# 概要\n\n## 制作メモ\n\n## こだわり\n\n## 関連\n\n",
+      permalink: ({ date, slug }) => {
+        const [year, month, day] = date.split("-");
+        return slug ? `/journal/${year}/${month}/${day}/${slug}/` : `/journal/${date}/`;
+      },
+      filename: ({ date, slug }) => slug ? `${date}-${slug}.md` : `${date}-making.md`
+    },
+    report: {
+      body: "# 今月の報告\n\n## やったこと\n\n- \n\n## 見たもの・行った場所\n\n- \n\n## これから\n\n- \n",
+      permalink: ({ date }) => `/journal/${date}/`,
+      filename: ({ date, slug }) => slug ? `${date}-${slug}.md` : `${date}.md`
+    }
+  };
+
+  const splitList = (value) => value.split(",").map((item) => item.trim()).filter(Boolean);
+  const slugify = (value) => value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9_-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+  const escapeHtml = (value) => value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+  const yamlString = (value) => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  const yamlArray = (items) => `[${items.map(yamlString).join(", ")}]`;
+  const formatPreviewDate = (value) => {
+    if (!value) return "";
+    const [year, month, day] = value.split("-");
+    return `${year}年${month}月${day}日`;
+  };
+  const applyInlineMarkdown = (value) => escapeHtml(value)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+  function buildFrontmatter() {
+    const lines = ["---"];
+    const title = fields.title.value.trim() || "Untitled";
+    const date = fields.date.value;
+    const tags = splitList(fields.tags.value);
+    const related = splitList(fields.featuredRelated.value);
+
+    lines.push(`title: ${yamlString(title)}`);
+    if (date) lines.push(`date: ${date}`);
+    if (fields.ogDescription.value.trim()) lines.push(`og_description: ${yamlString(fields.ogDescription.value.trim())}`);
+    if (fields.image.value.trim()) lines.push(`image: ${yamlString(fields.image.value.trim())}`);
+    if (fields.permalink.value.trim()) lines.push(`permalink: ${fields.permalink.value.trim()}`);
+    if (related.length > 0) lines.push(`featured_related: ${yamlArray(related)}`);
+    if (fields.useMath.checked) lines.push("use_math: true");
+    if (tags.length > 0) lines.push(`tags: ${yamlArray(tags)}`);
+    if (fields.thumbnailClass.value.trim()) lines.push(`thumbnail_class: ${yamlString(fields.thumbnailClass.value.trim())}`);
+    lines.push("---");
+    return lines.join("\n");
+  }
+
+  function renderMarkdown(markdown) {
+    const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+    const html = [];
+    let inList = false;
+    let inOrderedList = false;
+    let inCode = false;
+    let codeLines = [];
+
+    const closeList = () => {
+      if (inList) {
+        html.push("</ul>");
+        inList = false;
+      }
+      if (inOrderedList) {
+        html.push("</ol>");
+        inOrderedList = false;
+      }
+    };
+
+    lines.forEach((line) => {
+      if (line.startsWith("```")) {
+        if (inCode) {
+          html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+          codeLines = [];
+          inCode = false;
+        } else {
+          closeList();
+          inCode = true;
+        }
+        return;
+      }
+
+      if (inCode) {
+        codeLines.push(line);
+        return;
+      }
+
+      if (!line.trim()) {
+        closeList();
+        return;
+      }
+
+      const heading = line.match(/^(#{1,4})\s+(.+)$/);
+      if (heading) {
+        closeList();
+        const level = heading[1].length;
+        html.push(`<h${level}>${applyInlineMarkdown(heading[2])}</h${level}>`);
+        return;
+      }
+
+      const listItem = line.match(/^[-*]\s+(.+)$/);
+      if (listItem) {
+        if (inOrderedList) {
+          html.push("</ol>");
+          inOrderedList = false;
+        }
+        if (!inList) {
+          html.push("<ul>");
+          inList = true;
+        }
+        html.push(`<li>${applyInlineMarkdown(listItem[1])}</li>`);
+        return;
+      }
+
+      const orderedListItem = line.match(/^\d+\.\s+(.+)$/);
+      if (orderedListItem) {
+        if (inList) {
+          html.push("</ul>");
+          inList = false;
+        }
+        if (!inOrderedList) {
+          html.push("<ol>");
+          inOrderedList = true;
+        }
+        html.push(`<li>${applyInlineMarkdown(orderedListItem[1])}</li>`);
+        return;
+      }
+
+      const quote = line.match(/^>\s?(.+)$/);
+      if (quote) {
+        closeList();
+        html.push(`<blockquote><p>${applyInlineMarkdown(quote[1])}</p></blockquote>`);
+        return;
+      }
+
+      if (line.trim().startsWith("<")) {
+        closeList();
+        html.push(line);
+        return;
+      }
+
+      closeList();
+      html.push(`<p>${applyInlineMarkdown(line)}</p>`);
+    });
+
+    closeList();
+    return html.join("\n");
+  }
+
+  function renderPreview(markdown) {
+    const previewDate = formatPreviewDate(fields.date.value);
+    const title = fields.title.value.trim() || "Untitled";
+    const summary = fields.ogDescription.value.trim();
+    const bodyHtml = renderMarkdown(markdown);
+
+    fields.preview.innerHTML = `
+      <header class="journal-hero preview-hero">
+        ${previewDate ? `<p class="journal-date"><time datetime="${escapeHtml(fields.date.value)}">${escapeHtml(previewDate)}</time></p>` : ""}
+        <h1 class="page_title">${escapeHtml(title)}</h1>
+        ${summary ? `<p class="journal-summary">${applyInlineMarkdown(summary)}</p>` : ""}
+      </header>
+      <div class="post-content journal-content preview-content">
+        ${bodyHtml}
+      </div>
+    `;
+  }
+
+  function syncDerivedFields(forcePermalink = false) {
+    const date = fields.date.value;
+    const slug = slugify(fields.slug.value);
+    if (fields.slug.value && fields.slug.value !== slug) {
+      fields.slug.value = slug;
+    }
+    const template = templates[fields.template.value];
+    fields.filename.value = template.filename({ date, slug });
+    if (forcePermalink || !fields.permalink.dataset.touched) {
+      fields.permalink.value = template.permalink({ date, slug });
+    }
+  }
+
+  function generate() {
+    syncDerivedFields(false);
+    const markdown = `${buildFrontmatter()}\n\n${fields.body.value.trimEnd()}\n`;
+    fields.outputContent.value = markdown;
+    renderPreview(fields.body.value);
+    saveDraft();
+  }
+
+  function insertAtCursor(textarea, text) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    textarea.value = `${textarea.value.slice(0, start)}${text}${textarea.value.slice(end)}`;
+    textarea.selectionStart = textarea.selectionEnd = start + text.length;
+    textarea.focus();
+  }
+
+  function buildImageCard() {
+    const id = fields.cardCloudinaryId.value.trim();
+    const caption = fields.cardCaption.value.trim();
+    const heading = fields.cardHeading.value.trim() || caption;
+    const lightbox = fields.cardLightbox.value.trim() || "Journal";
+    if (!id) return "";
+
+    return `<div class="journal-card-grid">
+  <div class="journal-card no-gallery-button">
+    <a href="${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${escapeHtml(id)}" data-lightbox="${escapeHtml(lightbox)}" data-title="${escapeHtml(caption)}">
+      <img src="${cloudinaryBase}/w_300,h_300,c_fill,q_auto,f_auto/v1/${escapeHtml(id)}" alt="${escapeHtml(caption)}">
+    </a>
+    <div class="journal-card-info">
+      <h4>${escapeHtml(heading)}</h4>
+    </div>
+  </div>
+</div>`;
+  }
+
+  async function copyOutput() {
+    await navigator.clipboard.writeText(fields.outputContent.value);
+    setDraftStatus("Markdownをコピーしました");
+  }
+
+  function downloadOutput() {
+    const blob = new Blob([fields.outputContent.value], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fields.filename.value || "journal.md";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setDraftStatus("Markdownをダウンロードしました");
+  }
+
+  function getDraftData() {
+    return {
+      template: fields.template.value,
+      date: fields.date.value,
+      title: fields.title.value,
+      slug: fields.slug.value,
+      permalink: fields.permalink.value,
+      permalinkTouched: fields.permalink.dataset.touched === "true",
+      ogDescription: fields.ogDescription.value,
+      image: fields.image.value,
+      tags: fields.tags.value,
+      featuredRelated: fields.featuredRelated.value,
+      thumbnailClass: fields.thumbnailClass.value,
+      useMath: fields.useMath.checked,
+      body: fields.body.value,
+      cardCloudinaryId: fields.cardCloudinaryId.value,
+      cardCaption: fields.cardCaption.value,
+      cardLightbox: fields.cardLightbox.value,
+      cardHeading: fields.cardHeading.value
+    };
+  }
+
+  function setDraftData(data) {
+    if (!data || typeof data !== "object") return false;
+    fields.template.value = data.template && templates[data.template] ? data.template : "journal";
+    fields.date.value = data.date || fields.date.value;
+    fields.title.value = data.title || "";
+    fields.slug.value = data.slug || "";
+    fields.permalink.value = data.permalink || "";
+    fields.permalink.dataset.touched = data.permalinkTouched ? "true" : "";
+    fields.ogDescription.value = data.ogDescription || "";
+    fields.image.value = data.image || "";
+    fields.tags.value = data.tags || "";
+    fields.featuredRelated.value = data.featuredRelated || "";
+    fields.thumbnailClass.value = data.thumbnailClass || "";
+    fields.useMath.checked = Boolean(data.useMath);
+    fields.body.value = data.body || templates[fields.template.value].body;
+    fields.cardCloudinaryId.value = data.cardCloudinaryId || "";
+    fields.cardCaption.value = data.cardCaption || "";
+    fields.cardLightbox.value = data.cardLightbox || "Journal";
+    fields.cardHeading.value = data.cardHeading || "";
+    return true;
+  }
+
+  function saveDraft() {
+    if (isRestoringDraft) return;
+    localStorage.setItem(storageKey, JSON.stringify(getDraftData()));
+    setDraftStatus("下書きを自動保存しました");
+  }
+
+  function restoreDraft() {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return false;
+
+    try {
+      isRestoringDraft = true;
+      const restored = setDraftData(JSON.parse(raw));
+      isRestoringDraft = false;
+      if (restored) {
+        generate();
+        setDraftStatus("保存済みの下書きを復元しました");
+      }
+      return restored;
+    } catch {
+      isRestoringDraft = false;
+      localStorage.removeItem(storageKey);
+      return false;
+    }
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(storageKey);
+    setDraftStatus("保存済みの下書きを削除しました");
+  }
+
+  function setDraftStatus(message) {
+    fields.draftStatus.textContent = message;
+  }
+
+  function resetForm() {
+    fields.title.value = "";
+    fields.slug.value = "";
+    fields.permalink.dataset.touched = "";
+    fields.ogDescription.value = "";
+    fields.image.value = "";
+    fields.tags.value = "";
+    fields.featuredRelated.value = "";
+    fields.thumbnailClass.value = "";
+    fields.useMath.checked = false;
+    fields.cardCloudinaryId.value = "";
+    fields.cardCaption.value = "";
+    fields.cardLightbox.value = "Journal";
+    fields.cardHeading.value = "";
+    fields.body.value = templates[fields.template.value].body;
+    syncDerivedFields(true);
+    generate();
+    setDraftStatus("初期化しました");
+  }
+
+  document.querySelectorAll("input, textarea, select").forEach((field) => {
+    field.addEventListener("input", generate);
+    field.addEventListener("change", generate);
+  });
+
+  fields.permalink.addEventListener("input", () => {
+    fields.permalink.dataset.touched = "true";
+  });
+
+  fields.template.addEventListener("change", () => {
+    fields.body.value = templates[fields.template.value].body;
+    fields.permalink.dataset.touched = "";
+    syncDerivedFields(true);
+    generate();
+  });
+
+  document.querySelector("[data-action='insert-card']").addEventListener("click", () => {
+    const card = buildImageCard();
+    if (!card) return;
+    insertAtCursor(fields.body, `\n\n${card}\n\n`);
+    generate();
+  });
+
+  document.querySelector("[data-action='append-featured']").addEventListener("click", () => {
+    const id = fields.cardCloudinaryId.value.trim();
+    if (!id) return;
+    const items = splitList(fields.featuredRelated.value);
+    if (!items.includes(id)) items.push(id);
+    fields.featuredRelated.value = items.join(", ");
+    generate();
+  });
+
+  document.querySelector("[data-action='copy-content']").addEventListener("click", copyOutput);
+  document.querySelector("[data-action='download-content']").addEventListener("click", downloadOutput);
+  document.querySelector("[data-action='clear-draft']").addEventListener("click", clearDraft);
+  document.querySelector("[data-action='reset-form']").addEventListener("click", resetForm);
+
+  if (!restoreDraft()) {
+    resetForm();
+  }
+</script>
+
+<style>
+  .journal-editor {
+    --editor-ink: #122019;
+    --editor-muted: rgba(18, 32, 25, 0.68);
+    --editor-line: rgba(18, 32, 25, 0.14);
+    --editor-panel: rgba(255, 255, 255, 0.86);
+    --editor-panel-strong: #ffffff;
+    --editor-accent: #168a73;
+    --editor-accent-dark: #0f6f5c;
+    --editor-warm: #f5efe5;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 clamp(0.75rem, 2vw, 1.5rem) 3rem;
+    color: var(--editor-ink);
+  }
+
+  .editor-header {
+    max-width: 900px;
+    margin: 0 auto 1rem;
+    text-align: center;
+  }
+
+  .editor-header .web_title {
+    margin-bottom: 0.6rem;
+  }
+
+  .editor-grid {
+    display: grid;
+    grid-template-columns: minmax(520px, 1.04fr) minmax(390px, 0.96fr);
+    gap: clamp(1rem, 2vw, 1.5rem);
+    align-items: start;
+  }
+
+  .editor-side {
+    display: grid;
+    gap: 1rem;
+    position: sticky;
+    top: 1rem;
+  }
+
+  .editor-panel {
+    padding: clamp(1rem, 2vw, 1.25rem);
+    border: 1px solid var(--editor-line);
+    border-radius: 8px;
+    background: var(--editor-panel);
+    box-shadow: 0 10px 30px rgba(18, 32, 25, 0.06);
+  }
+
+  .editor-form {
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--editor-line);
+  }
+
+  .panel-heading h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .compact-row {
+    align-items: end;
+  }
+
+  label {
+    display: grid;
+    gap: 0.38rem;
+    margin-bottom: 0.8rem;
+    color: var(--editor-ink);
+    font-weight: 700;
+  }
+
+  label span {
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--editor-line);
+    border-radius: 6px;
+    padding: 0.68rem 0.75rem;
+    background: var(--editor-panel-strong);
+    color: var(--editor-ink);
+    font: inherit;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: rgba(22, 138, 115, 0.72);
+    box-shadow: 0 0 0 3px rgba(22, 138, 115, 0.14);
+    outline: none;
+  }
+
+  input[readonly],
+  textarea[readonly] {
+    background: #f8faf8;
+    color: rgba(18, 32, 25, 0.8);
+  }
+
+  textarea {
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    line-height: 1.55;
+  }
+
+  .body-editor {
+    min-height: 460px;
+  }
+
+  .output-editor {
+    min-height: 300px;
+    font-size: 0.88rem;
+  }
+
+  .checkbox-field {
+    display: flex;
+    min-height: 43px;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.68rem 0.75rem;
+    border: 1px solid var(--editor-line);
+    border-radius: 6px;
+    background: var(--editor-panel-strong);
+  }
+
+  .checkbox-field input {
+    width: auto;
+    accent-color: var(--editor-accent);
+  }
+
+  .card-builder {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba(22, 138, 115, 0.18);
+    border-radius: 8px;
+    background: linear-gradient(180deg, rgba(22, 138, 115, 0.07), rgba(245, 239, 229, 0.42));
+  }
+
+  .editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .top-actions {
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    margin-bottom: 1rem;
+    padding: 0.7rem;
+    border: 1px solid var(--editor-line);
+    border-radius: 8px;
+    background: rgba(252, 253, 250, 0.9);
+    backdrop-filter: blur(12px);
+  }
+
+  .draft-status {
+    flex: 1 1 180px;
+    min-height: 1.5rem;
+    color: var(--editor-muted);
+    font-size: 0.88rem;
+    text-align: right;
+  }
+
+  button {
+    min-height: 42px;
+    border: 1px solid var(--editor-line);
+    border-radius: 6px;
+    padding: 0.58rem 0.9rem;
+    background: #fbfcfa;
+    color: var(--editor-ink);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  }
+
+  button:hover {
+    border-color: rgba(22, 138, 115, 0.35);
+    background: #eef6f2;
+    transform: translateY(-1px);
+  }
+
+  .primary-button {
+    border-color: var(--editor-accent);
+    background: var(--editor-accent);
+    color: white;
+  }
+
+  .primary-button:hover {
+    background: var(--editor-accent-dark);
+  }
+
+  .preview {
+    min-height: 360px;
+    max-height: min(720px, 68vh);
+    padding: 0;
+    border: 1px solid var(--editor-line);
+    border-radius: 6px;
+    background: var(--editor-panel-strong);
+    overflow: auto;
+    line-height: 1.8;
+  }
+
+  .preview-hero {
+    padding: clamp(1.2rem, 2.4vw, 2rem) clamp(1rem, 2.4vw, 2rem) 1rem;
+    border-bottom: 1px solid var(--editor-line);
+    background: linear-gradient(180deg, rgba(245, 239, 229, 0.56), rgba(255, 255, 255, 0));
+  }
+
+  .preview-hero .journal-date {
+    margin: 0 0 0.5rem;
+    color: var(--editor-muted);
+    font-size: 0.95rem;
+  }
+
+  .preview-hero .page_title {
+    margin: 0;
+    color: var(--editor-ink);
+    font-size: clamp(1.65rem, 3vw, 2.45rem);
+    line-height: 1.3;
+  }
+
+  .preview-hero .journal-summary {
+    max-width: 72ch;
+    margin: 0.8rem 0 0;
+    color: rgba(18, 32, 25, 0.78);
+    font-size: 1.02rem;
+  }
+
+  .preview-content {
+    padding: clamp(1rem, 2.4vw, 2rem);
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .preview h1,
+  .preview h2,
+  .preview h3,
+  .preview h4 {
+    color: var(--editor-ink);
+    line-height: 1.45;
+  }
+
+  .preview h1 {
+    font-size: 1.8rem;
+    margin: 0 0 1.2rem;
+  }
+
+  .preview h2 {
+    margin-top: 1.6rem;
+    padding-left: 0.75rem;
+    border-left: 4px solid var(--editor-accent);
+    font-size: 1.35rem;
+  }
+
+  .preview p,
+  .preview li {
+    color: rgba(18, 32, 25, 0.86);
+  }
+
+  .preview a {
+    color: var(--editor-accent-dark);
+    text-decoration-thickness: 0.08em;
+    text-underline-offset: 0.16em;
+  }
+
+  .preview blockquote {
+    margin: 1.4rem 0;
+    padding: 0.2rem 1rem;
+    border-left: 4px solid rgba(22, 138, 115, 0.36);
+    color: rgba(18, 32, 25, 0.74);
+    background: rgba(22, 138, 115, 0.06);
+  }
+
+  .preview code {
+    padding: 0.12rem 0.32rem;
+    border-radius: 4px;
+    background: rgba(18, 32, 25, 0.08);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.92em;
+  }
+
+  .preview :global(.journal-card-grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin: 1.2rem 0;
+  }
+
+  .preview :global(.journal-card) {
+    overflow: hidden;
+    border: 1px solid var(--editor-line);
+    border-radius: 8px;
+    background: #fbfcfa;
+  }
+
+  .preview :global(.journal-card img) {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .preview pre {
+    overflow-x: auto;
+    padding: 1rem;
+    border-radius: 6px;
+    background: #f6f3ed;
+    font-size: 0.88rem;
+  }
+
+  .preview pre code {
+    padding: 0;
+    background: transparent;
+  }
+
+  @media (max-width: 1080px) {
+    .editor-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .editor-side,
+    .top-actions {
+      position: static;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+
+    .top-actions {
+      justify-content: stretch;
+    }
+
+    .top-actions button,
+    .editor-actions button {
+      flex: 1 1 100%;
+    }
+
+    .draft-status {
+      flex-basis: 100%;
+      text-align: left;
+    }
+
+    .body-editor {
+      min-height: 360px;
+    }
+  }
+</style>
