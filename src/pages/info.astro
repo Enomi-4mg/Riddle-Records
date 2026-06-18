@@ -10,13 +10,13 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
   <h1 class="web_title">Information</h1>
 
   <h2 class="page_title">このサイトについて</h2>
-  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+  <div class="info-section journal-entry-animate">
     <p>Riddle Records は、日記・音楽記録・ギャラリーを統合したポートフォリオサイトです。日常の記録から創作物まで、様々なコンテンツを管理・公開する目的で制作されました。</p>
     <p>このサイトは Astro による静的サイト生成をベースに、HTML5・CSS3・JavaScript などのモダンなウェブ技術を組み合わせて実装されています。GitHub Pages でホスティングされており、リポジトリへの push と同時に自動ビルド・デプロイが実行されます。</p>
     <p>技術的な詳細については、<a href={href("/tech/")}>技術基盤ページ</a>をご覧ください。</p>
   </div>
 
-  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+  <div class="info-section journal-entry-animate">
     <h2 class="page_title">ツール一覧</h2>
     <h3><a href={href("/tools/image-compressor.html")}>画像圧縮ツール→</a></h3>
     <p>画像ファイルを効率的に圧縮します</p>
@@ -26,7 +26,7 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
     <p>※まだ使えない…、ローカルでのみ動きます。</p>
   </div>
 
-  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+  <div class="info-section journal-entry-animate">
     <h2 class="page_title">サイト作成用のテンプレ生成ツール</h2>
     <h3><a href={href("/tools/journal-editor/")}>Journal Editor→</a></h3>
     <p>Journal記事のfrontmatter、本文、画像カードをまとめて生成します</p>
@@ -41,7 +41,7 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
     <p>Journal記事のMarkdownファイルをテンプレートから生成します</p>
   </div>
 
-  <div class="journal-entry-animate" style="max-width: 1000px; margin: 0 auto; padding: 0 1rem;">
+  <div class="info-section journal-entry-animate">
     <h2 class="page_title">ソースコード</h2>
     <p>このサイトの全ソースコードは <a href="https://github.com/enomi-4mg/Riddle-Records">GitHub リポジトリ</a> で公開しています。</p>
   </div>

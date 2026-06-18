@@ -374,7 +374,7 @@ function initializeJournalFeatures() {
     });
 
     if (grid.children.length > 0) {
-      contentWorksDiv.style.display = 'block';
+      contentWorksDiv.hidden = false;
     }
   }
 

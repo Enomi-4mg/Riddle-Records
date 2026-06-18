@@ -135,13 +135,13 @@ function checkRelatedWorks() {
   if (!noRelatedMessage) return; // Journal記事ページでない場合は終了
   
   // 各セクションの表示状態をチェック
-  const hasContentWorks = contentWorksDiv && contentWorksDiv.style.display !== 'none';
+  const hasContentWorks = contentWorksDiv && !contentWorksDiv.hidden;
   const hasFeaturedWorks = !!featuredWorks;
   const hasSameDateWorks = !!sameDateWorks;
   
   // 全て空の場合のみメッセージを表示
   if (!hasContentWorks && !hasFeaturedWorks && !hasSameDateWorks) {
-    noRelatedMessage.style.display = 'block';
+    noRelatedMessage.hidden = false;
   }
 }
 

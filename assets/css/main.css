@@ -12,6 +12,12 @@
     --space-md: 1rem;
     --space-lg: 1.5rem;
     --space-xl: 2rem;
+    --baseline: 8px;
+    --layout-max: 1000px;
+    --layout-wide-max: 1200px;
+    --layout-pad: clamp(16px, 4vw, 32px);
+    --grid-gap: clamp(var(--space-md), 2.4vw, var(--space-xl));
+    --grid-min-card: 240px;
     --radius-sm: 0.35rem;
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
@@ -72,10 +78,10 @@ img {
 /* 画像カード形式グリッド */
 .journal-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin: 1.5rem auto;
-    max-width: 1000px;
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-card), 1fr));
+    gap: var(--grid-gap);
+    margin: var(--space-lg) auto;
+    max-width: var(--layout-max);
 }
 
 /* カード個別スタイル */
@@ -131,7 +137,7 @@ img {
 @media screen and (max-width: 600px) {
     .journal-card-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: var(--grid-gap);
     }
 }
 
@@ -139,9 +145,9 @@ img {
 .making-comparison-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
-    margin: 2rem auto;
-    max-width: 1200px;
+    gap: var(--grid-gap);
+    margin: var(--space-xl) auto;
+    max-width: var(--layout-wide-max);
 }
 
 .comparison-item {
@@ -176,7 +182,7 @@ img {
 @media screen and (max-width: 768px) {
     .making-comparison-grid {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: var(--grid-gap);
     }
 }
 
@@ -187,16 +193,16 @@ img {
     font-size: 2.8rem;
     color: var(--color-ink);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
-    max-width: 1400px;
-    padding: 0 15px;
+    max-width: var(--layout-wide-max);
+    padding: 0 var(--layout-pad);
 }
 .page_title {
     font-size: 2.1rem;
     margin: 1.5rem auto;
-    padding: 0 15px;
+    padding: 0 var(--layout-pad);
     color: var(--color-ink);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.349);
-    max-width: 1000px;
+    max-width: var(--layout-max);
 }
 
 /* ===== Header Styles ===== */
@@ -412,9 +418,9 @@ img {
 /* Discography Grid Card Styles */
 .disco-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
-    padding: 2rem 0;
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-card), 1fr));
+    gap: var(--grid-gap);
+    padding: var(--space-xl) 0;
 }
 
 .disco-card {
@@ -434,7 +440,7 @@ img {
     position: relative;
     overflow: hidden;
     display: block;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 16 / 10;
 }
 
 .disco-card-image img {
@@ -472,17 +478,16 @@ img {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: var(--layout-max);
     width: 100%;
     margin: 0 auto;
-    padding: 0 15px;
+    padding: 0 var(--layout-pad);
     box-sizing: border-box;
 }
 
 /* Wide container for content-heavy pages (Journal, Gallery) */
 .container.wide-container {
-    max-width: 1400px;
-    padding: 0 15px;
+    max-width: var(--layout-wide-max);
 }
 .social_links {
     display: flex;
@@ -505,9 +510,9 @@ img {
 .profile-card {
     display: grid;
     grid-template-columns: 140px 1fr;
-    gap: 1rem;
+    gap: var(--space-lg);
     align-items: start;
-    max-width: 1000px;
+    max-width: var(--layout-max);
     margin: 10px auto 16px auto;
     padding: 1.2rem;
     border-radius: 0.75rem;
@@ -593,7 +598,7 @@ img {
     gap: 0.75rem 1rem;
     flex-wrap: wrap;
     margin: 0 auto 6px auto;
-    padding: 0 15px;
+    padding: 0 var(--layout-pad);
     list-style: none;
 }
 .profile-links .link-list li {
@@ -626,7 +631,7 @@ img {
 /* Intro section width align with profile card */
 .about-intro {
     margin: 0 auto 16px auto;
-    padding: 0 15px;
+    padding: 0 var(--layout-pad);
 }
 .about-intro p {
     margin: 0.25rem 0;
@@ -640,7 +645,7 @@ img {
 /* ===== Works Preview ===== */
 .works-preview {
     margin: 0 auto 16px auto;
-    padding: 0 15px;
+    padding: 0 var(--layout-pad);
 }
 .works-preview .page_title {
     margin: 1rem 0 0.75rem 0;
@@ -648,8 +653,8 @@ img {
 }
 .works-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-md);
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-card), 1fr));
+    gap: var(--grid-gap);
 }
 .work-card {
     display: flex;
@@ -700,8 +705,8 @@ img {
 
 @media screen and (max-width: 1024px) {
     .works-grid {
-        grid-template-columns: 1fr;
-        gap: 1.25rem;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min-card)), 1fr));
+        gap: var(--grid-gap);
     }
 }
 @media screen and (max-width: 600px) {
@@ -859,23 +864,17 @@ img {
     .work_img {
         max-width: 85%;
     }
-    .home-grid,
-    .works-grid,
-    .disco-grid,
-    .journal-card-grid {
-        grid-template-columns: 1fr;
-    }
     .disco-grid {
-        gap: 1.25rem;
+        gap: var(--grid-gap);
         padding: 1.25rem 0;
     }
     .works-grid,
     .journal-card-grid {
-        gap: 1.25rem;
+        gap: var(--grid-gap);
     }
     .home-grid {
-        gap: 1.5rem;
-        margin: 0 20px;
+        gap: var(--grid-gap);
+        margin: 0;
     }
     p {
         font-size: 18px;
@@ -949,24 +948,21 @@ img {
     }
     .container {
         max-width: 100%;
-        padding: 0 20px;
     }
     .home-intro {
-        padding: 0 20px;
         margin: 2.5rem auto 1.75rem auto;
     }
     .home-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-        margin: 0 20px;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min-card)), 1fr));
+        gap: var(--grid-gap);
     }
     .works-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min-card)), 1fr));
+        gap: var(--grid-gap);
     }
     .disco-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min-card)), 1fr));
+        gap: var(--grid-gap);
     }
     .profile-card {
         margin: 10px auto 16px auto;
@@ -980,16 +976,13 @@ img {
         height: 160px;
     }
     .about-intro {
-        padding: 0 20px;
         margin: 0 auto 16px auto;
     }
     .works-preview {
-        padding: 0 20px;
         margin: 0 auto 16px auto;
     }
     .profile-links .link-list {
         margin: 0 auto 6px auto;
-        padding: 0 20px;
     }
 }
 @media screen and (max-width: 600px) {
@@ -1147,8 +1140,8 @@ img {
 .home-intro {
     text-align: left;
     margin: 2rem auto 1.5rem auto;
-    max-width: 800px;
-    padding: 0 15px;
+    max-width: var(--layout-max);
+    padding: 0 var(--layout-pad);
 }
 
 .home-welcome {
@@ -1169,8 +1162,8 @@ img {
 
 .home-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-card), 1fr));
+    gap: var(--grid-gap);
     margin-top: 2rem;
 }
 
@@ -1290,8 +1283,8 @@ img {
 @media screen and (max-width: 768px) {
     .home-grid {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
-        margin: 0 15px;
+        gap: var(--grid-gap);
+        margin: 0;
     }
     .home-card {
         padding: 1.2rem;
@@ -1918,15 +1911,15 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 
 /* ===== Unified Works Cards ===== */
 .works-intro {
-    max-width: 1000px;
+    max-width: var(--layout-max);
     margin: 0 auto var(--space-xl);
-    padding: 0 15px;
+    padding: 0 var(--layout-pad);
 }
 
 .works-grid-list {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: var(--space-lg);
-    max-width: 1200px;
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-card), 1fr));
+    gap: var(--grid-gap);
+    max-width: var(--layout-wide-max);
     margin: 0 auto;
 }
 
@@ -2016,16 +2009,16 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 
 /* ===== Project Pages ===== */
 .project-intro {
-    max-width: 1000px;
+    max-width: var(--layout-max);
     margin: 0 auto 2rem;
-    padding: 0 15px;
+    padding: 0 var(--layout-pad);
 }
 
 .project-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    max-width: 1200px;
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-card), 1fr));
+    gap: var(--grid-gap);
+    max-width: var(--layout-wide-max);
     margin: 0 auto;
 }
 
@@ -2146,7 +2139,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 }
 
 .project-detail {
-    max-width: 1000px;
+    max-width: var(--layout-max);
     margin: 0 auto;
 }
 
@@ -2227,6 +2220,12 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .project-action:hover {
     transform: translateY(-1px);
     opacity: 0.9;
+}
+
+.info-section {
+    max-width: var(--layout-max);
+    margin: 0 auto var(--space-xl);
+    padding: 0 var(--layout-pad);
 }
 
 @media screen and (max-width: 768px) {

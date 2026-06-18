@@ -150,3 +150,14 @@ Add `making_article_url` when there is a separate making-of post.
 ## Deployment
 
 GitHub Pages is handled by `.github/workflows/astro-pages.yml`.
+
+Cloudflare Pages is not used for this repository. If a Cloudflare Pages project
+is still connected to the repo, set its **Ignored build step** command to:
+
+```bash
+./scripts/skip-cloudflare-pages.sh
+```
+
+Cloudflare treats an exit code of `0` from that command as "skip this build",
+so the project remains outside the Cloudflare build target while GitHub Pages
+continues to deploy normally.
