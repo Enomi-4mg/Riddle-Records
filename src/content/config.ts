@@ -14,7 +14,8 @@ const journalCollection = defineCollection({
     featured_related: z.array(z.string()).nullable().optional(),
     use_math: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
-    thumbnail_class: z.string().optional()
+    thumbnail_class: z.string().optional(),
+    draft: z.boolean().optional()
   })
 });
 

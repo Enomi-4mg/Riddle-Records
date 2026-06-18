@@ -23,8 +23,8 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 
     <nav class="header-nav header-nav-right">
       <ul class="nav-menu">
-        <li class="nav-item"><a href={href("/gallery/")} class={Astro.url.pathname.includes(`${basePath}gallery`) ? "active" : ""}>Gallery</a></li>
-        <li class="nav-item"><a href={href("/disco/")} class={Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""}>Discography</a></li>
+        <li class="nav-item"><a href={href("/works/")} class={Astro.url.pathname.includes(`${basePath}works`) || Astro.url.pathname.includes(`${basePath}gallery`) || Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""}>Works</a></li>
+        <li class="nav-item"><a href={href("/project/")} class={Astro.url.pathname.includes(`${basePath}project`) ? "active" : ""}>Project</a></li>
         <li class="nav-item"><a href={href("/info/")} class={Astro.url.pathname.includes(`${basePath}info`) ? "active" : ""}>Information</a></li>
       </ul>
     </nav>

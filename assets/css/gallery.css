@@ -3,27 +3,27 @@
    ===================================== */
 .gallery-intro {
   text-align: center;
-  margin: 2rem 0;
-  padding: 1rem;
-  background: #f5f5f5;
-  border-radius: 8px;
+  margin: var(--space-xl) 0;
+  padding: var(--space-md);
+  background: var(--color-card);
+  border-radius: var(--radius-md);
 }
 
 /* =====================================
    コントロールパネル
    ===================================== */
 .gallery-controls {
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin: var(--space-xl) 0;
+  padding: var(--space-lg);
+  background: var(--color-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
 }
 
 .sort-controls {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-line);
 }
 
 .filter-controls {
@@ -35,31 +35,32 @@
 .control-btn,
 .filter-btn {
   padding: 0.5rem 1rem;
-  border: 2px solid #ddd;
-  background: white;
-  border-radius: 6px;
+  border: 2px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.95rem;
   transition: all 0.3s ease;
   font-family: 'Kiwi Maru', serif;
+  color: var(--color-ink);
 }
 
 .control-btn:hover,
 .filter-btn:hover {
   background: #f5f5f5;
-  border-color: #007acc;
+  border-color: var(--color-mint-deep);
 }
 
 .control-btn.active {
-  background: #007acc;
+  background: var(--color-mint-deep);
   color: white;
-  border-color: #007acc;
+  border-color: var(--color-mint-deep);
 }
 
 .filter-btn.active {
-  background: #ff6b6b;
+  background: var(--color-mint-deep);
   color: white;
-  border-color: #ff6b6b;
+  border-color: var(--color-mint-deep);
 }
 
 /* =====================================
@@ -68,38 +69,38 @@
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 2rem;
-  padding: 2rem 0;
+  gap: var(--space-xl);
+  padding: var(--space-xl) 0;
 }
 
 /* =====================================
    各作品のカード
    ===================================== */
 .gallery-item {
-  border: 1px solid #ddd;
-  padding: 1rem;
-  border-radius: 8px;
-  background: white;
+  border: 1px solid var(--color-line);
+  padding: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .gallery-item:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-soft);
 }
 
 /* 画像部分 */
 .gallery-image-link {
   display: block;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .gallery-item img {
   width: 100%;
   height: auto;
   display: block;
-  border-radius: 4px;
+  border-radius: 0;
   transition: transform 0.3s ease;
   cursor: pointer;
 }
@@ -110,24 +111,24 @@
 
 /* 作品情報部分 */
 .gallery-info {
-  padding-top: 1rem;
+  padding: var(--space-md);
 }
 
 .gallery-item h3 {
   margin: 0.5rem 0;
   font-size: 1.2rem;
-  color: #333;
+  color: var(--color-ink);
 }
 
 .date {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--color-muted);
   margin: 0.3rem 0;
 }
 
 .description {
   font-size: 0.95rem;
-  color: #555;
+  color: var(--color-muted);
   margin: 0.5rem 0 1rem;
   line-height: 1.5;
 }
@@ -136,7 +137,7 @@
 .category {
   display: inline-block;
   padding: 0.3rem 0.8rem;
-  border-radius: 20px;
+  border-radius: var(--radius-pill);
   font-size: 0.85rem;
   font-weight: bold;
   margin-bottom: 0.5rem;

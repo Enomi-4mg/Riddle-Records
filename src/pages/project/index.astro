@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { projects } from "../../data/projects";
+
+const base = import.meta.env.BASE_URL;
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const sortedProjects = [...projects].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
+---
+
+<BaseLayout title="Project" description="制作したアプリ・Web作品などのプロジェクト一覧。" wideContainer={true}>
+  <h1 class="web_title">Project</h1>
+
+  <section class="project-intro journal-entry-animate">
+    <p>制作したアプリ、Web作品、実験的なプロジェクトをまとめています。</p>
+  </section>
+
+  <div class="project-grid">
+    {sortedProjects.map((project) => (
+      <article class="project-card journal-entry-animate">
+        <a href={href(`/project/${project.slug}/`)} class={`project-card-visual${project.heroImage ? "" : " project-card-visual-fallback"}`}>
+          {project.heroImage ? (
+            <img src={project.heroImage} alt={`${project.title} preview`} loading="lazy" />
+          ) : (
+            <span>{project.title}</span>
+          )}
+        </a>
+
+        <div class="project-card-copy">
+          <p class="project-kicker">{project.subtitle}</p>
+          <h2 class="project-card-title">
+            <a href={href(`/project/${project.slug}/`)}>{project.title}</a>
+          </h2>
+          <time class="project-date" datetime={project.date}>{formatDate(project.date)}</time>
+          <p class="project-description">{project.description}</p>
+          <div class="project-tags" aria-label={`${project.title} tags`}>
+            {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}
+          </div>
+          <a class="project-detail-link" href={href(`/project/${project.slug}/`)}>詳細を見る</a>
+        </div>
+      </article>
+    ))}
+  </div>
+</BaseLayout>

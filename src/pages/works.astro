@@ -1,0 +1,85 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { galleryItems } from "../data/gallery";
+
+const base = import.meta.env.BASE_URL;
+const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const songs = await getCollection("songs");
+
+const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
+
+const galleryWorks = galleryItems.map((item) => ({
+  kind: "gallery",
+  id: `gallery-${item.cloudinary_id}`,
+  title: item.title,
+  date: item.date,
+  description: item.description,
+  tags: item.categories,
+  image: `${cloudinaryBase}/w_600,h_400,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`,
+  imageAlt: item.title,
+  href: item.article_url ? href(item.article_url) : `${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`,
+  external: !item.article_url
+}));
+
+const songWorks = songs.map((song) => ({
+  kind: "song",
+  id: `song-${song.id}`,
+  title: song.data.title,
+  date: song.data.date.toISOString().slice(0, 10),
+  description: song.data.description ?? "",
+  tags: ["Music", ...(song.data.tags ?? [])],
+  image: `https://img.youtube.com/vi/${song.data.youtube_id}/sddefault.jpg`,
+  imageAlt: song.data.title,
+  href: href(`/disco/${song.slug}/`),
+  external: false
+}));
+
+const works = [...galleryWorks, ...songWorks].sort((left, right) => {
+  const dateDiff = new Date(right.date).getTime() - new Date(left.date).getTime();
+  if (dateDiff !== 0) {
+    return dateDiff;
+  }
+
+  return left.title.localeCompare(right.title, "ja");
+});
+const allTags = [...new Set(works.flatMap((work) => work.tags))].sort((left, right) => left.localeCompare(right, "ja"));
+---
+
+<BaseLayout title="Works" description="イラスト・映像作品・楽曲をまとめた作品一覧。" wideContainer={true}>
+  <h1 class="web_title">Works</h1>
+
+  <div class="gallery-controls works-controls journal-entry-animate">
+    <div class="sort-controls">
+      <button id="sort-newest" class="control-btn active">新しい順</button>
+      <button id="sort-oldest" class="control-btn">古い順</button>
+    </div>
+
+    <div class="filter-controls">
+      <button class="filter-btn active" data-filter="all">すべて</button>
+      {allTags.map((tag) => (
+        <button class="filter-btn" data-filter={tag}>{tag}</button>
+      ))}
+    </div>
+  </div>
+
+  <div class="works-grid works-grid-list" id="gallery-container">
+    {works.map((work) => (
+      <article class="gallery-item work-card work-card-unified journal-entry-animate" data-work-kind={work.kind} data-date={work.date} data-categories={work.tags.join(",")}>
+        <a href={work.href} class="work-thumb" target={work.external ? "_blank" : undefined} rel={work.external ? "noopener noreferrer" : undefined}>
+          <img src={work.image} alt={work.imageAlt} loading="lazy" />
+        </a>
+        <div class="work-copy">
+          <h2 class="work-title"><a href={work.href} target={work.external ? "_blank" : undefined} rel={work.external ? "noopener noreferrer" : undefined}>{work.title}</a></h2>
+          <time datetime={work.date} class="work-date">{formatDate(work.date)}</time>
+          <p class="work-desc">{work.description}</p>
+          <div class="work-tags" aria-label={`${work.title} tags`}>
+            {work.tags.map((tag) => <span class="work-tag">{tag}</span>)}
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+</BaseLayout>

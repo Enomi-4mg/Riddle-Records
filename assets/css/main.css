@@ -1,4 +1,24 @@
 @charset "UTF-8";
+:root {
+    --color-paper: #f4fffa;
+    --color-mint: #2adca3;
+    --color-mint-deep: #1bb48e;
+    --color-ink: #06110d;
+    --color-muted: #34443d;
+    --color-line: rgba(20, 40, 30, 0.12);
+    --color-card: rgba(255, 255, 255, 0.72);
+    --space-xs: 0.4rem;
+    --space-sm: 0.75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --radius-sm: 0.35rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-pill: 999px;
+    --shadow-soft: 0 4px 14px rgba(10, 21, 16, 0.08);
+}
+
 html {
     overflow-y: scroll;
 }
@@ -11,21 +31,22 @@ body {
     font-family: "Kiwi Maru",serif;
     width: 100%;
     margin: 0;
-    background-color: #f4fffa;
+    background-color: var(--color-paper);
     padding: 80px 20px 20px 20px;
     border: none;
     overflow-x: hidden;
+    color: var(--color-ink);
 }
 h1{
-    color:rgb(47, 56, 56);
+    color: var(--color-ink);
     font-family: "Kiwi Maru",serif;
 }
 h2{
-    color:rgb(47, 56, 56);
+    color: var(--color-ink);
     font-family: "Kiwi Maru",serif;
 }
 p{
-    color:rgb(19, 27, 19);
+    color: var(--color-ink);
     font-size:20px;
 }
 ul{
@@ -40,7 +61,7 @@ a {
 img {
     max-width: 100%;
     height: auto;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     display: block;
 }
 
@@ -59,16 +80,16 @@ img {
 
 /* カード個別スタイル */
 .journal-card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
     overflow: hidden;
-    background: white;
+    background: var(--color-card);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .journal-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-soft);
 }
 
 .journal-card a {
@@ -102,7 +123,7 @@ img {
 .journal-card-info h4 {
     margin: 0 0 0.5rem 0;
     font-size: 1rem;
-    color: #333;
+    color: var(--color-ink);
     word-break: break-word;
 }
 
@@ -135,8 +156,8 @@ img {
 .comparison-item img {
     width: 100%;
     height: auto;
-    border-radius: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -148,7 +169,7 @@ img {
 .comparison-label {
     font-size: 1.1rem;
     font-weight: bold;
-    color: #333;
+    color: var(--color-ink);
     margin: 0;
 }
 
@@ -164,7 +185,7 @@ img {
     left: auto;
     margin: 25px auto 25px auto;
     font-size: 2.8rem;
-    color: #0a1510;
+    color: var(--color-ink);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
     max-width: 1400px;
     padding: 0 15px;
@@ -173,7 +194,7 @@ img {
     font-size: 2.1rem;
     margin: 1.5rem auto;
     padding: 0 15px;
-    color: #0a1510;
+    color: var(--color-ink);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.349);
     max-width: 1000px;
 }
@@ -225,7 +246,7 @@ img {
 .site-title {
     font-size: 1.8rem;
     font-weight: 700;
-    color: #0a1510;
+    color: var(--color-ink);
     white-space: nowrap;
 }
 
@@ -252,7 +273,7 @@ img {
 }
 
 .nav-item a {
-    color: #0a1510;
+    color: var(--color-ink);
     font-size: 1rem;
     font-weight: 400;
     padding: 0.25rem 0;
@@ -261,7 +282,7 @@ img {
 }
 
 .nav-item a:hover {
-    color: #1bb48e;
+    color: var(--color-mint-deep);
 }
 
 /* Menu Toggle (Mobile Only) */
@@ -628,7 +649,7 @@ img {
 .works-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    gap: var(--space-md);
 }
 .work-card {
     display: flex;
@@ -640,14 +661,14 @@ img {
     position: relative;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
 }
 .work-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     max-width: none;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
 }
 .work-info {
     text-align: center;
@@ -661,7 +682,7 @@ img {
     font-size: 0.95rem;
     font-weight: 700;
     margin: 0;
-    color: #0a1510;
+    color: var(--color-ink);
     line-height: 1.4;
     min-height: 2.66em; /* 2 lines at 0.95rem + line-height 1.4 */
     display: -webkit-box;
@@ -671,7 +692,7 @@ img {
     overflow: hidden;
 }
 .work_date {
-    color: #666;
+    color: var(--color-muted);
     font-size: 0.8rem;
     margin: 0;
     line-height: 1.2;
@@ -1895,40 +1916,329 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     }
 }
 
-/* Journal一覧のモバイル最適化 */
-@media screen and (max-width: 600px) {
-    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) {
-        display: flex !important;
-        gap: 0.75rem !important;
-        margin-bottom: 1.5rem !important;
-        padding-bottom: 1.5rem !important;
+/* ===== Unified Works Cards ===== */
+.works-intro {
+    max-width: 1000px;
+    margin: 0 auto var(--space-xl);
+    padding: 0 15px;
+}
+
+.works-grid-list {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-lg);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.work-card-unified {
+    overflow: hidden;
+    gap: 0;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    background: var(--color-card);
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.work-card-unified:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(10, 21, 16, 0.12);
+}
+
+.work-card-unified .work-thumb {
+    aspect-ratio: 16 / 10;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.work-card-unified .work-thumb img {
+    border-radius: 0;
+}
+
+.work-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-md);
+}
+
+.work-title {
+    margin: 0;
+    color: var(--color-ink);
+    font-size: 1.15rem;
+    line-height: 1.4;
+}
+
+.work-title a:hover {
+    color: var(--color-mint-deep);
+}
+
+.work-date {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+}
+
+.work-desc {
+    margin: 0.25rem 0;
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.work-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: auto;
+}
+
+.work-tag {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 0.18rem 0.6rem;
+    border: 1px solid #bfe7d9;
+    border-radius: var(--radius-pill);
+    background: #e6f7f1;
+    color: var(--color-ink);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.profile-section-title {
+    margin-top: var(--space-md);
+}
+
+.works-preview-link {
+    margin: var(--space-md) 0 0;
+    text-align: center;
+}
+
+/* ===== Project Pages ===== */
+.project-intro {
+    max-width: 1000px;
+    margin: 0 auto 2rem;
+    padding: 0 15px;
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.project-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(20, 40, 30, 0.1);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 4px 14px rgba(10, 21, 16, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(10, 21, 16, 0.12);
+}
+
+.project-card-visual,
+.project-hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #e6f7f1;
+}
+
+.project-card-visual {
+    aspect-ratio: 16 / 9;
+    border-radius: 0;
+}
+
+.project-card-visual img,
+.project-hero img {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    border-radius: 0;
+}
+
+.project-card-visual-fallback,
+.project-hero-fallback {
+    min-height: 220px;
+    color: #0a1510;
+    font-size: 1.6rem;
+    font-weight: 700;
+    text-align: center;
+    background:
+        linear-gradient(135deg, rgba(42, 220, 163, 0.3), rgba(255, 255, 255, 0.8)),
+        repeating-linear-gradient(0deg, rgba(10, 21, 16, 0.08) 0 1px, transparent 1px 24px),
+        repeating-linear-gradient(90deg, rgba(10, 21, 16, 0.08) 0 1px, transparent 1px 24px);
+}
+
+.project-card-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.25rem;
+}
+
+.project-kicker {
+    margin: 0;
+    color: #34443d;
+    font-size: 0.9rem;
+    letter-spacing: 0;
+}
+
+.project-card-title {
+    margin: 0;
+    color: #06110d;
+    font-size: 1.35rem;
+    line-height: 1.35;
+}
+
+.project-card-title a:hover,
+.project-back-link:hover,
+.project-detail-link:hover {
+    color: #1bb48e;
+}
+
+.project-date {
+    color: #34443d;
+    font-size: 0.92rem;
+}
+
+.project-description,
+.project-lead {
+    margin: 0;
+    color: #34443d;
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.project-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.65rem;
+    border: 1px solid #bfe7d9;
+    border-radius: 999px;
+    background: #e6f7f1;
+    color: #0a1510;
+    font-size: 0.85rem;
+}
+
+.project-detail-link {
+    margin-top: auto;
+    color: #0a1510;
+    font-weight: 700;
+}
+
+.project-detail {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.project-back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: #34443d;
+}
+
+.project-detail-header {
+    margin-bottom: 1.5rem;
+}
+
+.project-detail-header .web_title {
+    margin: 0.25rem 0 0.5rem;
+    padding: 0;
+}
+
+.project-hero {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin: 1.5rem 0 2rem;
+    border: 1px solid rgba(20, 40, 30, 0.1);
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 14px rgba(10, 21, 16, 0.08);
+}
+
+.project-section {
+    margin: 2rem 0;
+}
+
+.project-section .page_title {
+    margin: 0 0 1rem;
+    padding: 0;
+}
+
+.project-feature-list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+}
+
+.project-feature-list li {
+    padding: 1rem;
+    border-left: 4px solid #1bb48e;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.72);
+    color: #34443d;
+    line-height: 1.7;
+}
+
+.project-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.project-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    border: 1px solid #1bb48e;
+    border-radius: 0.5rem;
+    color: #0a1510;
+    font-weight: 700;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.project-action-primary {
+    background: #1bb48e;
+    color: #f4fffa;
+}
+
+.project-action:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+@media screen and (max-width: 768px) {
+    .project-grid {
+        grid-template-columns: 1fr;
     }
-    
-    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) img {
-        width: 100px !important;
-        height: 100px !important;
-        object-fit: cover !important;
-        flex-shrink: 0 !important;
+
+    .project-card-copy {
+        padding: 1rem;
     }
-    
-    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) h3 {
-        font-size: 1rem !important;
-    }
-    
-    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) div[style*="color: #666"] {
-        font-size: 0.9rem !important;
-    }
-    
-    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) p {
-        font-size: 0.95rem !important;
-        display: -webkit-box !important;
-        -webkit-line-clamp: 3 !important;
-        -webkit-box-orient: vertical !important;
-        line-clamp: 3 !important;
-        overflow: hidden !important;
-    }
-    
-    div[style*="display: flex"] .journal-entry-animate:has(a[style*="flex-shrink"]) a[style] {
-        flex-shrink: 0 !important;
+
+    .project-hero {
+        aspect-ratio: 4 / 3;
     }
 }

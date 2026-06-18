@@ -50,8 +50,16 @@ function initGallery() {
     return raw.split(',').map(c => c.trim()).filter(Boolean);
   };
   
-  // 初期表示：イラストと四コマ漫画のみ表示
+  // Initial display: show all when the "all" filter is active, otherwise use Gallery defaults.
   function initializeFilters() {
+    const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+    if (allBtn && allBtn.classList.contains('active')) {
+      galleryItems.forEach(item => {
+        item.style.display = '';
+      });
+      return;
+    }
+
     const activeFilters = ['イラスト', '四コマ漫画'];
     galleryItems.forEach(item => {
       const categories = getCategories(item);

@@ -20,50 +20,22 @@ const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
     <p>公開した楽曲の一覧です。</p>
   </section>
 
-  <div class="song-grid">
+  <div class="works-grid works-grid-list">
     {songs.map((song) => (
-      <article class="song-card">
-        <a href={withBase(`/disco/${song.slug}/`)} class="song-thumb-link">
+      <article class="work-card work-card-unified">
+        <a href={withBase(`/disco/${song.slug}/`)} class="work-thumb">
           <img src={`https://img.youtube.com/vi/${song.data.youtube_id}/sddefault.jpg`} alt={song.data.title} loading="lazy" />
         </a>
-        <div class="song-copy">
-          <h2><a href={withBase(`/disco/${song.slug}/`)}>{song.data.title}</a></h2>
-          <time datetime={getEntryDateIso(song)}>{formatDate(song.data.date)}</time>
+        <div class="work-copy">
+          <h2 class="work-title"><a href={withBase(`/disco/${song.slug}/`)}>{song.data.title}</a></h2>
+          <time class="work-date" datetime={getEntryDateIso(song)}>{formatDate(song.data.date)}</time>
+          <p class="work-desc">{song.data.description ?? ""}</p>
+          <div class="work-tags" aria-label={`${song.data.title} tags`}>
+            <span class="work-tag">Music</span>
+            {(song.data.tags ?? []).map((tag) => <span class="work-tag">{tag}</span>)}
+          </div>
         </div>
       </article>
     ))}
   </div>
 </BaseLayout>
-
-<style>
-  .song-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
-
-  .song-card {
-    overflow: hidden;
-    border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(20, 40, 30, 0.08);
-  }
-
-  .song-card img {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-  }
-
-  .song-copy {
-    padding: 1rem;
-  }
-
-  .song-copy h2 {
-    margin-bottom: 0.5rem;
-  }
-
-  .song-copy a {
-    text-decoration: none;
-  }
-</style>

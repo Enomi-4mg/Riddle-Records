@@ -5,7 +5,10 @@ import { galleryItems } from "../../data/gallery";
 
 const base = import.meta.env.BASE_URL;
 const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
-const journalEntries = (await getCollection("journal")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+const showDrafts = !import.meta.env.PROD;
+const journalEntries = (await getCollection("journal"))
+  .filter((entry) => showDrafts || !entry.data.draft)
+  .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 
 const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
 const toRoutePath = (path) => path.replace(/^\/+/, "").replace(/\/+$/, "").replace(/^journal\//, "");
@@ -15,7 +18,8 @@ const getJournalPath = (entry) => toRoutePath(entry.data.permalink ?? `/journal/
 const normalizeCredits = (credits) => Array.isArray(credits) ? credits.join("\n") : credits;
 
 export async function getStaticPaths() {
-  const journalEntriesForPaths = await getCollection("journal");
+  const showDraftPaths = !import.meta.env.PROD;
+  const journalEntriesForPaths = (await getCollection("journal")).filter((entry) => showDraftPaths || !entry.data.draft);
   return journalEntriesForPaths.map((entry) => ({
     params: {
       slug: (entry.data.permalink ?? `/journal/${entry.data.date.toISOString().slice(0, 10)}/`)

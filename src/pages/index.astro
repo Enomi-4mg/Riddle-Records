@@ -6,12 +6,20 @@ import { galleryItems } from "../data/gallery";
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const showDrafts = !import.meta.env.PROD;
 
-const journals = (await getCollection("journal")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
+const journals = (await getCollection("journal"))
+  .filter((entry) => showDrafts || !entry.data.draft)
+  .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 const songs = (await getCollection("songs")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 const latestJournal = journals[0];
 const latestSong = songs[0];
 const latestGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())[0];
+const latestWorkDate = latestGallery && latestSong
+  ? new Date(latestGallery.date).getTime() >= latestSong.data.date.getTime()
+    ? latestGallery.date
+    : latestSong.data.date.toISOString().slice(0, 10)
+  : latestGallery?.date ?? latestSong?.data.date.toISOString().slice(0, 10);
 const summarize = (text) => (text ? text.replace(/\s+/g, " ").trim().slice(0, 70) : "");
 const getJournalPath = (entry) =>
   (entry.data.permalink ?? `/journal/${entry.data.date.toISOString().slice(0, 10)}/`)
@@ -54,37 +62,26 @@ const getJournalPath = (entry) =>
         </article>
       )}
 
-      {latestGallery && (
+      {(latestGallery || latestSong) && (
         <article class="home-card journal-entry-animate">
-          <a href={href("/gallery/")} class="home-card-clickable">
+          <a href={href("/works/")} class="home-card-clickable">
             <div class="home-card-head">
-              <span class="home-card-label">Gallery</span>
-              <time class="home-card-date" datetime={latestGallery.date}>{new Date(latestGallery.date).toLocaleDateString("ja-JP")}</time>
+              <span class="home-card-label">Works</span>
+              {latestWorkDate && <time class="home-card-date" datetime={latestWorkDate}>{new Date(latestWorkDate).toLocaleDateString("ja-JP")}</time>}
             </div>
-            <div class="home-card-thumb">
-              <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${latestGallery.cloudinary_id}`} alt={latestGallery.title} loading="lazy" />
-            </div>
-            <h3 class="home-card-title">{latestGallery.title}</h3>
-            <p class="home-card-desc">{latestGallery.description}</p>
+            {latestGallery && (
+              <div class="home-card-thumb">
+                <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${latestGallery.cloudinary_id}`} alt={latestGallery.title} loading="lazy" />
+              </div>
+            )}
+            <h3 class="home-card-title">作品一覧</h3>
+            <p class="home-card-desc">
+              {latestGallery && latestSong
+                ? `${latestGallery.title} や ${latestSong.data.title} など、作品と楽曲をまとめています。`
+                : "Gallery作品と楽曲をまとめています。"}
+            </p>
           </a>
-          <a class="home-card-cta" href={href("/gallery/")}>一覧を見る →</a>
-        </article>
-      )}
-
-      {latestSong && (
-        <article class="home-card journal-entry-animate">
-          <a href={href(`/disco/${latestSong.slug}/`)} class="home-card-clickable">
-            <div class="home-card-head">
-              <span class="home-card-label">Discography</span>
-              <time class="home-card-date" datetime={latestSong.data.date.toISOString().slice(0, 10)}>{latestSong.data.date.toLocaleDateString("ja-JP")}</time>
-            </div>
-            <div class="home-card-thumb">
-              <img src={`https://img.youtube.com/vi/${latestSong.data.youtube_id}/maxresdefault.jpg`} alt={latestSong.data.title} loading="lazy" />
-            </div>
-            <h3 class="home-card-title">{latestSong.data.title}</h3>
-            <p class="home-card-desc">{latestSong.data.description ?? ""}</p>
-          </a>
-          <a class="home-card-cta" href={href("/disco/")}>一覧を見る →</a>
+          <a class="home-card-cta" href={href("/works/")}>Works を見る →</a>
         </article>
       )}
 

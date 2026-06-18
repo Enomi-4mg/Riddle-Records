@@ -10,8 +10,8 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
       <li class="menu_item"><a href={href("/")} class={Astro.url.pathname === basePath || Astro.url.pathname === `${basePath}index.html` ? "active" : ""}>Home</a></li>
       <li class="menu_item"><a href={href("/about/")} class={Astro.url.pathname.includes(`${basePath}about`) ? "active" : ""}>About</a></li>
       <li class="menu_item"><a href={href("/journal/")} class={Astro.url.pathname.includes(`${basePath}journal`) ? "active" : ""}>Journal</a></li>
-      <li class="menu_item"><a href={href("/gallery/")} class={Astro.url.pathname.includes(`${basePath}gallery`) ? "active" : ""}>Gallery</a></li>
-      <li class="menu_item"><a href={href("/disco/")} class={Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""}>Discography</a></li>
+      <li class="menu_item"><a href={href("/works/")} class={Astro.url.pathname.includes(`${basePath}works`) || Astro.url.pathname.includes(`${basePath}gallery`) || Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""}>Works</a></li>
+      <li class="menu_item"><a href={href("/project/")} class={Astro.url.pathname.includes(`${basePath}project`) ? "active" : ""}>Project</a></li>
       <li class="menu_item"><a href={href("/info/")} class={Astro.url.pathname.includes(`${basePath}info`) ? "active" : ""}>Information</a></li>
     </ul>
   </div>

@@ -34,17 +34,17 @@ const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 
   <div class="gallery-grid" id="gallery-container">
     {sortedGallery.map((item) => (
-      <div class="gallery-item journal-entry-animate" id={item.cloudinary_id.replace(/\./g, "-")} data-date={item.date} data-categories={item.categories.join(",")}>
-        <a href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link">
+      <div class="gallery-item work-card work-card-unified journal-entry-animate" id={item.cloudinary_id.replace(/\./g, "-")} data-date={item.date} data-categories={item.categories.join(",")}>
+        <a href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link work-thumb">
           <img src={`${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`} alt={item.title} loading="lazy" />
         </a>
-        <div class="gallery-info">
-          <h3>{item.title}</h3>
-          <p class="date">📅 {new Date(item.date).toLocaleDateString("ja-JP")}</p>
-          <p class="description">{item.description}</p>
-          <div class="category-list">
+        <div class="gallery-info work-copy">
+          <h3 class="work-title">{item.title}</h3>
+          <time class="date work-date" datetime={item.date}>{new Date(item.date).toLocaleDateString("ja-JP")}</time>
+          <p class="description work-desc">{item.description}</p>
+          <div class="category-list work-tags">
             {item.categories.map((category) => (
-              <span class={`category category-${category}`}>{category}</span>
+              <span class={`category category-${category} work-tag`}>{category}</span>
             ))}
           </div>
 

@@ -42,8 +42,7 @@ export const galleryItems = [
     description: "被写界深度を適用",
     categories: ["3DCG"],
     article_url: "/journal/2025-06-06/",
-    thumbnail: true,
-    making_article_url: "/journal/2025-06-06/five-apples-making/"
+    thumbnail: true
   },
   {
     title: "四コマ漫画：目撃",
