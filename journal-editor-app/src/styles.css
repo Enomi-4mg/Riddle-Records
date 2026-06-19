@@ -427,6 +427,14 @@ textarea {
   box-shadow: -18px 0 48px rgba(18, 26, 24, 0.16);
 }
 
+.tool-drawer {
+  width: min(760px, 100%);
+  height: 100%;
+  overflow: auto;
+  background: #ffffff;
+  box-shadow: -18px 0 48px rgba(18, 26, 24, 0.16);
+}
+
 .drawer-header p {
   margin: 0 0 0.2rem;
   color: #6b7774;
@@ -446,6 +454,17 @@ textarea {
   gap: 0.85rem;
   border-bottom: 1px solid #e2e8e5;
   padding: 1.15rem;
+}
+
+.section-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.section-line h3 {
+  margin: 0;
 }
 
 .field {
@@ -491,6 +510,54 @@ code {
   white-space: pre-wrap;
   word-break: break-word;
   color: #0f6f5d;
+}
+
+.media-card-editor {
+  display: grid;
+  gap: 0.78rem;
+  border: 1px solid #e2e8e5;
+  border-radius: 8px;
+  background: #fbfdfc;
+  padding: 0.9rem;
+}
+
+.media-preview-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.media-preview-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 0.8rem;
+  align-items: center;
+  border: 1px solid #e2e8e5;
+  border-radius: 8px;
+  background: #f8fbfa;
+  padding: 0.75rem;
+}
+
+.media-preview-item div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.media-preview-item span {
+  color: #6b7774;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.media-preview-item img {
+  width: 92px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #edf2f0;
+}
+
+.compact-output {
+  min-height: 12rem;
 }
 
 @media (max-width: 1120px) {

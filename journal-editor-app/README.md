@@ -22,6 +22,20 @@ Vite dev server は `5174` を使います。
 4. `チェック` で公開前チェックを確認します。
 5. `出力` からコピー、または `.md` ボタンでMarkdownを書き出します。
 
+### 画像カード / Gallery支援
+
+Editor 画面の `画像カード` から、旧Astro版Editorにあった画像カード生成系の補助機能を使えます。
+
+- `journal-card-grid` と `making-comparison-grid` のHTML生成
+- `data-lightbox` / `data-title` 付きの既存記事互換HTML出力
+- 生成HTMLのコピー、本文textareaのカーソル位置への挿入
+- 本文内の `.journal-card` / `.comparison-item` 抽出
+- 生成または抽出した Cloudinary ID の `featured_related` 追加
+- Gallery登録用TypeScript風コード生成
+- `thumbnail` / `og_image` / legacy `image` / カード画像の実URLプレビュー
+
+Cloudinary ID候補は `src/data/galleryIds.ts` に分離しています。Galleryデータへ直接書き込む機能、本文内カードの置換編集、カード作成状態の永続化はまだ未実装です。
+
 ### 既存記事一括インポート
 
 `既存記事を一括インポート` は、親リポジトリの `src/content/journal/*.md` を raw import し、localStorage の draft として保存します。

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FrontmatterForm, ReviewMode, StoredDraft } from "../types/journal";
 import { buildFrontmatter } from "../lib/frontmatter";
 import { buildMarkdown, downloadDraft } from "../lib/markdown";
 import { SettingsDrawer } from "./SettingsDrawer";
 import { ReviewPane } from "./ReviewPane";
+import { ImageCardTool } from "./ImageCardTool";
 
 export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
   draft: StoredDraft;
@@ -14,7 +15,9 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
 }) {
   const [localDraft, setLocalDraft] = useState(draft);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [cardToolOpen, setCardToolOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState<ReviewMode | null>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => setLocalDraft(draft), [draft.id]);
 
@@ -35,6 +38,24 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
     onNotice(`${label}をコピーしました`);
   }
 
+  function insertBodyText(text: string) {
+    const textarea = bodyRef.current;
+    setLocalDraft((current) => {
+      const start = textarea?.selectionStart ?? current.body.length;
+      const end = textarea?.selectionEnd ?? start;
+      const nextBody = `${current.body.slice(0, start)}${text}${current.body.slice(end)}`;
+      window.requestAnimationFrame(() => {
+        if (!textarea) return;
+        const cursor = start + text.length;
+        textarea.focus();
+        textarea.selectionStart = cursor;
+        textarea.selectionEnd = cursor;
+      });
+      return { ...current, body: nextBody };
+    });
+    onNotice("カードHTMLを本文に挿入しました");
+  }
+
   return (
     <main className="editor-shell">
       <header className="editor-topbar">
@@ -42,6 +63,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
         <span className="status-pill">{notice}</span>
         <div className="editor-actions">
           <button onClick={() => setSettingsOpen(true)}>記事設定</button>
+          <button onClick={() => setCardToolOpen(true)}>画像カード</button>
           <button className={reviewMode === "preview" ? "active" : ""} onClick={() => setReviewMode(reviewMode === "preview" ? null : "preview")}>プレビュー</button>
           <button className={reviewMode === "checks" ? "active" : ""} onClick={() => setReviewMode(reviewMode === "checks" ? null : "checks")}>チェック</button>
           <button className={reviewMode === "output" ? "active" : ""} onClick={() => setReviewMode(reviewMode === "output" ? null : "output")}>出力</button>
@@ -63,6 +85,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
             placeholder="記事タイトル"
           />
           <textarea
+            ref={bodyRef}
             className="note-editor"
             value={localDraft.body}
             onChange={(event) => setLocalDraft((current) => ({ ...current, body: event.target.value }))}
@@ -89,6 +112,20 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
           onChange={updateFrontmatter}
           onClose={() => setSettingsOpen(false)}
         />
+      )}
+
+      {cardToolOpen && (
+        <div className="drawer-backdrop" role="presentation">
+          <ImageCardTool
+            body={localDraft.body}
+            frontmatter={localDraft.frontmatter}
+            onInsert={insertBodyText}
+            onFrontmatterChange={updateFrontmatter}
+            onCopy={copy}
+            onNotice={onNotice}
+            onClose={() => setCardToolOpen(false)}
+          />
+        </div>
       )}
     </main>
   );
