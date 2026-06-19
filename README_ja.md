@@ -46,27 +46,31 @@ tools/
 
 ## Journal Editor での記事作成手順
 
-Journal 記事は、サイト内ツール `Journal Editor` でMarkdownを生成してから `src/content/journal/` に追加します。
+Journal 記事は、独立アプリ `journal-editor-app/` の Journal Editor でMarkdownを生成してから `src/content/journal/` に追加します。
+
+旧Astro版Editor `src/pages/tools/journal-editor.astro` は、現在は移行案内ページです。旧URL `/tools/journal-editor/` はブックマークや Information ページからの互換用に残していますが、記事作成の本命Editorは `journal-editor-app/` です。画像カード生成やGallery登録用コード生成も新Editorへ移植済みです。
 
 ### 1. エディタを開く
 
-ローカルサーバーを起動します。
+新Editorを起動します。
 
 ```bash
-npm run dev -- --host 0.0.0.0
+cd journal-editor-app
+npm install
+npm run dev
 ```
 
-ブラウザで次のURLを開きます。
+Vite dev server のURLをブラウザで開きます。旧URLは移行案内ページです。
 
 ```text
-http://localhost:4321/Riddle-Records/tools/journal-editor/
+http://localhost:5174/
 ```
 
-公開サイト上では `Information` ページの「Journal Editor」からも開けます。
+公開サイト上では `Information` ページの「Journal Editor（移行案内）」から、移行先と起動方法を確認できます。
 
 ### 2. 記事設定を入力する
 
-`Journal Editor` では、`src/content/config.ts` のJournal schemaに合わせて以下の項目を生成します。
+新Editorでは、`src/content/config.ts` のJournal schemaに合わせて以下の項目を生成します。
 
 - `title`: 記事タイトル
 - `date`: 記事日付
@@ -78,7 +82,7 @@ http://localhost:4321/Riddle-Records/tools/journal-editor/
 - `tags`: 関連記事判定に使うタグ
 - `thumbnail_class`: 一覧サムネイルを明示したい場合のみ指定
 
-入力内容はブラウザの `localStorage` に自動保存されます。同じブラウザで再度エディタを開くと下書きが復元されます。不要になった下書きは `下書きを削除` で消します。
+入力内容はブラウザの `localStorage` に自動保存されます。複数下書き管理、既存Journal記事の一括import、Markdown import、backup / restore に対応しています。
 
 テンプレートは次の3種類です。
 

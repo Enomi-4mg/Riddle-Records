@@ -12,6 +12,8 @@ npm run dev
 
 Vite dev server は `5174` を使います。
 
+Astro本体側の旧Editor `src/pages/tools/journal-editor.astro` は、現在は移行案内ページです。旧URL `/tools/journal-editor/` はブックマークや Information ページからの互換用に残し、実際の記事作成・画像カード生成・Galleryコード生成はこの `journal-editor-app/` で行います。
+
 ## 基本運用
 
 ### 新規記事作成
