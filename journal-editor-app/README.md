@@ -1,0 +1,119 @@
+# Riddle Journal Editor
+
+Riddle Records の Journal 記事を作成・編集するための専用Webアプリです。Vite + React + TypeScript で、ポートフォリオ本体の Astro レイアウトから独立して動きます。
+
+## 起動方法
+
+```sh
+cd journal-editor-app
+npm install
+npm run dev
+```
+
+Vite dev server は `5174` を使います。
+
+## 基本運用
+
+### 新規記事作成
+
+1. DraftList で `新規作成` を押します。
+2. Editor 画面で `title` と本文 Markdown を書きます。
+3. `記事設定` から date / type / slug / description / tags / media fields を設定します。
+4. `チェック` で公開前チェックを確認します。
+5. `出力` からコピー、または `.md` ボタンでMarkdownを書き出します。
+
+### 既存記事一括インポート
+
+`既存記事を一括インポート` は、親リポジトリの `src/content/journal/*.md` を raw import し、localStorage の draft として保存します。
+
+- 既存IDがある記事はデフォルトでスキップします。
+- `再インポートして上書き` は同じIDのdraftを上書きします。
+- imported draft のIDは元ファイル名由来です。例: `imported:2026-01-30-dunes-making.md`
+- source情報として `source: "imported"`、`sourcePath`、`sourceFileName` を保存します。
+
+### 単体Markdown import
+
+`Markdown import` から `.md` ファイルを選ぶと、新しいdraftとして読み込みます。
+
+- 既存draftは上書きしません。
+- source は `uploaded` になります。
+
+### 全下書きバックアップ / 復元
+
+`全下書きバックアップ` は localStorage 内の全draftをJSONとして書き出します。
+
+```json
+{
+  "schemaVersion": 1,
+  "appVersion": "0.1.0",
+  "exportedAt": "2026-06-19T00:00:00.000Z",
+  "draftCount": 1,
+  "draftIndex": ["draft-id"],
+  "drafts": []
+}
+```
+
+`JSON復元` では復元モードを入力します。
+
+- `skip`: 同じIDがあるdraftはスキップします。
+- `overwrite`: 同じIDがあるdraftを上書きします。
+- `duplicate`: 同じIDがあるdraftを別IDで複製追加します。
+
+`imported:xxx` と `imported:xxx.md` は旧ID/新IDの同一記事候補として扱い、noticeに警告件数を表示します。
+
+## Riddle Records本体への反映
+
+1. Editor の `.md` でMarkdownを書き出します。
+2. 推奨ファイル名に従って、本体側の `src/content/journal/` に配置します。
+3. Riddle Records 本体のルートで build を確認します。
+
+```sh
+cd ..
+npm run build
+```
+
+既存記事を置き換える場合は、同名ファイルを差し替えてからbuildしてください。
+
+## URL rules
+
+- `permalink` があれば override として優先
+- `journal`: `/journal/YYYY-MM-DD/`
+- `making` + `slug`: `/journal/YYYY/MM/DD/slug/`
+- `making` slugなし: `/journal/YYYY-MM-DD/`
+- `report`: `/journal/YYYY-MM/`
+
+## Roundtrip検証
+
+既存 `src/content/journal/*.md` を import → export 相当で検証します。
+
+```sh
+npm run test:roundtrip
+```
+
+export後Markdownを実ファイルとして確認したい場合:
+
+```sh
+npm run test:roundtrip:write
+```
+
+出力先は `journal-editor-app/roundtrip-exported/` です。このディレクトリは検証用です。
+
+### 許容差分
+
+Roundtripでは以下の差分を許容しています。
+
+- BOM除去
+- frontmatterの順序やquoteの正規化
+- 配列のinline表記への正規化
+- 空配列 field の省略
+- `type: "journal"` の追加
+
+本文Markdown、本文HTML、画像カードHTMLが変わる差分は要確認です。
+
+## `type: "journal"` の出力方針
+
+既存記事の多くは `type` を省略しており、Astro content schema 側では `journal` がdefaultです。そのため roundtrip差分を最小化するなら、`type === "journal"` のときはfrontmatter出力を省略する案があります。
+
+一方で、このエディタは新規記事作成時に `journal / making / report` の種類を明示して扱う設計です。運用上は出力Markdownにも type を明示した方が、後から見たときに記事種別が分かりやすくなります。
+
+現時点では **明示性を優先して `type: "journal"` を出力する方針** にしています。roundtrip検証では許容差分として扱います。

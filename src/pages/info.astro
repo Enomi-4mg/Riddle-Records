@@ -18,27 +18,30 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 
   <div class="info-section journal-entry-animate">
     <h2 class="page_title">ツール一覧</h2>
-    <h3><a href={href("/tools/image-compressor.html")}>画像圧縮ツール→</a></h3>
-    <p>画像ファイルを効率的に圧縮します</p>
-
-    <h3><a href={href("/tools/video-converter.html")}>動画変換ツール→</a></h3>
-    <p>動画ファイルの一部を切り出してgifやmp4等に変換します</p>
-    <p>※まだ使えない…、ローカルでのみ動きます。</p>
+    <div class="info-link-list">
+      <a class="info-link-item" href={href("/tools/image-compressor.html")}>
+        <span>画像圧縮ツール</span>
+        <small>画像ファイルを効率的に圧縮します</small>
+      </a>
+      <a class="info-link-item" href={href("/tools/video-converter.html")}>
+        <span>動画変換ツール</span>
+        <small>動画ファイルの一部を切り出してgifやmp4等に変換します。ローカルでのみ動きます。</small>
+      </a>
+    </div>
   </div>
 
   <div class="info-section journal-entry-animate">
     <h2 class="page_title">サイト作成用のテンプレ生成ツール</h2>
-    <h3><a href={href("/tools/journal-editor/")}>Journal Editor→</a></h3>
-    <p>Journal記事のfrontmatter、本文、画像カードをまとめて生成します</p>
-
-    <h3><a href={href("/tools/cloudinary-url-converter.html")}>Cloudinary URL 変換ツール→</a></h3>
-    <p>Cloudinary の URL を生成・変換します</p>
-
-    <h3><a href={href("/tools/journal-card-generator.html")}>Journal Card Generator→</a></h3>
-    <p>JournalカードのHTMLとYAMLを生成し、比較ラベルやLightbox切替、記事解析に対応します</p>
-
-    <h3><a href={href("/tools/journal-md-generator.html")}>Journal Markdown Generator→</a></h3>
-    <p>Journal記事のMarkdownファイルをテンプレートから生成します</p>
+    <div class="info-link-list">
+      <a class="info-link-item" href={href("/tools/journal-editor/")}>
+        <span>Journal Editor</span>
+        <small>Journal記事の本文、画像カード、公開前チェック、Gallery登録用コードをまとめて扱います</small>
+      </a>
+      <a class="info-link-item" href={href("/tools/cloudinary-url-converter.html")}>
+        <span>Cloudinary URL 変換ツール</span>
+        <small>Cloudinary の URL を生成・変換します</small>
+      </a>
+    </div>
   </div>
 
   <div class="info-section journal-entry-animate">

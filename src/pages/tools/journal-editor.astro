@@ -10,146 +10,258 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
 <BaseLayout title="Journal Editor" description="Riddle Records のJournal記事作成ツール。" wideContainer={true}>
   <section class="journal-editor" data-cloudinary-base={cloudinaryBase}>
     <header class="editor-header">
+      <p class="editor-kicker">Riddle Records CMS</p>
       <h1 class="web_title">Journal Editor</h1>
     </header>
 
-    <div class="editor-actions top-actions">
-      <button type="button" class="primary-button" data-action="copy-content">Markdownをコピー</button>
-      <button type="button" data-action="download-content">Markdownをダウンロード</button>
-      <button type="button" data-action="clear-draft">下書きを削除</button>
-      <button type="button" data-action="reset-form">初期化</button>
+    <div class="top-actions">
+      <div class="action-group primary-actions" aria-label="主要操作">
+        <button type="button" class="primary-button" data-action="copy-content">記事全体をコピー</button>
+        <button type="button" class="primary-button secondary-primary" data-action="download-content">Markdownをダウンロード</button>
+      </div>
+      <div class="action-group support-actions" aria-label="補助操作">
+        <button type="button" data-action="copy-frontmatter">frontmatterのみコピー</button>
+        <button type="button" data-action="copy-body">本文のみコピー</button>
+        <button type="button" data-action="copy-gallery">Galleryコードをコピー</button>
+      </div>
+      <div class="action-group danger-actions" aria-label="危険操作">
+        <button type="button" data-action="clear-draft">下書きを削除</button>
+        <button type="button" data-action="reset-form">初期化</button>
+      </div>
       <span class="draft-status" id="draft-status" aria-live="polite"></span>
     </div>
 
     <div class="editor-grid">
-      <form class="editor-panel editor-form" id="journal-form">
-        <div class="panel-heading">
-          <h2>記事設定</h2>
-        </div>
-
-        <div class="field-row">
-          <label>
-            <span>テンプレート</span>
-            <select id="template">
-              <option value="journal">通常Journal</option>
-              <option value="making">制作メモ</option>
-              <option value="report">月次報告</option>
-            </select>
-          </label>
-          <label>
-            <span>日付</span>
-            <input type="date" id="date" value={today} />
-          </label>
-        </div>
-
-        <label>
-          <span>タイトル</span>
-          <input type="text" id="title" placeholder="記事タイトル" />
-        </label>
-
-        <div class="field-row">
-          <label>
-            <span>スラッグ</span>
-            <input type="text" id="slug" placeholder="例: dunes-making" />
-          </label>
-          <label>
-            <span>ファイル名</span>
-            <input type="text" id="filename" readonly />
-          </label>
-        </div>
-
-        <label>
-          <span>permalink</span>
-          <input type="text" id="permalink" placeholder="/journal/2026-04-30/sample/" />
-        </label>
-
-        <label>
-          <span>OG description</span>
-          <textarea id="og-description" rows="3" placeholder="一覧やOGPに使う短い説明"></textarea>
-        </label>
-
-        <label>
-          <span>OG image</span>
-          <input type="text" id="image" list="gallery-id-list" placeholder="Cloudinary ID または https:// から始まるURL" />
-        </label>
-
-        <div class="field-row compact-row">
-          <label>
-            <span>tags</span>
-            <input type="text" id="tags" placeholder="日記, 3DCG, 制作" />
-          </label>
-          <label>
-            <span>featured_related</span>
-            <input type="text" id="featured-related" list="gallery-id-list" placeholder="Cloudinary IDをカンマ区切り" />
-          </label>
-        </div>
-
-        <div class="field-row compact-row">
-          <label>
-            <span>thumbnail_class</span>
-            <input type="text" id="thumbnail-class" placeholder="任意" />
-          </label>
-          <label class="checkbox-field">
-            <input type="checkbox" id="use-math" />
-            <span>数式を使う</span>
-          </label>
-        </div>
-
-        <label>
-          <span>本文 Markdown</span>
-          <textarea id="body" class="body-editor" spellcheck="false"></textarea>
-        </label>
-
-        <section class="card-builder">
+      <form class="editor-main" id="journal-form">
+        <div class="editor-column editor-column-left">
+        <section class="editor-panel">
           <div class="panel-heading">
-            <h2>画像カード</h2>
+            <div>
+              <p class="section-label">Basic</p>
+              <h2>基本情報</h2>
+            </div>
           </div>
 
           <div class="field-row">
             <label>
-              <span>Cloudinary ID</span>
-              <input type="text" id="card-cloudinary-id" list="gallery-id-list" placeholder="example_image_abcd12.jpg" />
+              <span>テンプレート</span>
+              <select id="template">
+                <option value="journal">通常Journal</option>
+                <option value="making">制作メモ</option>
+                <option value="report">月次報告</option>
+              </select>
             </label>
             <label>
-              <span>キャプション</span>
-              <input type="text" id="card-caption" placeholder="画像の説明" />
+              <span>日付</span>
+              <input type="date" id="date" value={today} />
             </label>
           </div>
 
-          <div class="field-row compact-row">
+          <label>
+            <span>タイトル</span>
+            <input type="text" id="title" placeholder="記事タイトル" />
+          </label>
+
+          <div class="field-row">
             <label>
-              <span>Lightbox group</span>
-              <input type="text" id="card-lightbox" value="Journal" />
+              <span>slug</span>
+              <input type="text" id="slug" placeholder="makingでは推奨: dunes-making" />
             </label>
             <label>
-              <span>見出し</span>
-              <input type="text" id="card-heading" placeholder="カード内見出し" />
+              <span>推奨Markdownファイル名</span>
+              <input type="text" id="filename" readonly />
             </label>
           </div>
 
-          <div class="editor-actions">
-            <button type="button" data-action="insert-card">本文に画像カードを挿入</button>
-            <button type="button" data-action="append-featured">featured_relatedに追加</button>
-          </div>
+          <label>
+            <span>公開URL permalink（自動生成・必要時のみoverride）</span>
+            <input type="text" id="permalink" placeholder="/journal/2026-04-30/sample/" />
+          </label>
+
+          <div class="generated-url-panel" id="url-status" aria-live="polite"></div>
         </section>
-      </form>
 
-      <aside class="editor-side">
         <section class="editor-panel">
           <div class="panel-heading">
-            <h2>生成結果</h2>
+            <div>
+              <p class="section-label">Publish</p>
+              <h2>公開設定</h2>
+            </div>
           </div>
+
           <label>
-            <span>Markdown</span>
-            <textarea id="output-content" class="output-editor" readonly spellcheck="false"></textarea>
+            <span>description</span>
+            <textarea id="og-description" rows="3" placeholder="一覧・記事概要・OGPに使う短い説明"></textarea>
+          </label>
+
+          <div class="field-row">
+            <label>
+              <span>thumbnail</span>
+              <input type="text" id="thumbnail" list="gallery-id-list" placeholder="一覧サムネ用 Cloudinary ID / URL / /local/path" />
+            </label>
+            <label>
+              <span>thumbnail_alt</span>
+              <input type="text" id="thumbnail-alt" placeholder="サムネイル画像の説明" />
+            </label>
+          </div>
+
+          <details class="utility-details" open>
+            <summary>サムネイル表示オプション</summary>
+            <div class="field-row">
+              <label>
+                <span>thumbnail_fit</span>
+                <input type="text" id="thumbnail-fit" placeholder="cover / contain など" />
+              </label>
+              <label>
+                <span>thumbnail_position</span>
+                <input type="text" id="thumbnail-position" placeholder="center / top など" />
+              </label>
+            </div>
+          </details>
+
+          <label>
+            <span>og_image</span>
+            <input type="text" id="og-image" list="gallery-id-list" placeholder="OGP用 Cloudinary ID / URL / /local/path" />
+          </label>
+
+          <div class="field-row">
+            <label>
+              <span>tags</span>
+              <input type="text" id="tags" placeholder="日記, 3DCG, 制作" />
+            </label>
+            <label>
+              <span>featured_related</span>
+              <input type="text" id="featured-related" list="gallery-id-list" placeholder="Cloudinary IDをカンマ区切り" />
+            </label>
+          </div>
+
+          <div class="switch-row">
+            <label class="checkbox-field">
+              <input type="checkbox" id="draft" />
+              <span>draft</span>
+            </label>
+            <label class="checkbox-field">
+              <input type="checkbox" id="use-math" />
+              <span>数式を使う</span>
+            </label>
+          </div>
+
+          <div class="media-resolve-panel" id="media-status" aria-live="polite"></div>
+
+          <details class="utility-details">
+            <summary>詳細設定</summary>
+            <label>
+              <span>thumbnail_class</span>
+              <input type="text" id="thumbnail-class" placeholder="任意" />
+            </label>
+          </details>
+        </section>
+        </div>
+
+        <div class="editor-column editor-column-center">
+        <section class="editor-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Content</p>
+              <h2>本文</h2>
+            </div>
+          </div>
+
+          <label>
+            <span>本文 Markdown</span>
+            <textarea id="body" class="body-editor" spellcheck="false"></textarea>
           </label>
         </section>
 
         <section class="editor-panel">
           <div class="panel-heading">
-            <h2>プレビュー</h2>
+            <div>
+              <p class="section-label">Media</p>
+              <h2>画像カード</h2>
+            </div>
+            <span class="pill" id="card-count">0 cards</span>
           </div>
-          <article id="preview" class="preview"></article>
+
+          <div class="field-row">
+            <label>
+              <span>カードレイアウト</span>
+              <select id="card-layout">
+                <option value="journal-card-grid">journal-card-grid</option>
+                <option value="making-comparison-grid">making-comparison-grid</option>
+              </select>
+            </label>
+            <label>
+              <span>Lightbox group</span>
+              <select id="lightbox-preset">
+                <option value="Journal">Journal</option>
+                <option value="gallery">gallery</option>
+                <option value="making-comparison">making-comparison</option>
+                <option value="custom">カスタム</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="conditional-field" id="custom-lightbox-row" hidden>
+            <span>カスタムLightbox group</span>
+            <input type="text" id="custom-lightbox" placeholder="custom-group" />
+          </label>
+
+          <div class="card-list" id="card-list"></div>
+
+          <div class="editor-actions">
+            <button type="button" data-action="add-card">カードを追加</button>
+            <button type="button" data-action="insert-cards">本文にカードHTMLを挿入</button>
+            <button type="button" data-action="append-featured">featured_relatedに追加</button>
+          </div>
+
+          <details class="utility-details">
+            <summary>記事本文からカードを解析</summary>
+            <label>
+              <span>既存記事のHTML/Markdown</span>
+              <textarea id="article-input" class="article-analyzer" placeholder="<div class=&quot;journal-card&quot;>..."></textarea>
+            </label>
+            <div class="editor-actions">
+              <button type="button" data-action="analyze-article">本文からカードを抽出</button>
+              <button type="button" data-action="reset-cards">カードを初期化</button>
+            </div>
+          </details>
+        </section>
+        </div>
+      </form>
+
+      <aside class="editor-side">
+        <section class="editor-panel side-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">Review</p>
+              <h2>確認</h2>
+            </div>
+          </div>
+
+          <div class="side-tabs" role="tablist" aria-label="確認パネル">
+            <button type="button" class="tab-button is-active" data-tab="preview">プレビュー</button>
+            <button type="button" class="tab-button" data-tab="checklist">公開前チェック</button>
+            <button type="button" class="tab-button" data-tab="outputs">出力</button>
+          </div>
+
+          <div class="tab-panel is-active" data-panel="preview">
+            <article id="preview" class="preview"></article>
+          </div>
+
+          <div class="tab-panel" data-panel="checklist">
+            <ul class="publish-checklist" id="publish-checklist"></ul>
+          </div>
+
+          <div class="tab-panel" data-panel="outputs">
+            <label>
+              <span>Markdown</span>
+              <textarea id="output-content" class="output-editor" readonly spellcheck="false"></textarea>
+            </label>
+            <label>
+              <span>Galleryコード</span>
+              <textarea id="gallery-output" class="output-editor compact-output" readonly spellcheck="false"></textarea>
+            </label>
+          </div>
         </section>
       </aside>
     </div>
@@ -170,24 +282,38 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     slug: document.getElementById("slug"),
     filename: document.getElementById("filename"),
     permalink: document.getElementById("permalink"),
+    urlStatus: document.getElementById("url-status"),
     ogDescription: document.getElementById("og-description"),
-    image: document.getElementById("image"),
+    thumbnail: document.getElementById("thumbnail"),
+    thumbnailAlt: document.getElementById("thumbnail-alt"),
+    thumbnailFit: document.getElementById("thumbnail-fit"),
+    thumbnailPosition: document.getElementById("thumbnail-position"),
+    ogImage: document.getElementById("og-image"),
+    draft: document.getElementById("draft"),
+    mediaStatus: document.getElementById("media-status"),
     tags: document.getElementById("tags"),
     featuredRelated: document.getElementById("featured-related"),
     thumbnailClass: document.getElementById("thumbnail-class"),
     useMath: document.getElementById("use-math"),
     body: document.getElementById("body"),
+    cardLayout: document.getElementById("card-layout"),
+    lightboxPreset: document.getElementById("lightbox-preset"),
+    customLightbox: document.getElementById("custom-lightbox"),
+    customLightboxRow: document.getElementById("custom-lightbox-row"),
+    cardList: document.getElementById("card-list"),
+    cardCount: document.getElementById("card-count"),
+    articleInput: document.getElementById("article-input"),
     outputContent: document.getElementById("output-content"),
+    galleryOutput: document.getElementById("gallery-output"),
     preview: document.getElementById("preview"),
-    cardCloudinaryId: document.getElementById("card-cloudinary-id"),
-    cardCaption: document.getElementById("card-caption"),
-    cardLightbox: document.getElementById("card-lightbox"),
-    cardHeading: document.getElementById("card-heading"),
+    checklist: document.getElementById("publish-checklist"),
     draftStatus: document.getElementById("draft-status")
   };
 
-  const storageKey = "riddle-records:journal-editor-draft";
+  const storageKey = "riddle-records:journal-editor-cms-draft";
   let isRestoringDraft = false;
+  let saveTimer = null;
+  let cards = [];
 
   const templates = {
     journal: {
@@ -201,14 +327,27 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
         const [year, month, day] = date.split("-");
         return slug ? `/journal/${year}/${month}/${day}/${slug}/` : `/journal/${date}/`;
       },
-      filename: ({ date, slug }) => slug ? `${date}-${slug}.md` : `${date}-making.md`
+      filename: ({ date, slug }) => slug ? `${date}-${slug}.md` : `${date}.md`
     },
     report: {
       body: "# 今月の報告\n\n## やったこと\n\n- \n\n## 見たもの・行った場所\n\n- \n\n## これから\n\n- \n",
-      permalink: ({ date }) => `/journal/${date}/`,
+      permalink: ({ date }) => `/journal/${date.slice(0, 7)}/`,
       filename: ({ date, slug }) => slug ? `${date}-${slug}.md` : `${date}.md`
     }
   };
+
+  const defaultCard = () => ({
+    caption: "",
+    heading: "",
+    cloudinaryId: "",
+    description: "",
+    categories: "",
+    comparisonLabel: "",
+    comparisonOrder: "",
+    thumbnail: true,
+    noGalleryButton: true,
+    makingArticleUrl: ""
+  });
 
   const splitList = (value) => value.split(",").map((item) => item.trim()).filter(Boolean);
   const slugify = (value) => value
@@ -218,7 +357,7 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     .replace(/[^a-z0-9_-]/g, "")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");
-  const escapeHtml = (value) => value
+  const escapeHtml = (value = "") => value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -226,6 +365,7 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     .replace(/'/g, "&#39;");
   const yamlString = (value) => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   const yamlArray = (items) => `[${items.map(yamlString).join(", ")}]`;
+  const tsString = (value) => `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   const formatPreviewDate = (value) => {
     if (!value) return "";
     const [year, month, day] = value.split("-");
@@ -236,24 +376,81 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
 
+  function getGeneratedPermalink() {
+    const date = fields.date.value;
+    if (!date) return "";
+    const slug = slugify(fields.slug.value);
+    return templates[fields.template.value].permalink({ date, slug });
+  }
+
+  function normalizePermalink(value) {
+    return value.trim().replace(/\/+$/, "");
+  }
+
+  function hasPermalinkOverride() {
+    const current = fields.permalink.value.trim();
+    const generated = getGeneratedPermalink();
+    return Boolean(current && generated && normalizePermalink(current) !== normalizePermalink(generated));
+  }
+
+  function resolveEditorImage(value, transform = "w_400,h_400,c_fill,q_auto,f_auto") {
+    const image = value.trim();
+    if (!image) {
+      return { kind: "empty", label: "未入力", url: "" };
+    }
+
+    if (/^https?:\/\//.test(image)) {
+      return { kind: "url", label: "URL", url: image };
+    }
+
+    if (image.startsWith("/")) {
+      return { kind: "local", label: "ローカルパス", url: image };
+    }
+
+    return {
+      kind: "cloudinary",
+      label: "Cloudinary ID",
+      url: `${cloudinaryBase}/${transform}/v1/${image}`
+    };
+  }
+
+  function getLightboxGroup() {
+    if (fields.lightboxPreset.value === "custom") {
+      return fields.customLightbox.value.trim() || "Journal";
+    }
+    return fields.lightboxPreset.value;
+  }
+
   function buildFrontmatter() {
     const lines = ["---"];
     const title = fields.title.value.trim() || "Untitled";
     const date = fields.date.value;
     const tags = splitList(fields.tags.value);
     const related = splitList(fields.featuredRelated.value);
+    const slug = slugify(fields.slug.value);
 
     lines.push(`title: ${yamlString(title)}`);
     if (date) lines.push(`date: ${date}`);
-    if (fields.ogDescription.value.trim()) lines.push(`og_description: ${yamlString(fields.ogDescription.value.trim())}`);
-    if (fields.image.value.trim()) lines.push(`image: ${yamlString(fields.image.value.trim())}`);
-    if (fields.permalink.value.trim()) lines.push(`permalink: ${fields.permalink.value.trim()}`);
+    lines.push(`type: ${yamlString(fields.template.value)}`);
+    if (slug) lines.push(`slug: ${yamlString(slug)}`);
+    if (fields.ogDescription.value.trim()) lines.push(`description: ${yamlString(fields.ogDescription.value.trim())}`);
+    if (tags.length > 0) lines.push(`tags: ${yamlArray(tags)}`);
+    if (fields.draft.checked) lines.push("draft: true");
+    if (fields.thumbnail.value.trim()) lines.push(`thumbnail: ${yamlString(fields.thumbnail.value.trim())}`);
+    if (fields.thumbnailAlt.value.trim()) lines.push(`thumbnail_alt: ${yamlString(fields.thumbnailAlt.value.trim())}`);
+    if (fields.thumbnailFit.value.trim()) lines.push(`thumbnail_fit: ${yamlString(fields.thumbnailFit.value.trim())}`);
+    if (fields.thumbnailPosition.value.trim()) lines.push(`thumbnail_position: ${yamlString(fields.thumbnailPosition.value.trim())}`);
+    if (fields.ogImage.value.trim()) lines.push(`og_image: ${yamlString(fields.ogImage.value.trim())}`);
     if (related.length > 0) lines.push(`featured_related: ${yamlArray(related)}`);
     if (fields.useMath.checked) lines.push("use_math: true");
-    if (tags.length > 0) lines.push(`tags: ${yamlArray(tags)}`);
     if (fields.thumbnailClass.value.trim()) lines.push(`thumbnail_class: ${yamlString(fields.thumbnailClass.value.trim())}`);
+    if (hasPermalinkOverride()) lines.push(`permalink: ${fields.permalink.value.trim()}`);
     lines.push("---");
     return lines.join("\n");
+  }
+
+  function getBodyMarkdown() {
+    return `${fields.body.value.trimEnd()}\n`;
   }
 
   function renderMarkdown(markdown) {
@@ -374,23 +571,230 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
   }
 
   function syncDerivedFields(forcePermalink = false) {
-    const date = fields.date.value;
     const slug = slugify(fields.slug.value);
     if (fields.slug.value && fields.slug.value !== slug) {
       fields.slug.value = slug;
     }
     const template = templates[fields.template.value];
-    fields.filename.value = template.filename({ date, slug });
+    fields.filename.value = template.filename({ date: fields.date.value, slug });
     if (forcePermalink || !fields.permalink.dataset.touched) {
-      fields.permalink.value = template.permalink({ date, slug });
+      fields.permalink.value = getGeneratedPermalink();
     }
+  }
+
+  function cleanCards() {
+    return cards.filter((card) => card.cloudinaryId.trim());
+  }
+
+  function buildCardsHtml() {
+    const activeCards = cleanCards();
+    if (!activeCards.length) return "";
+    const group = getLightboxGroup();
+
+    if (fields.cardLayout.value === "making-comparison-grid") {
+      const items = activeCards.map((card) => {
+        const caption = card.caption || card.heading || "";
+        const label = card.comparisonLabel || card.heading || caption;
+        const blockClass = card.noGalleryButton ? " no-gallery-button" : "";
+        return `  <div class="comparison-item${blockClass}">
+    <a href="${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${escapeHtml(card.cloudinaryId.trim())}" data-lightbox="${escapeHtml(group)}" data-title="${escapeHtml(caption)}">
+      <img src="${cloudinaryBase}/w_300,h_300,c_fill,q_auto,f_auto/v1/${escapeHtml(card.cloudinaryId.trim())}" alt="${escapeHtml(caption)}">
+    </a>${label ? `\n    <p class="comparison-label">${escapeHtml(label)}</p>` : ""}
+  </div>`;
+      }).join("\n");
+      return `<div class="making-comparison-grid">\n${items}\n</div>`;
+    }
+
+    const items = activeCards.map((card) => {
+      const caption = card.caption || card.heading || "";
+      const heading = card.heading || card.caption || "";
+      const blockClass = card.noGalleryButton ? " no-gallery-button" : "";
+      return `  <div class="journal-card${blockClass}">
+    <a href="${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${escapeHtml(card.cloudinaryId.trim())}" data-lightbox="${escapeHtml(group)}" data-title="${escapeHtml(caption)}">
+      <img src="${cloudinaryBase}/w_300,h_300,c_fill,q_auto,f_auto/v1/${escapeHtml(card.cloudinaryId.trim())}" alt="${escapeHtml(caption)}">
+    </a>
+    <div class="journal-card-info">
+      <h4>${escapeHtml(heading)}</h4>
+    </div>
+  </div>`;
+    }).join("\n");
+    return `<div class="journal-card-grid">\n${items}\n</div>`;
+  }
+
+  function buildGalleryCode() {
+    const activeCards = cleanCards();
+    if (!activeCards.length) return "";
+    const articleUrl = fields.permalink.value.trim();
+    const date = fields.date.value;
+    const comparisonGroup = slugify(fields.slug.value) || articleUrl.replace(/^\/+|\/+$/g, "").replace(/\//g, "-");
+
+    return activeCards.map((card, index) => {
+      const title = card.caption || card.heading || `Card ${index + 1}`;
+      const description = card.description || title;
+      const categories = splitList(card.categories);
+      const lines = [
+        "{",
+        `  title: ${tsString(title)},`,
+        `  date: ${tsString(date)},`,
+        `  cloudinary_id: ${tsString(card.cloudinaryId.trim())},`,
+        `  description: ${tsString(description)},`,
+        `  categories: [${categories.map(tsString).join(", ")}],`,
+        `  article_url: ${tsString(articleUrl)},`
+      ];
+      if (card.makingArticleUrl.trim()) lines.push(`  making_article_url: ${tsString(card.makingArticleUrl.trim())},`);
+      lines.push(`  thumbnail: ${card.thumbnail ? "true" : "false"},`);
+      if (fields.cardLayout.value === "making-comparison-grid") {
+        lines.push(`  comparison_group: ${tsString(comparisonGroup)},`);
+        if (card.comparisonLabel || card.heading) lines.push(`  comparison_label: ${tsString(card.comparisonLabel || card.heading)},`);
+        if (card.comparisonOrder) lines.push(`  comparison_order: ${Number(card.comparisonOrder)},`);
+      }
+      lines.push("}");
+      return lines.join("\n");
+    }).join(",\n");
+  }
+
+  function renderChecklist() {
+    const items = [
+      {
+        label: fields.title.value.trim() ? "title が入っています" : "title が空です",
+        status: fields.title.value.trim() ? "ok" : "warn"
+      },
+      {
+        label: fields.date.value ? "date が入っています" : "date が空です",
+        status: fields.date.value ? "ok" : "warn"
+      },
+      {
+        label: fields.ogDescription.value.trim() ? "description が入っています" : "description が空です",
+        status: fields.ogDescription.value.trim() ? "ok" : "warn"
+      },
+      {
+        label: fields.template.value === "making" && !fields.slug.value.trim() ? "making では slug の入力を推奨します" : "slug 条件は問題ありません",
+        status: fields.template.value === "making" && !fields.slug.value.trim() ? "warn" : "ok"
+      },
+      {
+        label: fields.thumbnail.value.trim() && !fields.thumbnailAlt.value.trim() ? "thumbnail があるため thumbnail_alt を入れてください" : "thumbnail_alt 条件は問題ありません",
+        status: fields.thumbnail.value.trim() && !fields.thumbnailAlt.value.trim() ? "warn" : "ok"
+      },
+      {
+        label: hasPermalinkOverride() ? "permalink override 中です" : "permalink は自動生成URLです",
+        status: hasPermalinkOverride() ? "info" : "ok"
+      }
+    ];
+
+    fields.checklist.innerHTML = items.map((item) => `
+      <li class="is-${item.status}">
+        <span>${item.status === "ok" ? "OK" : item.status === "warn" ? "警告" : "情報"}</span>
+        ${escapeHtml(item.label)}
+      </li>
+    `).join("");
+  }
+
+  function renderUrlStatus() {
+    const generated = getGeneratedPermalink();
+    const current = fields.permalink.value.trim();
+    const override = hasPermalinkOverride();
+    fields.urlStatus.innerHTML = `
+      <p><strong>自動生成URL</strong><code>${escapeHtml(generated || "日付を入力してください")}</code></p>
+      ${override ? `<p><strong>override URL</strong><code>${escapeHtml(current)}</code></p>` : ""}
+      <p class="${override ? "status-info" : "status-ok"}">${override ? "permalink override 中です。frontmatter に permalink を出力します。" : "自動生成URLを使用します。frontmatter に permalink は出力しません。"}</p>
+    `;
+  }
+
+  function renderMediaStatus() {
+    const thumbnail = resolveEditorImage(fields.thumbnail.value);
+    const ogImage = resolveEditorImage(fields.ogImage.value, "w_1200,h_630,c_fill,q_auto,f_auto");
+    const renderItem = (title, item) => `
+      <div class="media-resolve-item">
+        <div>
+          <strong>${escapeHtml(title)}</strong>
+          <p>${escapeHtml(item.label)}</p>
+          ${item.url ? `<code>${escapeHtml(item.url)}</code>` : ""}
+        </div>
+        ${item.url ? `<img src="${escapeHtml(item.url)}" alt="${escapeHtml(title)} preview" loading="lazy" />` : ""}
+      </div>
+    `;
+
+    fields.mediaStatus.innerHTML = `
+      ${renderItem("thumbnail", thumbnail)}
+      ${renderItem("og_image", ogImage)}
+    `;
+  }
+
+  function updateCardCount() {
+    fields.cardCount.textContent = `${cleanCards().length} cards`;
+  }
+
+  function renderCards() {
+    updateCardCount();
+    fields.cardList.innerHTML = cards.map((card, index) => `
+      <article class="media-card" data-card-index="${index}">
+        <div class="media-card-header">
+          <strong>Card ${index + 1}</strong>
+          <button type="button" data-card-action="remove" data-index="${index}">削除</button>
+        </div>
+        <label>
+          <span>Cloudinary ID</span>
+          <input type="text" data-card-field="cloudinaryId" data-index="${index}" list="gallery-id-list" value="${escapeHtml(card.cloudinaryId)}" placeholder="example_abcd12.jpg" />
+        </label>
+        <div class="field-row">
+          <label>
+            <span>キャプション</span>
+            <input type="text" data-card-field="caption" data-index="${index}" value="${escapeHtml(card.caption)}" placeholder="画像の説明" />
+          </label>
+          <label>
+            <span>見出し</span>
+            <input type="text" data-card-field="heading" data-index="${index}" value="${escapeHtml(card.heading)}" placeholder="カード内見出し" />
+          </label>
+        </div>
+        <label>
+          <span>description (Gallery用)</span>
+          <input type="text" data-card-field="description" data-index="${index}" value="${escapeHtml(card.description)}" placeholder="作品説明" />
+        </label>
+        <div class="field-row">
+          <label>
+            <span>categories (カンマ区切り)</span>
+            <input type="text" data-card-field="categories" data-index="${index}" value="${escapeHtml(card.categories)}" placeholder="3DCG, Illustration" />
+          </label>
+          <label>
+            <span>making_article_url</span>
+            <input type="text" data-card-field="makingArticleUrl" data-index="${index}" value="${escapeHtml(card.makingArticleUrl)}" placeholder="/journal/2026/01/30/dunes-making/" />
+          </label>
+        </div>
+        <div class="field-row">
+          <label>
+            <span>comparison_label</span>
+            <input type="text" data-card-field="comparisonLabel" data-index="${index}" value="${escapeHtml(card.comparisonLabel)}" />
+          </label>
+          <label>
+            <span>comparison_order</span>
+            <input type="number" data-card-field="comparisonOrder" data-index="${index}" value="${escapeHtml(card.comparisonOrder)}" />
+          </label>
+        </div>
+        <div class="switch-row">
+          <label class="checkbox-field">
+            <input type="checkbox" data-card-field="thumbnail" data-index="${index}" ${card.thumbnail ? "checked" : ""} />
+            <span>サムネイル対象</span>
+          </label>
+          <label class="checkbox-field">
+            <input type="checkbox" data-card-field="noGalleryButton" data-index="${index}" ${card.noGalleryButton ? "checked" : ""} />
+            <span>ギャラリーボタン非表示</span>
+          </label>
+        </div>
+      </article>
+    `).join("");
   }
 
   function generate() {
     syncDerivedFields(false);
-    const markdown = `${buildFrontmatter()}\n\n${fields.body.value.trimEnd()}\n`;
+    fields.customLightboxRow.hidden = fields.lightboxPreset.value !== "custom";
+    const markdown = `${buildFrontmatter()}\n\n${getBodyMarkdown()}`;
     fields.outputContent.value = markdown;
+    fields.galleryOutput.value = buildGalleryCode();
     renderPreview(fields.body.value);
+    renderChecklist();
+    renderUrlStatus();
+    renderMediaStatus();
+    updateCardCount();
     saveDraft();
   }
 
@@ -402,28 +806,9 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     textarea.focus();
   }
 
-  function buildImageCard() {
-    const id = fields.cardCloudinaryId.value.trim();
-    const caption = fields.cardCaption.value.trim();
-    const heading = fields.cardHeading.value.trim() || caption;
-    const lightbox = fields.cardLightbox.value.trim() || "Journal";
-    if (!id) return "";
-
-    return `<div class="journal-card-grid">
-  <div class="journal-card no-gallery-button">
-    <a href="${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${escapeHtml(id)}" data-lightbox="${escapeHtml(lightbox)}" data-title="${escapeHtml(caption)}">
-      <img src="${cloudinaryBase}/w_300,h_300,c_fill,q_auto,f_auto/v1/${escapeHtml(id)}" alt="${escapeHtml(caption)}">
-    </a>
-    <div class="journal-card-info">
-      <h4>${escapeHtml(heading)}</h4>
-    </div>
-  </div>
-</div>`;
-  }
-
-  async function copyOutput() {
-    await navigator.clipboard.writeText(fields.outputContent.value);
-    setDraftStatus("Markdownをコピーしました");
+  async function copyText(text, message) {
+    await navigator.clipboard.writeText(text);
+    setDraftStatus(message);
   }
 
   function downloadOutput() {
@@ -448,16 +833,21 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
       permalink: fields.permalink.value,
       permalinkTouched: fields.permalink.dataset.touched === "true",
       ogDescription: fields.ogDescription.value,
-      image: fields.image.value,
+      thumbnail: fields.thumbnail.value,
+      thumbnailAlt: fields.thumbnailAlt.value,
+      thumbnailFit: fields.thumbnailFit.value,
+      thumbnailPosition: fields.thumbnailPosition.value,
+      ogImage: fields.ogImage.value,
+      draft: fields.draft.checked,
       tags: fields.tags.value,
       featuredRelated: fields.featuredRelated.value,
       thumbnailClass: fields.thumbnailClass.value,
       useMath: fields.useMath.checked,
       body: fields.body.value,
-      cardCloudinaryId: fields.cardCloudinaryId.value,
-      cardCaption: fields.cardCaption.value,
-      cardLightbox: fields.cardLightbox.value,
-      cardHeading: fields.cardHeading.value
+      cardLayout: fields.cardLayout.value,
+      lightboxPreset: fields.lightboxPreset.value,
+      customLightbox: fields.customLightbox.value,
+      cards
     };
   }
 
@@ -470,23 +860,32 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     fields.permalink.value = data.permalink || "";
     fields.permalink.dataset.touched = data.permalinkTouched ? "true" : "";
     fields.ogDescription.value = data.ogDescription || "";
-    fields.image.value = data.image || "";
+    fields.thumbnail.value = data.thumbnail || "";
+    fields.thumbnailAlt.value = data.thumbnailAlt || "";
+    fields.thumbnailFit.value = data.thumbnailFit || "";
+    fields.thumbnailPosition.value = data.thumbnailPosition || "";
+    fields.ogImage.value = data.ogImage || data.image || "";
+    fields.draft.checked = data.draft === undefined ? true : Boolean(data.draft);
     fields.tags.value = data.tags || "";
     fields.featuredRelated.value = data.featuredRelated || "";
     fields.thumbnailClass.value = data.thumbnailClass || "";
     fields.useMath.checked = Boolean(data.useMath);
     fields.body.value = data.body || templates[fields.template.value].body;
-    fields.cardCloudinaryId.value = data.cardCloudinaryId || "";
-    fields.cardCaption.value = data.cardCaption || "";
-    fields.cardLightbox.value = data.cardLightbox || "Journal";
-    fields.cardHeading.value = data.cardHeading || "";
+    fields.cardLayout.value = data.cardLayout || "journal-card-grid";
+    fields.lightboxPreset.value = data.lightboxPreset || "Journal";
+    fields.customLightbox.value = data.customLightbox || "";
+    cards = Array.isArray(data.cards) && data.cards.length ? data.cards : [defaultCard()];
     return true;
   }
 
   function saveDraft() {
     if (isRestoringDraft) return;
-    localStorage.setItem(storageKey, JSON.stringify(getDraftData()));
-    setDraftStatus("下書きを自動保存しました");
+    setDraftStatus("保存中...");
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      localStorage.setItem(storageKey, JSON.stringify(getDraftData()));
+      setDraftStatus("下書きを自動保存しました");
+    }, 260);
   }
 
   function restoreDraft() {
@@ -498,6 +897,7 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
       const restored = setDraftData(JSON.parse(raw));
       isRestoringDraft = false;
       if (restored) {
+        renderCards();
         generate();
         setDraftStatus("保存済みの下書きを復元しました");
       }
@@ -523,19 +923,92 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     fields.slug.value = "";
     fields.permalink.dataset.touched = "";
     fields.ogDescription.value = "";
-    fields.image.value = "";
+    fields.thumbnail.value = "";
+    fields.thumbnailAlt.value = "";
+    fields.thumbnailFit.value = "";
+    fields.thumbnailPosition.value = "";
+    fields.ogImage.value = "";
+    fields.draft.checked = true;
     fields.tags.value = "";
     fields.featuredRelated.value = "";
     fields.thumbnailClass.value = "";
     fields.useMath.checked = false;
-    fields.cardCloudinaryId.value = "";
-    fields.cardCaption.value = "";
-    fields.cardLightbox.value = "Journal";
-    fields.cardHeading.value = "";
+    fields.cardLayout.value = "journal-card-grid";
+    fields.lightboxPreset.value = "Journal";
+    fields.customLightbox.value = "";
+    fields.articleInput.value = "";
+    cards = [defaultCard()];
     fields.body.value = templates[fields.template.value].body;
     syncDerivedFields(true);
+    renderCards();
     generate();
     setDraftStatus("初期化しました");
+  }
+
+  function extractCloudinaryId(url) {
+    if (!url) return "";
+    const match = url.match(/\/image\/upload\/(?:[^/]*\/)*([^?/\s]+)(?:\?.*)?$/);
+    return match ? match[1] : url.trim();
+  }
+
+  function analyzeArticle() {
+    const raw = fields.articleInput.value;
+    if (!raw.trim()) {
+      setDraftStatus("解析する本文を貼り付けてください");
+      return;
+    }
+
+    const doc = new DOMParser().parseFromString(raw, "text/html");
+    const nodes = Array.from(doc.querySelectorAll(".journal-card, .comparison-item"));
+    if (!nodes.length) {
+      setDraftStatus("カード要素が見つかりませんでした");
+      return;
+    }
+
+    const parsed = nodes.map((node, index) => {
+      const anchor = node.querySelector("a");
+      const img = node.querySelector("img");
+      const caption = (anchor && anchor.getAttribute("data-title")) || (img && img.alt) || "";
+      const labelNode = node.querySelector("h4") || node.querySelector(".comparison-label");
+      const lightbox = anchor ? anchor.getAttribute("data-lightbox") || "" : "";
+      return {
+        ...defaultCard(),
+        caption,
+        heading: labelNode ? labelNode.textContent.trim() : caption,
+        cloudinaryId: extractCloudinaryId(anchor ? anchor.href : img ? img.src : ""),
+        comparisonLabel: labelNode ? labelNode.textContent.trim() : caption,
+        comparisonOrder: index + 1,
+        noGalleryButton: node.classList.contains("no-gallery-button")
+      };
+    }).filter((card) => card.cloudinaryId);
+
+    if (!parsed.length) {
+      setDraftStatus("Cloudinary IDを持つカードが見つかりませんでした");
+      return;
+    }
+
+    const firstCustomLightbox = nodes
+      .map((node) => node.querySelector("a")?.getAttribute("data-lightbox") || "")
+      .find((group) => group && !["Journal", "gallery", "making-comparison"].includes(group));
+    const firstPresetLightbox = nodes
+      .map((node) => node.querySelector("a")?.getAttribute("data-lightbox") || "")
+      .find((group) => ["Journal", "gallery", "making-comparison"].includes(group));
+
+    if (firstCustomLightbox) {
+      fields.lightboxPreset.value = "custom";
+      fields.customLightbox.value = firstCustomLightbox;
+    } else if (firstPresetLightbox) {
+      fields.lightboxPreset.value = firstPresetLightbox;
+    }
+
+    if (nodes.some((node) => node.classList.contains("comparison-item"))) {
+      fields.cardLayout.value = "making-comparison-grid";
+    }
+
+    cards = parsed;
+    renderCards();
+    generate();
+    setDraftStatus("本文からカードを抽出しました");
   }
 
   document.querySelectorAll("input, textarea, select").forEach((field) => {
@@ -554,23 +1027,76 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     generate();
   });
 
-  document.querySelector("[data-action='insert-card']").addEventListener("click", () => {
-    const card = buildImageCard();
-    if (!card) return;
-    insertAtCursor(fields.body, `\n\n${card}\n\n`);
+  fields.cardList.addEventListener("input", (event) => {
+    const field = event.target.dataset.cardField;
+    if (!field) return;
+    const index = Number(event.target.dataset.index);
+    cards[index][field] = event.target.type === "checkbox" ? event.target.checked : event.target.value;
     generate();
   });
 
+  fields.cardList.addEventListener("change", (event) => {
+    const field = event.target.dataset.cardField;
+    if (!field) return;
+    const index = Number(event.target.dataset.index);
+    cards[index][field] = event.target.type === "checkbox" ? event.target.checked : event.target.value;
+    generate();
+  });
+
+  fields.cardList.addEventListener("click", (event) => {
+    const action = event.target.dataset.cardAction;
+    if (action !== "remove") return;
+    const index = Number(event.target.dataset.index);
+    if (cards.length === 1) {
+      cards[0] = defaultCard();
+    } else {
+      cards.splice(index, 1);
+    }
+    renderCards();
+    generate();
+  });
+
+  document.querySelectorAll(".tab-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".tab-button").forEach((item) => item.classList.toggle("is-active", item === button));
+      document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.toggle("is-active", panel.dataset.panel === button.dataset.tab));
+    });
+  });
+
+  document.querySelector("[data-action='add-card']").addEventListener("click", () => {
+    cards.push(defaultCard());
+    renderCards();
+    generate();
+  });
+  document.querySelector("[data-action='insert-cards']").addEventListener("click", () => {
+    const html = buildCardsHtml();
+    if (!html) {
+      setDraftStatus("挿入するカードがありません");
+      return;
+    }
+    insertAtCursor(fields.body, `\n\n${html}\n\n`);
+    generate();
+  });
   document.querySelector("[data-action='append-featured']").addEventListener("click", () => {
-    const id = fields.cardCloudinaryId.value.trim();
-    if (!id) return;
     const items = splitList(fields.featuredRelated.value);
-    if (!items.includes(id)) items.push(id);
+    cleanCards().forEach((card) => {
+      const id = card.cloudinaryId.trim();
+      if (id && !items.includes(id)) items.push(id);
+    });
     fields.featuredRelated.value = items.join(", ");
     generate();
   });
-
-  document.querySelector("[data-action='copy-content']").addEventListener("click", copyOutput);
+  document.querySelector("[data-action='analyze-article']").addEventListener("click", analyzeArticle);
+  document.querySelector("[data-action='reset-cards']").addEventListener("click", () => {
+    cards = [defaultCard()];
+    renderCards();
+    generate();
+    setDraftStatus("カードを初期化しました");
+  });
+  document.querySelector("[data-action='copy-content']").addEventListener("click", () => copyText(fields.outputContent.value, "記事全体をコピーしました"));
+  document.querySelector("[data-action='copy-frontmatter']").addEventListener("click", () => copyText(buildFrontmatter(), "frontmatterをコピーしました"));
+  document.querySelector("[data-action='copy-body']").addEventListener("click", () => copyText(getBodyMarkdown(), "本文をコピーしました"));
+  document.querySelector("[data-action='copy-gallery']").addEventListener("click", () => copyText(fields.galleryOutput.value, "Galleryコードをコピーしました"));
   document.querySelector("[data-action='download-content']").addEventListener("click", downloadOutput);
   document.querySelector("[data-action='clear-draft']").addEventListener("click", clearDraft);
   document.querySelector("[data-action='reset-form']").addEventListener("click", resetForm);
@@ -585,14 +1111,14 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     --editor-ink: #122019;
     --editor-muted: rgba(18, 32, 25, 0.68);
     --editor-line: rgba(18, 32, 25, 0.14);
-    --editor-panel: rgba(255, 255, 255, 0.86);
+    --editor-panel: rgba(255, 255, 255, 0.88);
     --editor-panel-strong: #ffffff;
     --editor-accent: #168a73;
     --editor-accent-dark: #0f6f5c;
-    --editor-warm: #f5efe5;
-    max-width: 1360px;
+    --editor-soft: rgba(42, 220, 163, 0.1);
+    max-width: 1680px;
     margin: 0 auto;
-    padding: 0 clamp(0.75rem, 2vw, 1.5rem) 3rem;
+    padding: 0 clamp(0.75rem, 1.6vw, 1.5rem) 3rem;
     color: var(--editor-ink);
   }
 
@@ -603,34 +1129,47 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
   }
 
   .editor-header .web_title {
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.45rem;
+  }
+
+  .editor-kicker,
+  .section-label {
+    margin: 0;
+    color: var(--editor-accent-dark);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   .editor-grid {
     display: grid;
-    grid-template-columns: minmax(520px, 1.04fr) minmax(390px, 0.96fr);
-    gap: clamp(1rem, 2vw, 1.5rem);
+    grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.25fr) minmax(360px, 0.95fr);
+    gap: clamp(1rem, 1.6vw, 1.35rem);
     align-items: start;
   }
 
-  .editor-side {
+  .editor-main {
+    display: contents;
+  }
+
+  .editor-column {
     display: grid;
-    gap: 1rem;
+    gap: 1.15rem;
+    align-content: start;
+  }
+
+  .editor-side {
     position: sticky;
-    top: 1rem;
+    top: 80px;
   }
 
   .editor-panel {
-    padding: clamp(1rem, 2vw, 1.25rem);
+    padding: clamp(1rem, 1.5vw, 1.25rem);
     border: 1px solid var(--editor-line);
     border-radius: 8px;
-    background: var(--editor-panel);
+    background: rgba(255, 255, 255, 0.92);
     box-shadow: 0 10px 30px rgba(18, 32, 25, 0.06);
-  }
-
-  .editor-form {
-    display: grid;
-    gap: 0.2rem;
   }
 
   .panel-heading {
@@ -644,31 +1183,31 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
   }
 
   .panel-heading h2 {
-    margin: 0;
-    font-size: 1.05rem;
+    margin: 0.15rem 0 0;
+    font-size: 1.08rem;
     line-height: 1.3;
   }
 
-  .field-row {
+  .field-row,
+  .switch-row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
-  .compact-row {
-    align-items: end;
+    gap: 0.9rem;
   }
 
   label {
     display: grid;
-    gap: 0.38rem;
-    margin-bottom: 0.8rem;
+    gap: 0.42rem;
+    margin-bottom: 0.95rem;
     color: var(--editor-ink);
     font-weight: 700;
   }
 
-  label span {
-    font-size: 0.9rem;
+  label span,
+  summary {
+    color: rgba(18, 32, 25, 0.82);
+    font-size: 0.92rem;
+    font-weight: 800;
     line-height: 1.35;
   }
 
@@ -679,7 +1218,8 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     min-width: 0;
     border: 1px solid var(--editor-line);
     border-radius: 6px;
-    padding: 0.68rem 0.75rem;
+    min-height: 42px;
+    padding: 0.66rem 0.75rem;
     background: var(--editor-panel-strong);
     color: var(--editor-ink);
     font: inherit;
@@ -697,7 +1237,7 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
   input[readonly],
   textarea[readonly] {
     background: #f8faf8;
-    color: rgba(18, 32, 25, 0.8);
+    color: rgba(18, 32, 25, 0.82);
   }
 
   textarea {
@@ -707,12 +1247,24 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
   }
 
   .body-editor {
-    min-height: 460px;
+    min-height: 320px;
+    max-height: 60vh;
+    background: #fff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 0.92rem;
+  }
+
+  .article-analyzer {
+    min-height: 170px;
   }
 
   .output-editor {
     min-height: 300px;
     font-size: 0.88rem;
+  }
+
+  .compact-output {
+    min-height: 220px;
   }
 
   .checkbox-field {
@@ -731,12 +1283,90 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     accent-color: var(--editor-accent);
   }
 
-  .card-builder {
-    margin-top: 1rem;
+  .card-list {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .media-card {
     padding: 1rem;
     border: 1px solid rgba(22, 138, 115, 0.18);
     border-radius: 8px;
-    background: linear-gradient(180deg, rgba(22, 138, 115, 0.07), rgba(245, 239, 229, 0.42));
+    background: linear-gradient(180deg, rgba(22, 138, 115, 0.06), rgba(255, 255, 255, 0.76));
+  }
+
+  .media-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .utility-details {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--editor-line);
+  }
+
+  .utility-details summary {
+    cursor: pointer;
+    color: var(--editor-accent-dark);
+    font-weight: 800;
+  }
+
+  .generated-url-panel,
+  .media-resolve-panel {
+    display: grid;
+    gap: 0.55rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.8rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(22, 138, 115, 0.18);
+    border-radius: 8px;
+    background: rgba(42, 220, 163, 0.07);
+  }
+
+  .generated-url-panel p {
+    margin: 0;
+  }
+
+  .generated-url-panel code,
+  .media-resolve-panel code {
+    display: block;
+    overflow-wrap: anywhere;
+    margin-top: 0.25rem;
+    font-size: 0.82rem;
+  }
+
+  .status-ok {
+    color: var(--editor-accent-dark);
+  }
+
+  .status-info {
+    color: #6c5520;
+  }
+
+  .media-resolve-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .media-resolve-item p {
+    margin: 0.15rem 0 0;
+    color: var(--editor-muted);
+    font-size: 0.86rem;
+  }
+
+  .media-resolve-item img {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border: 1px solid var(--editor-line);
+    border-radius: 6px;
+    background: #fff;
   }
 
   .editor-actions {
@@ -746,8 +1376,10 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
   }
 
   .top-actions {
+    display: grid;
+    grid-template-columns: auto minmax(220px, 1fr) auto minmax(160px, 0.5fr);
+    gap: 0.65rem;
     align-items: center;
-    justify-content: center;
     position: sticky;
     top: 0;
     z-index: 5;
@@ -755,8 +1387,36 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     padding: 0.7rem;
     border: 1px solid var(--editor-line);
     border-radius: 8px;
-    background: rgba(252, 253, 250, 0.9);
+    background: rgba(252, 253, 250, 0.92);
     backdrop-filter: blur(12px);
+  }
+
+  .action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+  }
+
+  .support-actions {
+    justify-content: center;
+  }
+
+  .danger-actions {
+    justify-content: flex-end;
+    padding-left: 0.65rem;
+    border-left: 1px solid rgba(130, 48, 48, 0.2);
+  }
+
+  .danger-actions button {
+    border-color: rgba(145, 45, 45, 0.28);
+    color: #7b2f2f;
+    background: #fff8f7;
+  }
+
+  .danger-actions button:hover {
+    border-color: rgba(145, 45, 45, 0.5);
+    background: #fff0ed;
   }
 
   .draft-status {
@@ -767,7 +1427,8 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     text-align: right;
   }
 
-  button {
+  button,
+  .tab-button {
     min-height: 42px;
     border: 1px solid var(--editor-line);
     border-radius: 6px;
@@ -786,19 +1447,118 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     transform: translateY(-1px);
   }
 
-  .primary-button {
+  .primary-button,
+  .tab-button.is-active {
     border-color: var(--editor-accent);
     background: var(--editor-accent);
     color: white;
   }
 
-  .primary-button:hover {
+  .primary-button:hover,
+  .tab-button.is-active:hover {
     background: var(--editor-accent-dark);
   }
 
+  .secondary-primary {
+    background: #f4fffa;
+    color: var(--editor-accent-dark);
+  }
+
+  .secondary-primary:hover {
+    color: #fff;
+  }
+
+  .side-panel {
+    max-height: calc(100vh - 96px);
+    overflow: auto;
+  }
+
+  .side-panel .output-editor {
+    max-height: 32vh;
+  }
+
+  .side-panel .preview {
+    max-height: min(640px, 66vh);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(22, 138, 115, 0.2);
+    border-radius: 999px;
+    padding: 0.22rem 0.62rem;
+    background: var(--editor-soft);
+    color: var(--editor-accent-dark);
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .side-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.4rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.is-active {
+    display: block;
+  }
+
+  .publish-checklist {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .publish-checklist li {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.72rem 0.8rem;
+    border: 1px solid var(--editor-line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--editor-muted);
+  }
+
+  .publish-checklist span {
+    min-width: 3.4rem;
+    border-radius: 999px;
+    padding: 0.12rem 0.45rem;
+    text-align: center;
+    font-size: 0.76rem;
+    font-weight: 800;
+  }
+
+  .publish-checklist .is-ok span {
+    background: rgba(42, 220, 163, 0.16);
+    color: var(--editor-accent-dark);
+  }
+
+  .publish-checklist .is-pending span {
+    background: #f6f0df;
+    color: #7a6126;
+  }
+
+  .publish-checklist .is-warn span {
+    background: #fff3cc;
+    color: #745400;
+  }
+
+  .publish-checklist .is-info span {
+    background: rgba(22, 138, 115, 0.1);
+    color: var(--editor-accent-dark);
+  }
+
   .preview {
-    min-height: 360px;
-    max-height: min(720px, 68vh);
+    min-height: 520px;
+    max-height: min(820px, 72vh);
     padding: 0;
     border: 1px solid var(--editor-line);
     border-radius: 6px;
@@ -847,11 +1607,6 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     line-height: 1.45;
   }
 
-  .preview h1 {
-    font-size: 1.8rem;
-    margin: 0 0 1.2rem;
-  }
-
   .preview h2 {
     margin-top: 1.6rem;
     padding-left: 0.75rem;
@@ -874,7 +1629,6 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     margin: 1.4rem 0;
     padding: 0.2rem 1rem;
     border-left: 4px solid rgba(22, 138, 115, 0.36);
-    color: rgba(18, 32, 25, 0.74);
     background: rgba(22, 138, 115, 0.06);
   }
 
@@ -886,25 +1640,42 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     font-size: 0.92em;
   }
 
-  .preview :global(.journal-card-grid) {
+  .preview :global(.journal-card-grid),
+  .preview :global(.making-comparison-grid) {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 1rem;
     margin: 1.2rem 0;
   }
 
-  .preview :global(.journal-card) {
+  .preview :global(.journal-card-grid) {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .preview :global(.making-comparison-grid) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .preview :global(.journal-card),
+  .preview :global(.comparison-item) {
     overflow: hidden;
     border: 1px solid var(--editor-line);
     border-radius: 8px;
     background: #fbfcfa;
   }
 
-  .preview :global(.journal-card img) {
+  .preview :global(.journal-card img),
+  .preview :global(.comparison-item img) {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
     border-radius: 4px;
+  }
+
+  .preview :global(.comparison-label) {
+    margin: 0;
+    padding: 0.8rem;
+    text-align: center;
+    font-weight: 800;
   }
 
   .preview pre {
@@ -920,7 +1691,7 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     background: transparent;
   }
 
-  @media (max-width: 1080px) {
+  @media (max-width: 1120px) {
     .editor-grid {
       grid-template-columns: 1fr;
     }
@@ -929,14 +1700,36 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     .top-actions {
       position: static;
     }
+
+    .side-panel {
+      max-height: none;
+      overflow: visible;
+    }
+
+    .top-actions {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .danger-actions {
+      justify-content: flex-start;
+      padding-left: 0;
+      border-left: 0;
+    }
   }
 
   @media (max-width: 680px) {
-    .field-row {
+    .field-row,
+    .switch-row,
+    .side-tabs {
       grid-template-columns: 1fr;
     }
 
     .top-actions {
+      grid-template-columns: 1fr;
+      justify-content: stretch;
+    }
+
+    .action-group {
       justify-content: stretch;
     }
 
@@ -951,7 +1744,11 @@ const galleryIds = galleryItems.map((item) => item.cloudinary_id);
     }
 
     .body-editor {
-      min-height: 360px;
+      min-height: 320px;
+    }
+
+    .preview :global(.making-comparison-grid) {
+      grid-template-columns: 1fr;
     }
   }
 </style>

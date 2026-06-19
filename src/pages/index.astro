@@ -2,8 +2,11 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { galleryItems } from "../data/gallery";
+import { resolveImageUrl } from "../utils/images";
+import { getJournalRoutePath, toJournalRoutePath } from "../utils/journal";
 
 const base = import.meta.env.BASE_URL;
+const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const showDrafts = !import.meta.env.PROD;
@@ -21,11 +24,45 @@ const latestWorkDate = latestGallery && latestSong
     : latestSong.data.date.toISOString().slice(0, 10)
   : latestGallery?.date ?? latestSong?.data.date.toISOString().slice(0, 10);
 const summarize = (text) => (text ? text.replace(/\s+/g, " ").trim().slice(0, 70) : "");
-const getJournalPath = (entry) =>
-  (entry.data.permalink ?? `/journal/${entry.data.date.toISOString().slice(0, 10)}/`)
-    .replace(/^\/+/, "")
-    .replace(/^journal\//, "")
-    .replace(/\/+$/, "");
+const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_description ?? entry.body;
+const getJournalThumbnail = (entry) => {
+  const explicitThumbnail = resolveImageUrl(entry.data.thumbnail, "w_400,h_400,c_fill,q_auto,f_auto");
+  if (explicitThumbnail) {
+    return {
+      src: explicitThumbnail,
+      alt: entry.data.thumbnail_alt ?? entry.data.title
+    };
+  }
+
+  const journalPath = getJournalRoutePath(entry);
+  const galleryThumbnail = galleryItems.find((item) => {
+    if (item.thumbnail === false) {
+      return false;
+    }
+
+    return (
+      (item.article_url && toJournalRoutePath(item.article_url) === journalPath) ||
+      (item.making_article_url && toJournalRoutePath(item.making_article_url) === journalPath)
+    );
+  });
+
+  if (galleryThumbnail) {
+    return {
+      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.cloudinary_id}`,
+      alt: galleryThumbnail.title
+    };
+  }
+
+  const legacyImage = resolveImageUrl(entry.data.image, "w_400,h_400,c_fill,q_auto,f_auto");
+  if (legacyImage) {
+    return {
+      src: legacyImage,
+      alt: entry.data.thumbnail_alt ?? entry.data.title
+    };
+  }
+
+  return null;
+};
 ---
 
 <BaseLayout title="Riddle Records" description="4mgのポートフォリオサイトです。">
@@ -50,14 +87,24 @@ const getJournalPath = (entry) =>
 
       {latestJournal && (
         <article class="home-card journal-entry-animate">
-          <a href={href(`/journal/${getJournalPath(latestJournal)}/`)} class="home-card-clickable">
+          {(() => {
+            const journalThumbnail = getJournalThumbnail(latestJournal);
+            return (
+              <a href={href(`/journal/${getJournalRoutePath(latestJournal)}/`)} class="home-card-clickable">
             <div class="home-card-head">
               <span class="home-card-label">Journal</span>
               <time class="home-card-date" datetime={latestJournal.data.date.toISOString().slice(0, 10)}>{latestJournal.data.date.toLocaleDateString("ja-JP")}</time>
             </div>
+            {journalThumbnail && (
+              <div class="home-card-thumb">
+                <img src={journalThumbnail.src} alt={journalThumbnail.alt} loading="lazy" />
+              </div>
+            )}
             <h3 class="home-card-title">{latestJournal.data.title}</h3>
-            <p class="home-card-desc">{summarize(latestJournal.data.og_description ?? latestJournal.body)}</p>
-          </a>
+            <p class="home-card-desc">{summarize(getJournalSummary(latestJournal))}</p>
+              </a>
+            );
+          })()}
           <a class="home-card-cta" href={href("/journal/")}>一覧を見る →</a>
         </article>
       )}
@@ -84,6 +131,15 @@ const getJournalPath = (entry) =>
           <a class="home-card-cta" href={href("/works/")}>Works を見る →</a>
         </article>
       )}
+
+      <a href={href("/project/")} class="home-card home-card-link journal-entry-animate">
+        <div class="home-card-head">
+          <span class="home-card-label">Project</span>
+        </div>
+        <h3 class="home-card-title">制作プロジェクト</h3>
+        <p class="home-card-desc">アプリ、Web作品、実験的なプロジェクトをまとめています。</p>
+        <span class="home-card-cta">Project を見る →</span>
+      </a>
 
       <a href={href("/info/")} class="home-card home-card-link journal-entry-animate">
         <div class="home-card-head">

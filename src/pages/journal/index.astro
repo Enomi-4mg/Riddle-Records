@@ -2,6 +2,8 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { galleryItems } from "../../data/gallery";
+import { resolveImageUrl } from "../../utils/images";
+import { getJournalRoutePath, toJournalRoutePath } from "../../utils/journal";
 import fallbackIconUrl from "../../../favicon/icon.jpg?url";
 
 const base = import.meta.env.BASE_URL;
@@ -12,13 +14,12 @@ const journalEntries = (await getCollection("journal"))
   .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 
 const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
-const toRoutePath = (path) => path.replace(/^\/+/, "").replace(/\/+$/, "").replace(/^journal\//, "");
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
-const getJournalPath = (entry) => toRoutePath(entry.data.permalink ?? `/journal/${entry.data.date.toISOString().slice(0, 10)}/`);
-const getJournalUrl = (entry) => withBase(`/journal/${getJournalPath(entry)}/`);
-const getThumbnail = (entry) => {
-  const journalPath = getJournalPath(entry);
+const getJournalUrl = (entry) => withBase(`/journal/${getJournalRoutePath(entry)}/`);
+const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_description ?? "";
+const getGalleryThumbnail = (entry) => {
+  const journalPath = getJournalRoutePath(entry);
   if (entry.data.thumbnail_class) {
     const byClass = galleryItems.find((item) => item.thumbnail_class === entry.data.thumbnail_class && item.thumbnail !== false);
     if (byClass) {
@@ -32,10 +33,40 @@ const getThumbnail = (entry) => {
     }
 
     return (
-      (item.article_url && toRoutePath(item.article_url) === journalPath) ||
-      (item.making_article_url && toRoutePath(item.making_article_url) === journalPath)
+      (item.article_url && toJournalRoutePath(item.article_url) === journalPath) ||
+      (item.making_article_url && toJournalRoutePath(item.making_article_url) === journalPath)
     );
   }) ?? null;
+};
+const getJournalThumbnail = (entry) => {
+  const explicitThumbnail = resolveImageUrl(entry.data.thumbnail, "w_400,h_400,c_fill,q_auto,f_auto");
+  if (explicitThumbnail) {
+    return {
+      src: explicitThumbnail,
+      alt: entry.data.thumbnail_alt ?? entry.data.title
+    };
+  }
+
+  const galleryThumbnail = getGalleryThumbnail(entry);
+  if (galleryThumbnail) {
+    return {
+      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.cloudinary_id}`,
+      alt: galleryThumbnail.title
+    };
+  }
+
+  const legacyImage = resolveImageUrl(entry.data.image, "w_400,h_400,c_fill,q_auto,f_auto");
+  if (legacyImage) {
+    return {
+      src: legacyImage,
+      alt: entry.data.thumbnail_alt ?? entry.data.title
+    };
+  }
+
+  return {
+    src: fallbackIconUrl,
+    alt: entry.data.title
+  };
 };
 ---
 
@@ -44,21 +75,21 @@ const getThumbnail = (entry) => {
 
   <div class="journal-list">
     {journalEntries.map((entry) => {
-      const thumbnail = getThumbnail(entry);
+      const thumbnail = getJournalThumbnail(entry);
       const articleUrl = getJournalUrl(entry);
       return (
         <article class="journal-row journal-entry-animate">
           <a href={articleUrl} class="journal-thumb">
             <img
-              src={thumbnail ? `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${thumbnail.cloudinary_id}` : fallbackIconUrl}
-              alt={thumbnail ? thumbnail.title : entry.data.title}
+              src={thumbnail.src}
+              alt={thumbnail.alt}
               loading="lazy"
             />
           </a>
           <div class="journal-copy">
             <time class="journal-date" datetime={entry.data.date.toISOString().slice(0, 10)}>{formatDate(entry.data.date)}</time>
             <h3 class="journal-title"><a href={articleUrl}>{entry.data.title}</a></h3>
-            <p class="journal-desc">{entry.data.og_description ?? ""}</p>
+            <p class="journal-desc">{getJournalSummary(entry)}</p>
           </div>
         </article>
       );

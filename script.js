@@ -91,6 +91,11 @@ function getPageCategory(url) {
   return 'other';
 }
 
+function shouldUseNormalNavigation(url) {
+  const path = new URL(url, window.location.origin).pathname;
+  return path.includes('/tools/');
+}
+
 // Update sidebar active state based on current URL
 function updateSidebarActiveState() {
   const currentPath = window.location.pathname;
@@ -169,6 +174,10 @@ function initializeEventListeners() {
     link.addEventListener('click', async (e) => {
       // If it's an internal link
       if (link.href && link.href !== '#') {
+        if (shouldUseNormalNavigation(link.href)) {
+          return;
+        }
+
         e.preventDefault();
         
         const url = link.href;
