@@ -3,8 +3,7 @@ import type { ArticleState, StoredDraft } from "../types/journal";
 export function getArticleState(draft: StoredDraft): ArticleState {
   if (draft.frontmatter.draft === true) return "draft";
   if (draft.source === "imported") {
-    const importedAt = draft.importedAt ?? draft.createdAt;
-    return draft.updatedAt > importedAt ? "editing-published" : "published";
+    return draft.editedAt ? "editing-published" : "published";
   }
   return "scheduled";
 }

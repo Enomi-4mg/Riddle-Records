@@ -29,8 +29,15 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
   const markdown = useMemo(() => buildMarkdown(localDraft), [localDraft]);
   const frontmatter = useMemo(() => buildFrontmatter(localDraft.frontmatter), [localDraft.frontmatter]);
 
+  function markEdited(draft: StoredDraft): StoredDraft {
+    return { ...draft, editedAt: new Date().toISOString() };
+  }
+
   function updateFrontmatter<K extends keyof FrontmatterForm>(key: K, value: FrontmatterForm[K]) {
-    setLocalDraft((current) => ({ ...current, frontmatter: { ...current.frontmatter, [key]: value } }));
+    setLocalDraft((current) => {
+      if (current.frontmatter[key] === value) return current;
+      return markEdited({ ...current, frontmatter: { ...current.frontmatter, [key]: value } });
+    });
   }
 
   async function copy(text: string, label: string) {
@@ -51,7 +58,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
         textarea.selectionStart = cursor;
         textarea.selectionEnd = cursor;
       });
-      return { ...current, body: nextBody };
+      return markEdited({ ...current, body: nextBody });
     });
     onNotice("カードHTMLを本文に挿入しました");
   }
@@ -88,7 +95,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
             ref={bodyRef}
             className="note-editor"
             value={localDraft.body}
-            onChange={(event) => setLocalDraft((current) => ({ ...current, body: event.target.value }))}
+            onChange={(event) => setLocalDraft((current) => current.body === event.target.value ? current : markEdited({ ...current, body: event.target.value }))}
             spellCheck={false}
             placeholder="本文を書きはじめる"
           />

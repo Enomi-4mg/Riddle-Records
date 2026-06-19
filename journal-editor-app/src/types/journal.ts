@@ -32,6 +32,7 @@ export type StoredDraft = {
   createdAt: string;
   updatedAt: string;
   importedAt?: string;
+  editedAt?: string;
   source: DraftSource;
   sourcePath?: string;
   sourceFileName?: string;

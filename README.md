@@ -46,27 +46,29 @@ tools/
 
 ## Journal Editor Workflow
 
-Use the built-in Journal Editor to generate Markdown for new Journal posts.
+Use the standalone React editor in `journal-editor-app/` to create and edit Journal Markdown. The old Astro editor implementation has been replaced by a migration notice at `/tools/journal-editor/`; that URL is kept only as a compatibility landing page for bookmarks and the Information page.
 
 ### 1. Open the editor
 
-Start the local dev server.
+Start the editor app.
 
 ```bash
-npm run dev -- --host 0.0.0.0
+cd journal-editor-app
+npm install
+npm run dev
 ```
 
-Open:
+Open the Vite dev server URL:
 
 ```text
-http://localhost:4321/Riddle-Records/tools/journal-editor/
+http://localhost:5174/
 ```
 
-The editor is also linked from the `Information` page.
+The `Information` page links to the `/tools/journal-editor/` migration notice, not to the editor app itself.
 
 ### 2. Fill in post metadata
 
-The editor generates frontmatter that matches the Journal collection schema in `src/content/config.ts`.
+The React editor generates frontmatter that matches the Journal collection schema in `src/content/config.ts`.
 
 - `title`: post title
 - `date`: post date
@@ -78,7 +80,7 @@ The editor generates frontmatter that matches the Journal collection schema in `
 - `tags`: used for related article matching
 - `thumbnail_class`: optional thumbnail selector
 
-Editor input is automatically saved to the browser's `localStorage`. Opening the editor again in the same browser restores the draft. Use `下書きを削除` to remove the stored draft.
+Editor input is saved to browser `localStorage` as multiple drafts. Existing Journal entries can be bulk-imported, single Markdown files can be imported, and all drafts can be backed up or restored as JSON.
 
 Available templates:
 
@@ -95,14 +97,11 @@ Use the image card builder when a post needs Cloudinary images.
 3. Press `本文に画像カードを挿入`.
 4. Press `featured_relatedに追加` if the image should be highlighted as related content.
 
-The generated card HTML uses the current Astro URL format and does not use old Jekyll Liquid variables such as `{{ site.cloudinary_url }}`.
+The generated card HTML uses the current Astro URL format and does not use old Jekyll Liquid variables such as `{{ site.cloudinary_url }}`. The editor can also generate `making-comparison-grid` HTML, extract existing cards from the body, add IDs to `featured_related`, and generate TypeScript-style Gallery registration snippets.
 
 ### 4. Save the Markdown
 
-Use either editor action:
-
-- `Markdownをコピー`: copy generated Markdown.
-- `Markdownをダウンロード`: download a `.md` file.
+Use the editor output pane to copy the generated Markdown, or use the `.md` button to download a Markdown file.
 
 Place the file in `src/content/journal/`.
 
@@ -131,7 +130,7 @@ Check:
 
 ### 6. Connect Gallery items
 
-If the post introduces a Gallery work, add the item to `src/data/gallery.ts`.
+If the post introduces a Gallery work, use the editor's Gallery code output as a starting point and add the item to `src/data/gallery.ts`.
 
 ```ts
 {
@@ -146,6 +145,10 @@ If the post introduces a Gallery work, add the item to `src/data/gallery.ts`.
 ```
 
 Add `making_article_url` when there is a separate making-of post.
+
+### Markdown import notes
+
+The editor's frontmatter importer is a small line-based parser, not a full YAML parser. It is intended for the current Journal files and common fields such as `key: value`, inline arrays, and simple block arrays. Avoid complex YAML such as block scalars, nested objects, heavily escaped quotes, or inline arrays with quoted commas. Existing Journal files are checked with `npm run test:roundtrip` in `journal-editor-app/`.
 
 ## Deployment
 

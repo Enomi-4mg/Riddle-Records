@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { RestoreConflictMode, StoredDraft, View } from "./types/journal";
 import { createDraft, deleteDraft, downloadBackup, hasDraft, loadDrafts, nowIso, restoreBackup, saveNewDraft, writeDraft } from "./lib/storage";
 import { parseImportedMarkdown } from "./lib/markdown";
@@ -87,12 +87,12 @@ export function App() {
     setNotice(overwrite ? `既存Journal記事: ${added}件追加、${overwritten}件上書き、${skipped}件スキップ` : `既存Journal記事: ${added}件追加、${skipped}件スキップ`);
   }
 
-  function saveCurrent(next: StoredDraft) {
+  const saveCurrent = useCallback((next: StoredDraft) => {
     const updated = { ...next, updatedAt: nowIso() };
     writeDraft(updated);
     setDrafts((items) => items.map((item) => item.id === updated.id ? updated : item).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
     setNotice(`保存しました ${new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`);
-  }
+  }, []);
 
   function backupAllDrafts() {
     const backup = downloadBackup();

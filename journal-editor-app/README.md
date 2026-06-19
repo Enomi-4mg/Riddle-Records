@@ -77,6 +77,17 @@ Cloudinary ID候補は `src/data/galleryIds.ts` に分離しています。Galle
 
 `imported:xxx` と `imported:xxx.md` は旧ID/新IDの同一記事候補として扱い、noticeに警告件数を表示します。
 
+### 下書き時刻の扱い
+
+draft metadata では、時刻を以下の意味で分けています。
+
+- `createdAt`: draft が作られた時刻
+- `updatedAt`: localStorage 上で最後に保存・更新された時刻
+- `importedAt`: 既存記事として import / 再 import された時刻
+- `editedAt`: ユーザーが記事内容を最後に編集した時刻
+
+既存Journal記事を import しただけでは `editedAt` は付きません。本文やfrontmatter、画像カード挿入、`featured_related` 追加など、ユーザーが内容を変更したときだけ `editedAt` を更新します。再インポートして上書きした場合は既存ファイルの状態へ戻すため、`editedAt` は消えます。
+
 ## Riddle Records本体への反映
 
 1. Editor の `.md` でMarkdownを書き出します。
@@ -125,6 +136,19 @@ Roundtripでは以下の差分を許容しています。
 - `type: "journal"` の追加
 
 本文Markdown、本文HTML、画像カードHTMLが変わる差分は要確認です。
+
+### Markdown import parser の制約
+
+frontmatter import はフルYAML parserではなく、行ベースの簡易parserです。通常の `key: value`、inline array、単純なblock arrayを想定しています。
+
+以下のような複雑なYAMLは非推奨または未保証です。
+
+- block scalar
+- nested object
+- 複雑なquoteやescape
+- quoted comma を含む inline array
+
+既存Journal記事は `npm run test:roundtrip` で import/export 相当の検証をしています。複雑なfrontmatterを追加した場合は、roundtrip結果と実buildの両方を確認してください。
 
 ## `type: "journal"` の出力方針
 
