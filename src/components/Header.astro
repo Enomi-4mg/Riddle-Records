@@ -1,9 +1,10 @@
 ---
-import { galleryItems } from "../data/gallery";
+import { getGalleryItems } from "../utils/gallery";
 import faviconUrl from "../../favicon/favicon.ico?url";
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const galleryItems = await getGalleryItems();
 ---
 
 <header class="site-header">

@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { galleryItems, getGalleryDetailPath, hasGalleryDetail } from "../../data/gallery";
+import { getGalleryDetailItems } from "../../utils/gallery";
 
 const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const base = import.meta.env.BASE_URL;
@@ -8,8 +8,8 @@ const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const formatDate = (date: string) => new Date(date).toLocaleDateString("ja-JP");
 
-export function getStaticPaths() {
-  return galleryItems.filter(hasGalleryDetail).map((item) => ({
+export async function getStaticPaths() {
+  return (await getGalleryDetailItems()).map((item) => ({
     params: {
       slug: item.slug
     },
@@ -20,9 +20,9 @@ export function getStaticPaths() {
 }
 
 const { item } = Astro.props;
-const imageUrl = `${cloudinaryBase}/w_1400,q_auto,f_auto/v1/${item.cloudinary_id}`;
-const ogImage = `${cloudinaryBase}/w_1200,h_630,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`;
-const bodyParagraphs = (item.body ?? item.description).split(/\n{2,}/).filter(Boolean);
+const imageUrl = `${cloudinaryBase}/w_1400,q_auto,f_auto/v1/${item.image}`;
+const ogImage = `${cloudinaryBase}/w_1200,h_630,c_fill,q_auto,f_auto/v1/${item.image}`;
+const bodyParagraphs = item.body.split(/\n{2,}/).filter(Boolean);
 ---
 
 <BaseLayout
@@ -46,15 +46,15 @@ const bodyParagraphs = (item.body ?? item.description).split(/\n{2,}/).filter(Bo
 
     <a
       class="gallery-detail-image"
-      href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`}
+      href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.image}`}
       data-lightbox={`gallery-detail-${item.slug}`}
       data-title={`${item.title} - ${item.description}`}
     >
-      <img src={imageUrl} alt={item.title} />
+      <img src={imageUrl} alt={item.imageAlt} />
     </a>
 
     <div class="gallery-detail-tags" aria-label={`${item.title} tags`}>
-      {item.categories.map((category) => <span class="work-tag">{category}</span>)}
+      {item.tags.map((category) => <span class="work-tag">{category}</span>)}
     </div>
 
     <section class="gallery-detail-body">

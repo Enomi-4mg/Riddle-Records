@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { galleryItems } from "../data/gallery";
+import { getLatestGalleryItems } from "../utils/gallery";
 import profileIconUrl from "../../favicon/icon.jpg?url";
 
 const base = import.meta.env.BASE_URL;
@@ -10,7 +10,7 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 
 const songs = (await getCollection("songs")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 const latestSongs = songs.slice(0, 2);
-const latestGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime()).slice(0, 2);
+const latestGallery = await getLatestGalleryItems(2);
 const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
 ---
 
@@ -98,7 +98,7 @@ const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() +
       {latestGallery.map((item) => (
         <div class="work-card">
           <a href={href("/works/")} class="work-thumb">
-            <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`} alt={item.title} />
+            <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${item.image}`} alt={item.imageAlt} />
           </a>
           <div class="work-info">
             <p class="work_title">{item.title}</p>

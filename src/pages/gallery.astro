@@ -1,10 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { galleryItems, getGalleryDetailPath, hasGalleryDetail } from "../data/gallery";
+import { getGalleryDetailPath, getSortedGalleryItems, hasGalleryDetail } from "../utils/gallery";
 
 const base = import.meta.env.BASE_URL;
 const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
-const sortedGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+const sortedGallery = await getSortedGalleryItems();
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const getFullImageUrl = (cloudinaryId) => `${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${cloudinaryId}`;
@@ -38,14 +38,14 @@ const getThumbUrl = (cloudinaryId) => `${cloudinaryBase}/w_400,h_400,c_fill,q_au
     {sortedGallery.map((item) => {
       const detailUrl = hasGalleryDetail(item) ? withBase(getGalleryDetailPath(item)) : "";
       return (
-      <div class="gallery-item work-card work-card-unified journal-entry-animate" id={item.cloudinary_id.replace(/\./g, "-")} data-date={item.date} data-categories={item.categories.join(",")}>
+      <div class="gallery-item work-card work-card-unified journal-entry-animate" id={item.image.replace(/\./g, "-")} data-date={item.date} data-categories={item.tags.join(",")}>
         {detailUrl ? (
           <a href={detailUrl} class="gallery-image-link work-thumb">
-            <img src={getThumbUrl(item.cloudinary_id)} alt={item.title} loading="lazy" />
+            <img src={getThumbUrl(item.image)} alt={item.imageAlt} loading="lazy" />
           </a>
         ) : (
-          <a href={getFullImageUrl(item.cloudinary_id)} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link work-thumb">
-            <img src={getThumbUrl(item.cloudinary_id)} alt={item.title} loading="lazy" />
+          <a href={getFullImageUrl(item.image)} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link work-thumb">
+            <img src={getThumbUrl(item.image)} alt={item.imageAlt} loading="lazy" />
           </a>
         )}
         <div class="gallery-info work-copy">
@@ -55,7 +55,7 @@ const getThumbUrl = (cloudinaryId) => `${cloudinaryBase}/w_400,h_400,c_fill,q_au
           <time class="date work-date" datetime={item.date}>{new Date(item.date).toLocaleDateString("ja-JP")}</time>
           <p class="description work-desc">{item.description}</p>
           <div class="category-list work-tags">
-            {item.categories.map((category) => (
+            {item.tags.map((category) => (
               <span class={`category category-${category} work-tag`}>{category}</span>
             ))}
           </div>

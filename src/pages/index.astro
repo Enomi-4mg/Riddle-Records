@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { galleryItems } from "../data/gallery";
+import { getGalleryItems, getSortedGalleryItems } from "../utils/gallery";
 import { resolveImageUrl } from "../utils/images";
 import { getJournalRoutePath, toJournalRoutePath } from "../utils/journal";
 
@@ -17,7 +17,8 @@ const journals = (await getCollection("journal"))
 const songs = (await getCollection("songs")).sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 const latestJournal = journals[0];
 const latestSong = songs[0];
-const latestGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime())[0];
+const galleryItems = await getGalleryItems();
+const latestGallery = (await getSortedGalleryItems())[0];
 const latestWorkDate = latestGallery && latestSong
   ? new Date(latestGallery.date).getTime() >= latestSong.data.date.getTime()
     ? latestGallery.date
@@ -48,8 +49,8 @@ const getJournalThumbnail = (entry) => {
 
   if (galleryThumbnail) {
     return {
-      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.cloudinary_id}`,
-      alt: galleryThumbnail.title
+      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.image}`,
+      alt: galleryThumbnail.imageAlt
     };
   }
 
@@ -118,7 +119,7 @@ const getJournalThumbnail = (entry) => {
             </div>
             {latestGallery && (
               <div class="home-card-thumb">
-                <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${latestGallery.cloudinary_id}`} alt={latestGallery.title} loading="lazy" />
+                <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${latestGallery.image}`} alt={latestGallery.imageAlt} loading="lazy" />
               </div>
             )}
             <h3 class="home-card-title">作品一覧</h3>

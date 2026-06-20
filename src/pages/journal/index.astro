@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { galleryItems } from "../../data/gallery";
+import { getGalleryItems } from "../../utils/gallery";
 import { resolveImageUrl } from "../../utils/images";
 import { getJournalRoutePath, toJournalRoutePath } from "../../utils/journal";
 import fallbackIconUrl from "../../../favicon/icon.jpg?url";
@@ -9,6 +9,7 @@ import fallbackIconUrl from "../../../favicon/icon.jpg?url";
 const base = import.meta.env.BASE_URL;
 const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const showDrafts = !import.meta.env.PROD;
+const galleryItems = await getGalleryItems();
 const journalEntries = (await getCollection("journal"))
   .filter((entry) => showDrafts || !entry.data.draft)
   .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
@@ -50,8 +51,8 @@ const getJournalThumbnail = (entry) => {
   const galleryThumbnail = getGalleryThumbnail(entry);
   if (galleryThumbnail) {
     return {
-      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.cloudinary_id}`,
-      alt: galleryThumbnail.title
+      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.image}`,
+      alt: galleryThumbnail.imageAlt
     };
   }
 
