@@ -6,17 +6,23 @@ import { SettingsDrawer } from "./SettingsDrawer";
 import { ReviewPane } from "./ReviewPane";
 import { ImageCardTool } from "./ImageCardTool";
 
-export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
+export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDelete, conflictActive, onReloadConflict, onForceSaveConflict, onNotice }: {
   draft: StoredDraft;
   notice: string;
   onBack: () => void;
   onSave: (draft: StoredDraft) => void;
+  onSaveFile: (draft: StoredDraft, options?: { force?: boolean }) => void;
+  onDelete: (draft: StoredDraft) => void;
+  conflictActive: boolean;
+  onReloadConflict: () => void;
+  onForceSaveConflict: () => void;
   onNotice: (notice: string) => void;
 }) {
   const [localDraft, setLocalDraft] = useState(draft);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
   const [cardToolOpen, setCardToolOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState<ReviewMode | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => setLocalDraft(draft), [draft.id]);
@@ -63,61 +69,110 @@ export function EditorScreen({ draft, notice, onBack, onSave, onNotice }: {
     onNotice("カードHTMLを本文に挿入しました");
   }
 
+  function saveDraft() {
+    onSaveFile(localDraft);
+  }
+
+  function saveAsDraft() {
+    const next = markEdited({ ...localDraft, frontmatter: { ...localDraft.frontmatter, draft: true } });
+    setLocalDraft(next);
+    onSaveFile(next);
+  }
+
+  function deleteArticle() {
+    const message = localDraft.sourceFileName
+      ? `${localDraft.sourceFileName} を削除します。よろしいですか？`
+      : "未保存の記事を閉じます。よろしいですか？";
+    if (window.confirm(message)) onDelete(localDraft);
+  }
+
   return (
     <main className="editor-shell">
       <header className="editor-topbar">
-        <button className="ghost" onClick={onBack}>記事一覧へ</button>
-        <span className="status-pill">{notice}</span>
+        <button className="ghost" onClick={() => publishOpen ? setPublishOpen(false) : onBack()}>{publishOpen ? "編集に戻る" : "閉じる"}</button>
+        <span className="status-pill">{draft.sourceFileName ? `${notice} ・ ${draft.sourceFileName}` : `${notice} ・ 未保存Markdown`}</span>
         <div className="editor-actions">
-          <button onClick={() => setSettingsOpen(true)}>記事設定</button>
-          <button onClick={() => setCardToolOpen(true)}>画像カード</button>
-          <button className={reviewMode === "preview" ? "active" : ""} onClick={() => setReviewMode(reviewMode === "preview" ? null : "preview")}>プレビュー</button>
-          <button className={reviewMode === "checks" ? "active" : ""} onClick={() => setReviewMode(reviewMode === "checks" ? null : "checks")}>チェック</button>
-          <button className={reviewMode === "output" ? "active" : ""} onClick={() => setReviewMode(reviewMode === "output" ? null : "output")}>出力</button>
-          <button className="primary" onClick={() => downloadDraft(localDraft)}>.md</button>
+          <div className="more-menu-wrap">
+            <button className="icon-button" aria-label="その他" onClick={() => setMoreOpen((open) => !open)}>...</button>
+            {moreOpen && (
+              <div className="more-menu">
+                <button onClick={() => { setReviewMode("preview"); setMoreOpen(false); }}>プレビュー</button>
+                <button onClick={() => { onNotice(`作成 ${new Date(localDraft.createdAt).toLocaleString()} / 更新 ${new Date(localDraft.updatedAt).toLocaleString()}`); setMoreOpen(false); }}>変更履歴</button>
+                <button className="danger" onClick={deleteArticle}>削除</button>
+              </div>
+            )}
+          </div>
+          <button onClick={saveDraft}>下書き保存</button>
+          <button className="primary" onClick={() => { setPublishOpen(true); setReviewMode(null); }}>公開に進む</button>
         </div>
       </header>
 
-      <section className={reviewMode ? "writing-layout with-review" : "writing-layout"}>
-        <aside className="outline-rail">
-          <span>本文</span>
-          <span>{localDraft.body.length}字</span>
-        </aside>
+      {conflictActive && (
+        <section className="conflict-bar" role="alert">
+          <div>
+            <strong>ファイルが外部で変更されています</strong>
+            <span>保存前に再読み込みするか、現在の編集内容で上書き保存してください。</span>
+          </div>
+          <div className="button-row">
+            <button onClick={onReloadConflict}>再読み込み</button>
+            <button className="danger" onClick={onForceSaveConflict}>上書き保存</button>
+          </div>
+        </section>
+      )}
 
-        <article className="writing-canvas">
-          <input
-            className="title-input"
-            value={localDraft.frontmatter.title}
-            onChange={(event) => updateFrontmatter("title", event.target.value)}
-            placeholder="記事タイトル"
-          />
-          <textarea
-            ref={bodyRef}
-            className="note-editor"
-            value={localDraft.body}
-            onChange={(event) => setLocalDraft((current) => current.body === event.target.value ? current : markEdited({ ...current, body: event.target.value }))}
-            spellCheck={false}
-            placeholder="本文を書きはじめる"
-          />
-        </article>
+      {!publishOpen && (
+        <>
+          <aside className="editor-tool-rail" aria-label="編集ツール">
+            <button className="tool-button active" title="目次" onClick={() => onNotice("見出しを設定すると目次に表示されます")}>☰</button>
+            <button className="tool-button" title="画像カード" onClick={() => setCardToolOpen(true)}>▧</button>
+            <button className="tool-button" title="チェック" onClick={() => setReviewMode(reviewMode === "checks" ? null : "checks")}>✓</button>
+            <button className="tool-button" title="MD出力" onClick={() => setReviewMode(reviewMode === "output" ? null : "output")}>MD</button>
+            <span className="tool-count">{localDraft.body.length}字</span>
+          </aside>
 
-        {reviewMode && (
-          <ReviewPane
-            mode={reviewMode}
-            draft={localDraft}
-            markdown={markdown}
-            frontmatter={frontmatter}
-            onClose={() => setReviewMode(null)}
-            onCopy={copy}
-          />
-        )}
-      </section>
+          <section className={reviewMode ? "writing-layout with-review" : "writing-layout"}>
+          <article className="writing-canvas">
+            <input
+              className="title-input"
+              value={localDraft.frontmatter.title}
+              onChange={(event) => updateFrontmatter("title", event.target.value)}
+              placeholder="記事タイトル"
+            />
+            <textarea
+              ref={bodyRef}
+              className="note-editor"
+              value={localDraft.body}
+              onChange={(event) => setLocalDraft((current) => current.body === event.target.value ? current : markEdited({ ...current, body: event.target.value }))}
+              spellCheck={false}
+              placeholder="本文を書きはじめる"
+            />
+          </article>
 
-      {settingsOpen && (
+          {reviewMode && (
+            <ReviewPane
+              mode={reviewMode}
+              draft={localDraft}
+              markdown={markdown}
+              frontmatter={frontmatter}
+              onClose={() => setReviewMode(null)}
+              onCopy={copy}
+            />
+          )}
+          </section>
+        </>
+      )}
+
+      {publishOpen && (
         <SettingsDrawer
           draft={localDraft}
+          markdown={markdown}
+          frontmatterOutput={frontmatter}
           onChange={updateFrontmatter}
-          onClose={() => setSettingsOpen(false)}
+          onBack={() => setPublishOpen(false)}
+          onSaveDraft={saveAsDraft}
+          onSaveFile={() => onSaveFile(localDraft)}
+          onDownload={() => downloadDraft(localDraft)}
+          onCopy={copy}
         />
       )}
 

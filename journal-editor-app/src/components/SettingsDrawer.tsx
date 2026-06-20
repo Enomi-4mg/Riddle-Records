@@ -1,25 +1,47 @@
 import type { ArticleType, FrontmatterForm, StoredDraft } from "../types/journal";
 import { generatedFilename, generatedUrl } from "../lib/permalink";
+import { frontmatterSchema, publishChecks, toFrontmatterObject } from "../lib/validation";
 import { Field, Readout } from "./shared";
 
-export function SettingsDrawer({ draft, onChange, onClose }: {
+export function SettingsDrawer({ draft, markdown, frontmatterOutput, onChange, onBack, onSaveDraft, onSaveFile, onDownload, onCopy }: {
   draft: StoredDraft;
+  markdown: string;
+  frontmatterOutput: string;
   onChange: <K extends keyof FrontmatterForm>(key: K, value: FrontmatterForm[K]) => void;
-  onClose: () => void;
+  onBack: () => void;
+  onSaveDraft: () => void;
+  onSaveFile: () => void;
+  onDownload: () => void;
+  onCopy: (text: string, label: string) => void;
 }) {
   const frontmatter = draft.frontmatter;
+  const checks = publishChecks(frontmatter);
+  const validation = frontmatterSchema.safeParse(toFrontmatterObject(frontmatter));
+
   return (
-    <div className="drawer-backdrop" role="presentation">
-      <aside className="settings-drawer" role="dialog" aria-label="記事設定">
-        <header className="drawer-header">
+    <section className="publish-layout" aria-label="記事設定">
+      <aside className="publish-nav">
+        <strong>公開設定</strong>
+        <a href="#publish-basic">基本</a>
+        <a href="#publish-checks">チェック</a>
+        <a href="#publish-media">画像</a>
+        <a href="#publish-output">MD出力</a>
+      </aside>
+
+      <article className="publish-panel">
+        <header className="publish-header">
           <div>
             <p>Settings</p>
             <h2>記事設定</h2>
           </div>
-          <button onClick={onClose}>閉じる</button>
+          <div className="button-row">
+            <button onClick={onBack}>編集に戻る</button>
+            <button onClick={onSaveDraft}>下書きのまま保存</button>
+            <button className="primary" onClick={onSaveFile}>Markdown保存</button>
+          </div>
         </header>
 
-        <section className="settings-section">
+        <section id="publish-basic" className="settings-section">
           <h3>Basic</h3>
           <Field label="title"><input value={frontmatter.title} onChange={(event) => onChange("title", event.target.value)} /></Field>
           <div className="field-grid">
@@ -45,7 +67,17 @@ export function SettingsDrawer({ draft, onChange, onClose }: {
           <Field label="permalink override"><input value={frontmatter.permalink} onChange={(event) => onChange("permalink", event.target.value)} /></Field>
         </section>
 
-        <section className="settings-section">
+        <section id="publish-checks" className="settings-section">
+          <h3>Checks</h3>
+          <p className={validation.success ? "validation-ok" : "validation-bad"}>
+            {validation.success ? "frontmatter validation OK" : "frontmatter validation error"}
+          </p>
+          <ul className="check-list">
+            {checks.map((check) => <li className={check.ok ? "ok" : "bad"} key={check.label}>{check.label}</li>)}
+          </ul>
+        </section>
+
+        <section id="publish-media" className="settings-section">
           <h3>Media</h3>
           <Field label="thumbnail"><input value={frontmatter.thumbnail} onChange={(event) => onChange("thumbnail", event.target.value)} /></Field>
           <Field label="thumbnail_alt"><input value={frontmatter.thumbnail_alt} onChange={(event) => onChange("thumbnail_alt", event.target.value)} /></Field>
@@ -64,7 +96,19 @@ export function SettingsDrawer({ draft, onChange, onClose }: {
           <Field label="image"><input value={frontmatter.image} onChange={(event) => onChange("image", event.target.value)} /></Field>
           <Field label="thumbnail_class"><input value={frontmatter.thumbnail_class} onChange={(event) => onChange("thumbnail_class", event.target.value)} /></Field>
         </section>
-      </aside>
-    </div>
+
+        <section id="publish-output" className="settings-section">
+          <h3>MD出力</h3>
+          <div className="button-row">
+            <button onClick={() => onCopy(markdown, "記事全体")}>記事全体をコピー</button>
+            <button onClick={() => onCopy(frontmatterOutput, "frontmatter")}>frontmatterをコピー</button>
+            <button onClick={onDownload}>.md ダウンロード</button>
+          </div>
+          <Field label="frontmatter + body">
+            <textarea className="output" value={markdown} readOnly spellCheck={false} />
+          </Field>
+        </section>
+      </article>
+    </section>
   );
 }

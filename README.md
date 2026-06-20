@@ -80,7 +80,7 @@ The React editor generates frontmatter that matches the Journal collection schem
 - `tags`: used for related article matching
 - `thumbnail_class`: optional thumbnail selector
 
-Editor input is saved to browser `localStorage` as multiple drafts. Existing Journal entries can be bulk-imported, single Markdown files can be imported, and all drafts can be backed up or restored as JSON.
+In the dev server, the editor manages `src/content/journal/*.md` directly. The UI stays note-like, but the source of truth is Markdown rather than browser `localStorage`. In build/public environments, use the output pane or `.md` download button because local file writes are unavailable.
 
 Available templates:
 

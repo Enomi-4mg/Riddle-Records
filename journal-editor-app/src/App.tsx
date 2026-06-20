@@ -1,109 +1,188 @@
-import { useCallback, useState } from "react";
-import type { RestoreConflictMode, StoredDraft, View } from "./types/journal";
-import { createDraft, deleteDraft, downloadBackup, hasDraft, loadDrafts, nowIso, restoreBackup, saveNewDraft, writeDraft } from "./lib/storage";
-import { parseImportedMarkdown } from "./lib/markdown";
-import { existingJournalArticles } from "./data/existingJournal";
+import { useCallback, useEffect, useState } from "react";
+import type { JournalFileEntry, StoredDraft, View } from "./types/journal";
+import { buildMarkdown, createEditorDraft, nowIso, parseImportedMarkdown } from "./lib/markdown";
+import { generatedFilename } from "./lib/permalink";
+import { deleteJournalFile, JournalFileConflictError, loadJournalFile, loadJournalFiles, saveJournalFile } from "./lib/journalFiles";
+import { clearUnsavedBackup, loadUnsavedBackup, writeUnsavedBackup } from "./lib/unsavedBackup";
 import { DraftList } from "./components/DraftList";
 import { EditorScreen } from "./components/EditorScreen";
 
 export function App() {
   const [view, setView] = useState<View>("list");
-  const [drafts, setDrafts] = useState<StoredDraft[]>(() => loadDrafts());
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [currentDraft, setCurrentDraft] = useState<StoredDraft | null>(null);
   const [notice, setNotice] = useState("準備できました");
+  const [journalFiles, setJournalFiles] = useState<string[]>([]);
+  const [journalEntries, setJournalEntries] = useState<JournalFileEntry[]>([]);
+  const [journalFileApiAvailable, setJournalFileApiAvailable] = useState(false);
+  const [conflictDraft, setConflictDraft] = useState<StoredDraft | null>(null);
 
-  const currentDraft = drafts.find((draft) => draft.id === currentId) ?? null;
+  useEffect(() => {
+    refreshJournalFiles();
+  }, []);
 
-  function refresh() {
-    setDrafts(loadDrafts());
-  }
+  async function refreshJournalFiles() {
+    const result = await loadJournalFiles();
+    setJournalFileApiAvailable(result.available);
+    setJournalFiles(result.files.map((file) => file.path));
+    if (!result.available) {
+      setJournalEntries([]);
+      setNotice("ローカルファイルAPIは利用できません。コピー/ダウンロード運用になります");
+      return;
+    }
 
-  function openDraft(id: string) {
-    setCurrentId(id);
-    setView("editor");
+    const entries = await Promise.all(result.files.map(async (fileInfo): Promise<JournalFileEntry | null> => {
+      try {
+        const filename = fileInfo.path;
+        const file = await loadJournalFile(filename);
+        const importedAt = nowIso();
+        return {
+          file: { path: file.path, mtimeMs: file.mtimeMs },
+          filename,
+          draft: parseImportedMarkdown(file.markdown, {
+            id: `file:${file.path}`,
+            createdAt: importedAt,
+            updatedAt: importedAt,
+            importedAt,
+            source: "imported",
+            sourcePath: `src/content/journal/${file.path}`,
+            sourceFileName: file.path,
+            loadedFilePath: file.path,
+            loadedFileMtime: file.mtimeMs
+          })
+        };
+      } catch {
+        return null;
+      }
+    }));
+    setJournalEntries(entries.filter((entry): entry is JournalFileEntry => Boolean(entry)));
   }
 
   function createAndOpen() {
-    const draft = createDraft();
-    saveNewDraft(draft);
-    refresh();
-    setCurrentId(draft.id);
+    const draft = createEditorDraft();
+    setCurrentDraft(draft);
     setView("editor");
-    setNotice("新しい下書きを作成しました");
+    setNotice("新しいMarkdownを作成しました。保存するとsrc/content/journalに書き出します");
   }
 
-  function duplicateDraft(source: StoredDraft) {
-    const draft = createDraft({
-      frontmatter: { ...source.frontmatter, title: `${source.frontmatter.title || "Untitled"} copy` },
-      body: source.body
-    });
-    saveNewDraft(draft);
-    refresh();
-    setNotice("下書きを複製しました");
-  }
-
-  function removeDraft(id: string) {
-    if (!window.confirm("この下書きを削除しますか？")) return;
-    deleteDraft(id);
-    refresh();
-    setNotice("下書きを削除しました");
-  }
-
-  function importMarkdown(markdown: string) {
+  function importMarkdown(markdown: string, filename?: string) {
     const importedAt = nowIso();
-    const draft = parseImportedMarkdown(markdown, { source: "uploaded", createdAt: importedAt, updatedAt: importedAt, importedAt });
-    saveNewDraft(draft);
-    refresh();
-    setCurrentId(draft.id);
+    const draft = parseImportedMarkdown(markdown, {
+      id: filename ? `uploaded:${filename}` : undefined,
+      createdAt: importedAt,
+      updatedAt: importedAt,
+      importedAt,
+      source: "uploaded",
+      sourceFileName: filename?.endsWith(".md") ? filename : undefined
+    });
+    const backup = loadUnsavedBackup(draft.id);
+    setCurrentDraft(backup && window.confirm("未保存の一時退避データがあります。復元しますか？") ? backup : draft);
     setView("editor");
-    setNotice("Markdownを新しい下書きとして読み込みました");
+    setNotice(filename ? `${filename} を読み込みました` : "Markdownを読み込みました");
   }
 
-  function importExistingJournal(overwrite = false) {
-    let added = 0;
-    let skipped = 0;
-    let overwritten = 0;
-    for (const article of existingJournalArticles) {
-      const exists = hasDraft(article.id);
-      if (exists && !overwrite) {
-        skipped += 1;
-        continue;
-      }
+  async function openJournalFile(filename: string) {
+    try {
+      const file = await loadJournalFile(filename);
       const importedAt = nowIso();
-      const draft = parseImportedMarkdown(article.markdown, {
-        id: article.id,
+      const draft = parseImportedMarkdown(file.markdown, {
+        id: `file:${file.path}`,
         createdAt: importedAt,
         updatedAt: importedAt,
         importedAt,
         source: "imported",
-        sourcePath: article.sourcePath,
-        sourceFileName: article.filename
+        sourcePath: `src/content/journal/${file.path}`,
+        sourceFileName: file.path,
+        loadedFilePath: file.path,
+        loadedFileMtime: file.mtimeMs
       });
-      saveNewDraft(draft);
-      if (exists) overwritten += 1;
-      else added += 1;
+      const backup = loadUnsavedBackup(draft.id);
+      setCurrentDraft(backup && window.confirm("未保存の一時退避データがあります。復元しますか？") ? backup : draft);
+      setView("editor");
+      setNotice(`${file.path} を読み込みました`);
+    } catch (error) {
+      setNotice(`読み込みに失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
-    refresh();
-    setNotice(overwrite ? `既存Journal記事: ${added}件追加、${overwritten}件上書き、${skipped}件スキップ` : `既存Journal記事: ${added}件追加、${skipped}件スキップ`);
   }
 
-  const saveCurrent = useCallback((next: StoredDraft) => {
+  const updateCurrentDraft = useCallback((next: StoredDraft) => {
     const updated = { ...next, updatedAt: nowIso() };
-    writeDraft(updated);
-    setDrafts((items) => items.map((item) => item.id === updated.id ? updated : item).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)));
-    setNotice(`保存しました ${new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}`);
+    setCurrentDraft(updated);
+    writeUnsavedBackup(updated);
   }, []);
 
-  function backupAllDrafts() {
-    const backup = downloadBackup();
-    setNotice(`バックアップを書き出しました: ${backup.draftCount}件`);
+  async function saveCurrentToFile(next: StoredDraft, options: { force?: boolean } = {}) {
+    const filename = next.sourceFileName || generatedFilename(next.frontmatter);
+    if (!filename) {
+      setNotice("保存先ファイル名を作れません。dateかslugを確認してください");
+      return;
+    }
+
+    try {
+      const saved = await saveJournalFile(filename, buildMarkdown(next), {
+        expectedMtime: next.loadedFileMtime,
+        force: options.force
+      });
+      const updated = {
+        ...next,
+        updatedAt: nowIso(),
+        source: "imported" as const,
+        sourcePath: `src/content/journal/${filename}`,
+        sourceFileName: filename,
+        loadedFilePath: saved.path,
+        loadedFileMtime: saved.mtimeMs
+      };
+      setCurrentDraft(updated);
+      setConflictDraft(null);
+      clearUnsavedBackup(next.id);
+      setNotice(`${filename} に保存しました`);
+      await refreshJournalFiles();
+    } catch (error) {
+      if (error instanceof JournalFileConflictError) {
+        setConflictDraft(next);
+        setNotice("ファイルが外部で変更されています");
+        return;
+      }
+      setNotice(`ファイル保存に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
   }
 
-  function restoreAllDrafts(json: string, mode: RestoreConflictMode) {
-    const result = restoreBackup(json, mode);
-    refresh();
-    const warning = result.legacyDuplicateWarnings ? `、旧ID重複候補${result.legacyDuplicateWarnings}件` : "";
-    setNotice(`復元: ${result.added}件追加、${result.overwritten}件上書き、${result.skipped}件スキップ、${result.errors}件エラー${warning}`);
+  async function reloadConflictFile() {
+    const filename = conflictDraft?.loadedFilePath || conflictDraft?.sourceFileName;
+    if (!filename) return;
+    clearUnsavedBackup(conflictDraft.id);
+    setConflictDraft(null);
+    await openJournalFile(filename);
+  }
+
+  async function forceSaveConflictFile() {
+    const draft = currentDraft || conflictDraft;
+    if (!draft) return;
+    await saveCurrentToFile(draft, { force: true });
+  }
+
+  async function deleteCurrentFile(next: StoredDraft) {
+    const filename = next.source === "imported" ? next.sourceFileName : undefined;
+    if (!filename) {
+      setCurrentDraft(null);
+      setView("list");
+      setNotice("未保存の記事を閉じました");
+      return;
+    }
+
+    try {
+      await deleteJournalFile(filename);
+      setCurrentDraft(null);
+      setView("list");
+      setNotice(`${filename} を削除しました`);
+      await refreshJournalFiles();
+    } catch (error) {
+      setNotice(`削除に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+  }
+
+  function closeEditor() {
+    setCurrentDraft(null);
+    setView("list");
   }
 
   if (view === "editor" && currentDraft) {
@@ -112,10 +191,14 @@ export function App() {
         draft={currentDraft}
         notice={notice}
         onBack={() => {
-          refresh();
-          setView("list");
+          closeEditor();
         }}
-        onSave={saveCurrent}
+        onSave={updateCurrentDraft}
+        onSaveFile={saveCurrentToFile}
+        onDelete={deleteCurrentFile}
+        conflictActive={Boolean(conflictDraft)}
+        onReloadConflict={reloadConflictFile}
+        onForceSaveConflict={forceSaveConflictFile}
         onNotice={setNotice}
       />
     );
@@ -123,17 +206,14 @@ export function App() {
 
   return (
     <DraftList
-      drafts={drafts}
+      journalFiles={journalFiles}
+      journalEntries={journalEntries}
+      journalFileApiAvailable={journalFileApiAvailable}
       notice={notice}
       onNew={createAndOpen}
-      onOpen={openDraft}
-      onDuplicate={duplicateDraft}
-      onDelete={removeDraft}
+      onOpenJournalFile={openJournalFile}
+      onRefreshJournalFiles={refreshJournalFiles}
       onImport={importMarkdown}
-      onImportExisting={() => importExistingJournal(false)}
-      onReimportExisting={() => importExistingJournal(true)}
-      onBackup={backupAllDrafts}
-      onRestore={restoreAllDrafts}
     />
   );
 }

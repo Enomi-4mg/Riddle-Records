@@ -4,7 +4,6 @@ export type ArticleType = (typeof articleTypes)[number];
 export type View = "list" | "editor";
 export type ReviewMode = "preview" | "checks" | "output";
 export type DraftSource = "manual" | "imported" | "uploaded";
-export type RestoreConflictMode = "skip" | "overwrite" | "duplicate";
 
 export type FrontmatterForm = {
   title: string;
@@ -36,29 +35,25 @@ export type StoredDraft = {
   source: DraftSource;
   sourcePath?: string;
   sourceFileName?: string;
+  loadedFilePath?: string;
+  loadedFileMtime?: number;
   frontmatter: FrontmatterForm;
   body: string;
 };
 
+export type JournalFileInfo = {
+  path: string;
+  mtimeMs: number;
+};
+
+export type JournalFileEntry = {
+  file: JournalFileInfo;
+  filename: string;
+  draft: StoredDraft;
+};
+
 export type DraftOverrides = Omit<Partial<StoredDraft>, "frontmatter"> & {
   frontmatter?: Partial<FrontmatterForm>;
-};
-
-export type BackupPayload = {
-  schemaVersion: 1;
-  appVersion: string;
-  exportedAt: string;
-  draftCount: number;
-  draftIndex: string[];
-  drafts: StoredDraft[];
-};
-
-export type RestoreResult = {
-  added: number;
-  overwritten: number;
-  skipped: number;
-  errors: number;
-  legacyDuplicateWarnings: number;
 };
 
 export type ArticleState = "draft" | "published" | "editing-published" | "scheduled";

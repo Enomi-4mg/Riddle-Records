@@ -1,7 +1,33 @@
-import { articleTypes, defaultBody, today, type ArticleType, type DraftOverrides, type FrontmatterForm, type StoredDraft } from "../types/journal";
-import { createDraft } from "./storage";
+import { articleTypes, defaultBody, defaultFrontmatter, today, type ArticleType, type DraftOverrides, type FrontmatterForm, type StoredDraft } from "../types/journal";
 import { buildFrontmatter, joinList } from "./frontmatter";
 import { generatedFilename } from "./permalink";
+
+export function nowIso() {
+  return new Date().toISOString();
+}
+
+function createId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+export function createEditorDraft(overrides: DraftOverrides = {}): StoredDraft {
+  const createdAt = overrides.createdAt ?? nowIso();
+  return {
+    id: overrides.id ?? createId(),
+    createdAt,
+    updatedAt: overrides.updatedAt ?? createdAt,
+    importedAt: overrides.importedAt,
+    editedAt: overrides.editedAt,
+    source: overrides.source ?? "manual",
+    sourcePath: overrides.sourcePath,
+    sourceFileName: overrides.sourceFileName,
+    loadedFilePath: overrides.loadedFilePath,
+    loadedFileMtime: overrides.loadedFileMtime,
+    frontmatter: { ...defaultFrontmatter, ...overrides.frontmatter },
+    body: overrides.body ?? defaultBody
+  };
+}
 
 export function buildMarkdown(draft: StoredDraft) {
   return `${buildFrontmatter(draft.frontmatter)}\n\n${draft.body.trimEnd()}\n`;
@@ -62,7 +88,7 @@ export function parseImportedMarkdown(markdown: string, overrides: DraftOverride
     thumbnail_class: typeof imported.thumbnail_class === "string" ? imported.thumbnail_class : ""
   };
 
-  return createDraft({ ...overrides, frontmatter: { ...frontmatter, ...overrides.frontmatter }, body: body.trimStart() || defaultBody });
+  return createEditorDraft({ ...overrides, frontmatter: { ...frontmatter, ...overrides.frontmatter }, body: body.trimStart() || defaultBody });
 }
 
 export function downloadDraft(draft: StoredDraft) {

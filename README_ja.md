@@ -82,7 +82,7 @@ http://localhost:5174/
 - `tags`: 関連記事判定に使うタグ
 - `thumbnail_class`: 一覧サムネイルを明示したい場合のみ指定
 
-入力内容はブラウザの `localStorage` に自動保存されます。複数下書き管理、既存Journal記事の一括import、Markdown import、backup / restore に対応しています。
+dev server 上では `src/content/journal/*.md` を直接管理します。UI は note 的な入力体験のままですが、正本はブラウザの `localStorage` ではなく Markdown ファイルです。build/公開環境ではローカルファイル書き込みができないため、出力欄のコピーまたは `.md` ダウンロードで運用します。
 
 テンプレートは次の3種類です。
 
