@@ -1,11 +1,11 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { projects } from "../../data/projects";
+import { getSortedProjectItems } from "../../utils/projects";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
-const sortedProjects = [...projects].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+const sortedProjects = await getSortedProjectItems();
 const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
 ---
 
@@ -19,20 +19,20 @@ const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
   <div class="project-grid">
     {sortedProjects.map((project) => (
       <article class="project-card journal-entry-animate">
-        <a href={href(`/project/${project.slug}/`)} class={`project-card-visual${project.heroImage ? "" : " project-card-visual-fallback"}`}>
-          {project.heroImage ? (
-            <img src={project.heroImage} alt={`${project.title} preview`} loading="lazy" />
+        <a href={href(`/project/${project.slug}/`)} class={`project-card-visual${project.hero ? "" : " project-card-visual-fallback"}`}>
+          {project.hero ? (
+            <img src={project.hero} alt={`${project.title} preview`} loading="lazy" />
           ) : (
             <span>{project.title}</span>
           )}
         </a>
 
         <div class="project-card-copy">
-          <p class="project-kicker">{project.subtitle}</p>
+          {project.status && <p class="project-kicker">{project.status}</p>}
           <h2 class="project-card-title">
             <a href={href(`/project/${project.slug}/`)}>{project.title}</a>
           </h2>
-          <time class="project-date" datetime={project.date}>{formatDate(project.date)}</time>
+          {project.date && <time class="project-date" datetime={project.date}>{formatDate(project.date)}</time>}
           <p class="project-description">{project.description}</p>
           <div class="project-tags" aria-label={`${project.title} tags`}>
             {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}

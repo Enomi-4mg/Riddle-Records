@@ -1,13 +1,14 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { projects } from "../../data/projects";
+import { getProjectItems } from "../../utils/projects";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
-const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
+const formatDate = (date) => date ? new Date(date).toLocaleDateString("ja-JP") : "";
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const projects = await getProjectItems();
   return projects.map((project) => ({
     params: {
       slug: project.slug
@@ -27,22 +28,22 @@ const { project } = Astro.props;
   ogTitle={project.title}
   ogDescription={project.description}
   ogType="article"
-  ogImage={project.heroImage || undefined}
+  ogImage={project.hero || undefined}
   ogImageAlt={project.title}
 >
   <article class="project-detail journal-entry-animate">
     <a class="project-back-link" href={href("/project/")}>Project一覧へ戻る</a>
 
     <header class="project-detail-header">
-      <p class="project-kicker">{project.subtitle}</p>
+      {project.status && <p class="project-kicker">{project.status}</p>}
       <h1 class="web_title">{project.title}</h1>
-      <time class="project-date" datetime={project.date}>{formatDate(project.date)}</time>
+      {project.date && <time class="project-date" datetime={project.date}>{formatDate(project.date)}</time>}
       <p class="project-lead">{project.description}</p>
     </header>
 
-    <div class={`project-hero${project.heroImage ? "" : " project-hero-fallback"}`}>
-      {project.heroImage ? (
-        <img src={project.heroImage} alt={`${project.title} preview`} />
+    <div class={`project-hero${project.hero ? "" : " project-hero-fallback"}`}>
+      {project.hero ? (
+        <img src={project.hero} alt={`${project.title} preview`} />
       ) : (
         <span>{project.title}</span>
       )}
@@ -50,7 +51,7 @@ const { project } = Astro.props;
 
     <section class="project-section">
       <h2 class="page_title">概要</h2>
-      <p>{project.description}</p>
+      <p>{project.body || project.description}</p>
     </section>
 
     <section class="project-section">
@@ -66,10 +67,9 @@ const { project } = Astro.props;
         {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}
       </div>
       <div class="project-actions">
-        <a href={project.externalUrl} class="project-action project-action-primary" target="_blank" rel="noopener noreferrer">外部サイトを見る</a>
-        {project.sourceUrl && (
-          <a href={project.sourceUrl} class="project-action" target="_blank" rel="noopener noreferrer">GitHubを見る</a>
-        )}
+        {project.links.map((link, index) => (
+          <a href={link.url} class={`project-action${index === 0 ? " project-action-primary" : ""}`} target="_blank" rel="noopener noreferrer">{link.label}</a>
+        ))}
       </div>
     </section>
   </article>
