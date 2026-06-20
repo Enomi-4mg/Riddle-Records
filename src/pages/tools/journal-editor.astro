@@ -2,14 +2,14 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 
-<BaseLayout title="Journal Editor moved" description="Journal Editor は独立アプリへ移行しました。">
+<BaseLayout title="Content Editor moved" description="Content Editor は独立アプリへ移行しました。">
   <section class="journal-editor-moved journal-entry-animate">
     <p class="moved-kicker">Riddle Records CMS</p>
-    <h1 class="web_title">Journal Editor は独立アプリへ移行しました</h1>
+    <h1 class="web_title">Content Editor は独立アプリへ移行しました</h1>
 
     <div class="moved-panel">
       <p>
-        旧Astro版の Journal Editor は非推奨になりました。現在の本命Editorは
+        旧Astro版の Journal Editor は非推奨になりました。現在の本命 Content Editor は
         <code>journal-editor-app/</code> にある Vite + React + TypeScript の独立アプリです。
       </p>
       <p>
@@ -25,10 +25,10 @@ npm run dev</code></pre>
     </section>
 
     <section class="moved-section">
-      <h2 class="page_title">新Editorでできること</h2>
+      <h2 class="page_title">Content Editorでできること</h2>
       <ul class="moved-list">
-        <li>Journal Markdown の作成と `.md` 書き出し</li>
-        <li><code>src/content/journal/*.md</code> の直接読み込みと保存</li>
+        <li>Journal / Songs / Gallery / Projects Markdown の作成と `.md` 書き出し</li>
+        <li><code>src/content/*/*.md</code> の直接読み込みと保存</li>
         <li>frontmatter / body を解釈した note 風の記事一覧</li>
         <li>単体Markdown import</li>
         <li>画像カードHTML生成、making-comparison-grid 生成</li>
@@ -41,7 +41,7 @@ npm run dev</code></pre>
     <section class="moved-section">
       <h2 class="page_title">関連ファイル</h2>
       <ul class="moved-list">
-        <li><code>journal-editor-app/README.md</code>: 新Editorの運用メモ</li>
+        <li><code>journal-editor-app/README.md</code>: Content Editor の運用メモ</li>
         <li><code>journal-editor-app/src/components/ImageCardTool.tsx</code>: 画像カード / Gallery支援UI</li>
         <li><code>journal-editor-app/scripts/roundtrip-journal.mjs</code>: roundtrip検証</li>
       </ul>

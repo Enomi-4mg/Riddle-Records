@@ -28,6 +28,8 @@ src/
   content/
     journal/
     songs/
+    gallery/
+    projects/
   data/
   layouts/
   pages/
@@ -41,45 +43,58 @@ tools/
 
 - Journal entries live in `src/content/journal/`.
 - Song entries live in `src/content/songs/`.
-- Gallery metadata lives in `src/data/gallery.ts`.
+- Gallery works live in `src/content/gallery/*.md`.
+- Project entries live in `src/content/projects/*.md`.
+- `src/data/gallery.ts` is kept only as a legacy compatibility source and is currently empty.
+- `src/data/projects.ts` is kept only as a legacy compatibility source and is currently empty.
 - Old Jekyll files were removed during the migration.
 
 ## Works and Gallery Pages
 
-`/works/` is the primary index for all works. It combines Gallery items from `src/data/gallery.ts` and songs from `src/content/songs/`, then displays them with the shared Works card layout.
+`/works/` is the primary index for all works. It combines Gallery collection items from `src/content/gallery/*.md` and songs from `src/content/songs/`, then displays them with the shared Works card layout.
 
 Gallery remains available at `/gallery/` as an artwork-focused archive. Individual artwork pages are generated at `/gallery/[slug]/` only for Gallery items with `detail: true`.
 
-Gallery item fields:
+Gallery frontmatter fields:
 
 - `slug`: URL segment for the Gallery detail page
 - `detail`: set to `true` to generate `/gallery/[slug]/`
 - `title`: artwork title
-- `date`: artwork date
-- `cloudinary_id`: Cloudinary public ID
+- `date`: artwork date, written as `YYYY-MM-DD`
+- `image`: Cloudinary public ID or full image URL
 - `description`: short card, meta, and lead description
-- `body`: optional detail page body text
-- `categories`: tags shown on Works, Gallery, and detail pages
+- Markdown body: detail page body text
+- `tags`: tags shown on Works, Gallery, and detail pages
 - `article_url`: related Journal article or legacy artwork article
 - `making_article_url`: related making-of Journal article
-- `thumbnail`: controls Journal thumbnail matching behavior
+- `thumbnail`: set to `true` when the item should be available as a Journal thumbnail match; set to `false` to exclude it
+- `draft`: set to `true` to hide the item from production builds
+
+Legacy fields:
+
+- `cloudinary_id`: accepted as a fallback for old data, but new Markdown should use `image`
+- `categories`: accepted as a fallback for old data, but new Markdown should use `tags`
 
 Example:
 
-```ts
-{
-  slug: "work-title",
-  detail: true,
-  title: "Work title",
-  date: "2026-04-30",
-  cloudinary_id: "example_abcd12.jpg",
-  description: "Short work description",
-  body: "Longer note for the Gallery detail page.",
-  categories: ["Illustration"],
-  article_url: "/journal/2026-04-30/",
-  making_article_url: "/journal/2026/04/30/work-making/",
-  thumbnail: true
-}
+```md
+---
+title: Work title
+slug: work-title
+date: 2026-04-30
+description: Short work description
+image: example_abcd12.jpg
+thumbnail: true
+thumbnail_alt: Work title
+detail: true
+tags:
+  - Illustration
+article_url: /journal/2026-04-30/
+making_article_url: /journal/2026/04/30/work-making/
+draft: false
+---
+
+Longer note for the Gallery detail page.
 ```
 
 Link behavior:
@@ -87,12 +102,53 @@ Link behavior:
 - Works cards link to `/gallery/[slug]/` when the Gallery item has `detail: true`.
 - Gallery cards also link to `/gallery/[slug]/` when `detail: true`.
 - Gallery items without detail pages keep the existing Gallery Lightbox behavior.
-- Works cards without Gallery detail pages fall back to `article_url`, then to the full Cloudinary image.
+- Works cards without Gallery detail pages fall back to `article_url`, then to the full image.
 - `/gallery/` remains part of the Works navigation group in the header active state.
 
-## Journal Editor Workflow
+## Project Content
 
-Use the standalone React editor in `journal-editor-app/` to create and edit Journal Markdown. The old Astro editor implementation has been replaced by a migration notice at `/tools/journal-editor/`; that URL is kept only as a compatibility landing page for bookmarks and the Information page.
+Project pages are sourced from `src/content/projects/*.md`. The legacy `src/data/projects.ts` array remains available for compatibility, but the current source of truth is the Project content collection.
+
+Project frontmatter fields:
+
+- `title`: project title
+- `slug`: URL segment for `/project/[slug]/`
+- `date`: project date, written as `YYYY-MM-DD`
+- `description`: short card, meta, and lead description
+- `hero`: preview image URL; leave blank to use the title fallback
+- `status`: one of `active`, `paused`, `archived`, or `completed`
+- `tags`: tags shown on Project cards and detail pages
+- `links`: external project links with `label` and `url`
+- `features`: feature list shown on the detail page
+- `draft`: set to `true` to hide the item from production builds
+- Markdown body: detail page overview text
+
+Example:
+
+```md
+---
+title: "Project title"
+slug: "project-title"
+date: 2026-06-16
+description: "Short project description"
+hero: "/images/projects/example.jpg"
+status: "active"
+tags:
+  - "Web"
+links:
+  - label: "Website"
+    url: "https://example.com"
+features:
+  - "Feature one"
+draft: false
+---
+
+Longer project overview.
+```
+
+## Content Editor Workflow
+
+Use the standalone React editor in `journal-editor-app/` to create and edit Journal, Songs, Gallery, and Project Markdown. The folder name is still `journal-editor-app/`, but the app title and role are now **Riddle Records Content Editor**. The old Astro editor implementation has been replaced by a migration notice at `/tools/journal-editor/`; that URL is kept only as a compatibility landing page for bookmarks and the Information page.
 
 ### 1. Open the editor
 
@@ -114,7 +170,7 @@ The `Information` page links to the `/tools/journal-editor/` migration notice, n
 
 ### 2. Fill in post metadata
 
-The React editor generates frontmatter that matches the Journal collection schema in `src/content/config.ts`.
+The React editor generates frontmatter for the selected content kind. `journal-editor-app/src/types/content.ts` defines the Editor UI fields, while `src/content/config.ts` remains the Astro collection schema.
 
 - `title`: post title
 - `date`: post date
@@ -126,7 +182,7 @@ The React editor generates frontmatter that matches the Journal collection schem
 - `tags`: used for related article matching
 - `thumbnail_class`: optional thumbnail selector
 
-In the dev server, the editor manages `src/content/journal/*.md` directly. The UI stays note-like, but the source of truth is Markdown rather than browser `localStorage`. In build/public environments, use the output pane or `.md` download button because local file writes are unavailable.
+In the dev server, the editor manages `src/content/<kind>/*.md` directly. The UI stays note-like, but the source of truth is Markdown rather than browser `localStorage`. In build/public environments, use the output pane or `.md` download button because local file writes are unavailable.
 
 Available templates:
 
@@ -149,13 +205,15 @@ The generated card HTML uses the current Astro URL format and does not use old J
 
 Use the editor output pane to copy the generated Markdown, or use the `.md` button to download a Markdown file.
 
-Place the file in `src/content/journal/`.
+Place the file in the matching `src/content/<kind>/` directory.
 
 Examples:
 
 ```text
 src/content/journal/2026-04-30.md
 src/content/journal/2026-04-30-dunes-making.md
+src/content/gallery/work-title.md
+src/content/projects/project-title.md
 ```
 
 ### 5. Verify the post
@@ -176,25 +234,28 @@ Check:
 
 ### 6. Connect Gallery items
 
-If the post introduces a Gallery work, use the editor's Gallery code output as a starting point and add the item to `src/data/gallery.ts`.
+If the post introduces a Gallery work, use the editor's Gallery output as a starting point and add or edit a Markdown file in `src/content/gallery/*.md`.
 
-```ts
-{
-  title: "Work title",
-  date: "2026-04-30",
-  cloudinary_id: "example_abcd12.jpg",
-  description: "Work description",
-  categories: ["Illustration"],
-  article_url: "/journal/2026-04-30/",
-  thumbnail: true
-}
+```md
+---
+title: Work title
+slug: work-title
+date: 2026-04-30
+image: example_abcd12.jpg
+description: Work description
+tags:
+  - Illustration
+article_url: /journal/2026-04-30/
+thumbnail: true
+detail: true
+---
 ```
 
 Add `making_article_url` when there is a separate making-of post.
 
 ### Markdown import notes
 
-The editor's frontmatter importer is a small line-based parser, not a full YAML parser. It is intended for the current Journal files and common fields such as `key: value`, inline arrays, and simple block arrays. Avoid complex YAML such as block scalars, nested objects, heavily escaped quotes, or inline arrays with quoted commas. Existing Journal files are checked with `npm run test:roundtrip` in `journal-editor-app/`.
+The editor uses a YAML frontmatter parser/writer for Markdown files. Existing Journal, Songs, Gallery, and Project files are checked with `npm run test:content` in `journal-editor-app/`; YAML edge cases are checked with `npm run test:yaml`.
 
 ## Deployment
 
