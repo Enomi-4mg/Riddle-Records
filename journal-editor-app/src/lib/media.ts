@@ -9,9 +9,13 @@ export type ImageCard = {
   id: string;
   caption: string;
   heading: string;
+  slug: string;
+  detail: boolean;
   cloudinaryId: string;
   description: string;
+  body: string;
   categories: string;
+  articleUrl: string;
   comparisonLabel: string;
   comparisonOrder: string;
   thumbnail: boolean;
@@ -30,9 +34,13 @@ export function createImageCard(overrides: Partial<ImageCard> = {}): ImageCard {
     id: crypto.randomUUID ? crypto.randomUUID() : `card-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     caption: "",
     heading: "",
+    slug: "",
+    detail: false,
     cloudinaryId: "",
     description: "",
+    body: "",
     categories: "",
+    articleUrl: "",
     comparisonLabel: "",
     comparisonOrder: "",
     thumbnail: true,
@@ -56,7 +64,16 @@ export function escapeHtml(value = "") {
 }
 
 function tsString(value: string) {
-  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  return `"${value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/\r/g, "\\r").replace(/"/g, '\\"')}"`;
+}
+
+function slugFromCloudinaryId(value: string) {
+  return value.trim().split("/").pop()?.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").toLowerCase() || "";
+}
+
+function pushOptionalString(lines: string[], key: string, value: string) {
+  const trimmed = value.trim();
+  if (trimmed) lines.push(`  ${key}: ${tsString(trimmed)},`);
 }
 
 export function resolveEditorImage(value: string, transform = "w_400,h_400,c_fill,q_auto,f_auto"): ResolvedImage {
@@ -118,16 +135,21 @@ export function buildGalleryCode(cards: ImageCard[], layout: CardLayout, frontma
     const title = card.caption || card.heading || `Card ${index + 1}`;
     const description = card.description || title;
     const categories = splitList(card.categories);
+    const gallerySlug = slugify(card.slug) || slugify(title) || slugFromCloudinaryId(card.cloudinaryId) || `gallery-item-${index + 1}`;
+    const cardArticleUrl = card.articleUrl.trim() || articleUrl;
     const lines = [
       "{",
+      `  slug: ${tsString(gallerySlug)},`,
+      ...(card.detail ? ["  detail: true,"] : []),
       `  title: ${tsString(title)},`,
       `  date: ${tsString(frontmatter.date)},`,
-      `  cloudinary_id: ${tsString(card.cloudinaryId.trim())},`,
+      `  image: ${tsString(card.cloudinaryId.trim())},`,
       `  description: ${tsString(description)},`,
-      `  categories: [${categories.map(tsString).join(", ")}],`,
-      `  article_url: ${tsString(articleUrl)},`
+      `  tags: [${categories.map(tsString).join(", ")}],`
     ];
-    if (card.makingArticleUrl.trim()) lines.push(`  making_article_url: ${tsString(card.makingArticleUrl.trim())},`);
+    pushOptionalString(lines, "body", card.body);
+    pushOptionalString(lines, "article_url", cardArticleUrl);
+    pushOptionalString(lines, "making_article_url", card.makingArticleUrl);
     lines.push(`  thumbnail: ${card.thumbnail ? "true" : "false"},`);
     if (layout === "making-comparison-grid") {
       lines.push(`  comparison_group: ${tsString(comparisonGroup)},`);
@@ -159,6 +181,7 @@ export function extractCardsFromHtml(html: string): ImageCard[] {
     return createImageCard({
       caption,
       heading: labelNode?.textContent?.trim() || caption,
+      slug: slugify(labelNode?.textContent?.trim() || caption || `card-${index + 1}`),
       cloudinaryId: extractCloudinaryId(anchor?.getAttribute("href") || img?.getAttribute("src") || ""),
       comparisonLabel: isComparison ? labelNode?.textContent?.trim() || caption : "",
       comparisonOrder: String(index + 1),

@@ -1,3 +1,5 @@
+import type { ContentKind } from "./content";
+
 export const articleTypes = ["journal", "making", "report"] as const;
 
 export type ArticleType = (typeof articleTypes)[number];
@@ -11,6 +13,24 @@ export type FrontmatterForm = {
   type: ArticleType;
   slug: string;
   description: string;
+  youtube_id: string;
+  credits: string;
+  lyrics: string;
+  cloudinary_id: string;
+  categories: string;
+  detail: boolean;
+  article_url: string;
+  making_article_url: string;
+  comparison_group: string;
+  comparison_label: string;
+  subtitle: string;
+  heroImage: string;
+  hero: string;
+  status: string;
+  links: string;
+  externalUrl: string;
+  sourceUrl: string;
+  features: string;
   tags: string;
   draft: boolean;
   thumbnail: string;
@@ -28,6 +48,7 @@ export type FrontmatterForm = {
 
 export type StoredDraft = {
   id: string;
+  kind: ContentKind;
   createdAt: string;
   updatedAt: string;
   importedAt?: string;
@@ -66,6 +87,24 @@ export const defaultFrontmatter: FrontmatterForm = {
   type: "journal",
   slug: "",
   description: "",
+  youtube_id: "",
+  credits: "",
+  lyrics: "",
+  cloudinary_id: "",
+  categories: "",
+  detail: false,
+  article_url: "",
+  making_article_url: "",
+  comparison_group: "",
+  comparison_label: "",
+  subtitle: "",
+  heroImage: "",
+  hero: "",
+  status: "active",
+  links: "",
+  externalUrl: "",
+  sourceUrl: "",
+  features: "",
   tags: "",
   draft: true,
   thumbnail: "",

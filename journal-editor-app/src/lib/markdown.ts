@@ -1,6 +1,7 @@
 import { articleTypes, defaultBody, defaultFrontmatter, today, type ArticleType, type DraftOverrides, type FrontmatterForm, type StoredDraft } from "../types/journal";
 import { buildFrontmatter, joinList } from "./frontmatter";
 import { generatedFilename } from "./permalink";
+import { parseYamlFrontmatter } from "./yamlFrontmatter";
 
 export function nowIso() {
   return new Date().toISOString();
@@ -24,23 +25,29 @@ export function createEditorDraft(overrides: DraftOverrides = {}): StoredDraft {
     sourceFileName: overrides.sourceFileName,
     loadedFilePath: overrides.loadedFilePath,
     loadedFileMtime: overrides.loadedFileMtime,
+    kind: overrides.kind ?? "journal",
     frontmatter: { ...defaultFrontmatter, ...overrides.frontmatter },
     body: overrides.body ?? defaultBody
   };
 }
 
-export function buildMarkdown(draft: StoredDraft) {
-  return `${buildFrontmatter(draft.frontmatter)}\n\n${draft.body.trimEnd()}\n`;
+function joinLinks(value: unknown, externalUrl: unknown, sourceUrl: unknown) {
+  if (Array.isArray(value)) {
+    return value.map((item) => {
+      if (!item || typeof item !== "object") return "";
+      const label = "label" in item && typeof item.label === "string" ? item.label : "";
+      const url = "url" in item && typeof item.url === "string" ? item.url : "";
+      return label && url ? `${label} | ${url}` : "";
+    }).filter(Boolean).join("\n");
+  }
+  return [
+    typeof externalUrl === "string" && externalUrl ? `Website | ${externalUrl}` : "",
+    typeof sourceUrl === "string" && sourceUrl ? `GitHub | ${sourceUrl}` : ""
+  ].filter(Boolean).join("\n");
 }
 
-function parseScalar(value: string) {
-  const trimmed = value.trim().replace(/\s+#.*$/, "").trim();
-  if (trimmed === "true") return true;
-  if (trimmed === "false") return false;
-  if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-    return trimmed.slice(1, -1).split(",").map((item) => item.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
-  }
-  return trimmed.replace(/^["']|["']$/g, "");
+export function buildMarkdown(draft: StoredDraft) {
+  return `${buildFrontmatter(draft.frontmatter, draft.kind)}\n\n${draft.body.trimEnd()}\n`;
 }
 
 export function parseImportedMarkdown(markdown: string, overrides: DraftOverrides = {}) {
@@ -50,21 +57,7 @@ export function parseImportedMarkdown(markdown: string, overrides: DraftOverride
   let body = normalized;
   if (match) {
     body = match[2] || "";
-    const lines = match[1].split("\n");
-    let arrayKey = "";
-    for (const line of lines) {
-      const arrayItem = line.match(/^\s*-\s+(.+)$/);
-      if (arrayKey && arrayItem) {
-        const current = Array.isArray(imported[arrayKey]) ? imported[arrayKey] as string[] : [];
-        imported[arrayKey] = [...current, String(parseScalar(arrayItem[1]))];
-        continue;
-      }
-      const keyValue = line.match(/^([a-zA-Z0-9_]+):\s*(.*)$/);
-      if (!keyValue) continue;
-      const [, key, value] = keyValue;
-      arrayKey = value ? "" : key;
-      imported[key] = value ? parseScalar(value) : [];
-    }
+    Object.assign(imported, parseYamlFrontmatter(match[1]));
   }
 
   const frontmatter: Partial<FrontmatterForm> = {
@@ -73,9 +66,27 @@ export function parseImportedMarkdown(markdown: string, overrides: DraftOverride
     type: articleTypes.includes(imported.type as ArticleType) ? imported.type as ArticleType : "journal",
     slug: typeof imported.slug === "string" ? imported.slug : "",
     description: typeof imported.description === "string" ? imported.description : "",
+    youtube_id: typeof imported.youtube_id === "string" ? imported.youtube_id : "",
+    credits: typeof imported.credits === "string" ? imported.credits : joinList(imported.credits).replace(/,\s*/g, "\n"),
+    lyrics: typeof imported.lyrics === "string" ? imported.lyrics : "",
+    cloudinary_id: typeof imported.cloudinary_id === "string" ? imported.cloudinary_id : "",
+    categories: joinList(imported.categories),
+    detail: typeof imported.detail === "boolean" ? imported.detail : false,
+    article_url: typeof imported.article_url === "string" ? imported.article_url : "",
+    making_article_url: typeof imported.making_article_url === "string" ? imported.making_article_url : "",
+    comparison_group: typeof imported.comparison_group === "string" ? imported.comparison_group : "",
+    comparison_label: typeof imported.comparison_label === "string" ? imported.comparison_label : "",
+    subtitle: typeof imported.subtitle === "string" ? imported.subtitle : "",
+    heroImage: typeof imported.heroImage === "string" ? imported.heroImage : "",
+    hero: typeof imported.hero === "string" ? imported.hero : typeof imported.heroImage === "string" ? imported.heroImage : "",
+    status: typeof imported.status === "string" ? imported.status : "active",
+    links: joinLinks(imported.links, imported.externalUrl, imported.sourceUrl),
+    externalUrl: typeof imported.externalUrl === "string" ? imported.externalUrl : "",
+    sourceUrl: typeof imported.sourceUrl === "string" ? imported.sourceUrl : "",
+    features: joinList(imported.features),
     tags: joinList(imported.tags),
     draft: typeof imported.draft === "boolean" ? imported.draft : false,
-    thumbnail: typeof imported.thumbnail === "string" ? imported.thumbnail : "",
+    thumbnail: typeof imported.thumbnail === "string" ? imported.thumbnail : typeof imported.thumbnail === "boolean" ? String(imported.thumbnail) : "",
     thumbnail_alt: typeof imported.thumbnail_alt === "string" ? imported.thumbnail_alt : "",
     thumbnail_fit: typeof imported.thumbnail_fit === "string" ? imported.thumbnail_fit : "",
     thumbnail_position: typeof imported.thumbnail_position === "string" ? imported.thumbnail_position : "",
@@ -84,11 +95,13 @@ export function parseImportedMarkdown(markdown: string, overrides: DraftOverride
     use_math: Boolean(imported.use_math),
     permalink: typeof imported.permalink === "string" ? imported.permalink : "",
     og_description: typeof imported.og_description === "string" ? imported.og_description : "",
-    image: typeof imported.image === "string" ? imported.image : "",
+    image: typeof imported.image === "string" ? imported.image : typeof imported.cloudinary_id === "string" ? imported.cloudinary_id : "",
     thumbnail_class: typeof imported.thumbnail_class === "string" ? imported.thumbnail_class : ""
   };
 
-  return createEditorDraft({ ...overrides, frontmatter: { ...frontmatter, ...overrides.frontmatter }, body: body.trimStart() || defaultBody });
+  const importedBody = body.trimStart();
+  const fallbackBody = overrides.kind === "journal" || !overrides.kind ? defaultBody : "";
+  return createEditorDraft({ ...overrides, frontmatter: { ...frontmatter, ...overrides.frontmatter }, body: importedBody || fallbackBody });
 }
 
 export function downloadDraft(draft: StoredDraft) {
@@ -96,7 +109,7 @@ export function downloadDraft(draft: StoredDraft) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = generatedFilename(draft.frontmatter) || "journal.md";
+  anchor.download = generatedFilename(draft.frontmatter, draft.kind) || `${draft.kind}.md`;
   anchor.click();
   URL.revokeObjectURL(url);
 }

@@ -11,7 +11,7 @@ export function ReviewPane({ mode, draft, markdown, frontmatter, onClose, onCopy
   onClose: () => void;
   onCopy: (text: string, label: string) => void;
 }) {
-  const checks = publishChecks(draft.frontmatter);
+  const checks = publishChecks(draft.frontmatter, draft.kind);
   const validation = frontmatterSchema.safeParse(toFrontmatterObject(draft.frontmatter));
   const previewHtml = marked.parse(draft.body, { async: false });
 

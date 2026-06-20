@@ -134,11 +134,22 @@ export function ImageCardTool({ body, frontmatter, onInsert, onFrontmatterChange
                 <input value={card.heading} onChange={(event) => updateCard(index, { heading: event.target.value })} />
               </Field>
             </div>
+            <div className="field-grid">
+              <Field label="slug (Gallery詳細URL)">
+                <input value={card.slug} onChange={(event) => updateCard(index, { slug: event.target.value })} placeholder="work-title" />
+              </Field>
+              <Field label="article_url">
+                <input value={card.articleUrl} onChange={(event) => updateCard(index, { articleUrl: event.target.value })} placeholder="未入力なら記事URLを使用" />
+              </Field>
+            </div>
             <Field label="description (Gallery用)">
               <input value={card.description} onChange={(event) => updateCard(index, { description: event.target.value })} />
             </Field>
+            <Field label="body (Gallery詳細本文)">
+              <textarea value={card.body} onChange={(event) => updateCard(index, { body: event.target.value })} placeholder="空なら出力しません" />
+            </Field>
             <div className="field-grid">
-              <Field label="categories">
+              <Field label="tags (Gallery用)">
                 <input value={card.categories} onChange={(event) => updateCard(index, { categories: event.target.value })} placeholder="3DCG, Illustration" />
               </Field>
               <Field label="making_article_url">
@@ -154,6 +165,7 @@ export function ImageCardTool({ body, frontmatter, onInsert, onFrontmatterChange
               </Field>
             </div>
             <div className="button-row">
+              <label className="check-row"><input type="checkbox" checked={card.detail} onChange={(event) => updateCard(index, { detail: event.target.checked })} /> detail page</label>
               <label className="check-row"><input type="checkbox" checked={card.thumbnail} onChange={(event) => updateCard(index, { thumbnail: event.target.checked })} /> thumbnail</label>
               <label className="check-row"><input type="checkbox" checked={card.noGalleryButton} onChange={(event) => updateCard(index, { noGalleryButton: event.target.checked })} /> no-gallery-button</label>
             </div>

@@ -1,31 +1,34 @@
 import { useCallback, useEffect, useState } from "react";
 import type { JournalFileEntry, StoredDraft, View } from "./types/journal";
+import type { ContentFileInfo, ContentKind } from "./types/content";
+import { contentKindSchemas } from "./types/content";
 import { buildMarkdown, createEditorDraft, nowIso, parseImportedMarkdown } from "./lib/markdown";
 import { generatedFilename } from "./lib/permalink";
-import { deleteJournalFile, JournalFileConflictError, loadJournalFile, loadJournalFiles, saveJournalFile } from "./lib/journalFiles";
+import { ContentFileConflictError, deleteContentFile, loadContentFile, loadContentFiles, saveContentFile } from "./lib/contentFiles";
 import { clearUnsavedBackup, loadUnsavedBackup, writeUnsavedBackup } from "./lib/unsavedBackup";
 import { DraftList } from "./components/DraftList";
 import { EditorScreen } from "./components/EditorScreen";
 
 export function App() {
   const [view, setView] = useState<View>("list");
+  const [activeKind, setActiveKind] = useState<ContentKind>("journal");
   const [currentDraft, setCurrentDraft] = useState<StoredDraft | null>(null);
   const [notice, setNotice] = useState("準備できました");
-  const [journalFiles, setJournalFiles] = useState<string[]>([]);
-  const [journalEntries, setJournalEntries] = useState<JournalFileEntry[]>([]);
-  const [journalFileApiAvailable, setJournalFileApiAvailable] = useState(false);
+  const [contentFiles, setContentFiles] = useState<ContentFileInfo[]>([]);
+  const [contentEntries, setContentEntries] = useState<JournalFileEntry[]>([]);
+  const [contentFileApiAvailable, setContentFileApiAvailable] = useState(false);
   const [conflictDraft, setConflictDraft] = useState<StoredDraft | null>(null);
 
   useEffect(() => {
-    refreshJournalFiles();
-  }, []);
+    refreshContentFiles(activeKind);
+  }, [activeKind]);
 
-  async function refreshJournalFiles() {
-    const result = await loadJournalFiles();
-    setJournalFileApiAvailable(result.available);
-    setJournalFiles(result.files.map((file) => file.path));
+  async function refreshContentFiles(kind = activeKind) {
+    const result = await loadContentFiles(kind);
+    setContentFileApiAvailable(result.available);
+    setContentFiles(result.files);
     if (!result.available) {
-      setJournalEntries([]);
+      setContentEntries([]);
       setNotice("ローカルファイルAPIは利用できません。コピー/ダウンロード運用になります");
       return;
     }
@@ -33,18 +36,19 @@ export function App() {
     const entries = await Promise.all(result.files.map(async (fileInfo): Promise<JournalFileEntry | null> => {
       try {
         const filename = fileInfo.path;
-        const file = await loadJournalFile(filename);
+        const file = await loadContentFile(kind, filename);
         const importedAt = nowIso();
         return {
           file: { path: file.path, mtimeMs: file.mtimeMs },
           filename,
           draft: parseImportedMarkdown(file.markdown, {
+            kind,
             id: `file:${file.path}`,
             createdAt: importedAt,
             updatedAt: importedAt,
             importedAt,
             source: "imported",
-            sourcePath: `src/content/journal/${file.path}`,
+            sourcePath: `${contentKindSchemas[kind].directory}/${file.path}`,
             sourceFileName: file.path,
             loadedFilePath: file.path,
             loadedFileMtime: file.mtimeMs
@@ -54,19 +58,20 @@ export function App() {
         return null;
       }
     }));
-    setJournalEntries(entries.filter((entry): entry is JournalFileEntry => Boolean(entry)));
+    setContentEntries(entries.filter((entry): entry is JournalFileEntry => Boolean(entry)));
   }
 
   function createAndOpen() {
-    const draft = createEditorDraft();
+    const draft = createEditorDraft({ kind: activeKind, frontmatter: activeKind === "songs" ? { type: "journal", draft: false } : undefined });
     setCurrentDraft(draft);
     setView("editor");
-    setNotice("新しいMarkdownを作成しました。保存するとsrc/content/journalに書き出します");
+    setNotice(`新しい${contentKindSchemas[activeKind].label} Markdownを作成しました`);
   }
 
   function importMarkdown(markdown: string, filename?: string) {
     const importedAt = nowIso();
     const draft = parseImportedMarkdown(markdown, {
+      kind: activeKind,
       id: filename ? `uploaded:${filename}` : undefined,
       createdAt: importedAt,
       updatedAt: importedAt,
@@ -80,17 +85,18 @@ export function App() {
     setNotice(filename ? `${filename} を読み込みました` : "Markdownを読み込みました");
   }
 
-  async function openJournalFile(filename: string) {
+  async function openContentFile(filename: string, kind = activeKind) {
     try {
-      const file = await loadJournalFile(filename);
+      const file = await loadContentFile(kind, filename);
       const importedAt = nowIso();
       const draft = parseImportedMarkdown(file.markdown, {
+        kind,
         id: `file:${file.path}`,
         createdAt: importedAt,
         updatedAt: importedAt,
         importedAt,
         source: "imported",
-        sourcePath: `src/content/journal/${file.path}`,
+        sourcePath: `${contentKindSchemas[kind].directory}/${file.path}`,
         sourceFileName: file.path,
         loadedFilePath: file.path,
         loadedFileMtime: file.mtimeMs
@@ -111,14 +117,14 @@ export function App() {
   }, []);
 
   async function saveCurrentToFile(next: StoredDraft, options: { force?: boolean } = {}) {
-    const filename = next.sourceFileName || generatedFilename(next.frontmatter);
+    const filename = next.sourceFileName || generatedFilename(next.frontmatter, next.kind);
     if (!filename) {
       setNotice("保存先ファイル名を作れません。dateかslugを確認してください");
       return;
     }
 
     try {
-      const saved = await saveJournalFile(filename, buildMarkdown(next), {
+      const saved = await saveContentFile(next.kind, filename, buildMarkdown(next), {
         expectedMtime: next.loadedFileMtime,
         force: options.force
       });
@@ -126,7 +132,7 @@ export function App() {
         ...next,
         updatedAt: nowIso(),
         source: "imported" as const,
-        sourcePath: `src/content/journal/${filename}`,
+        sourcePath: `${contentKindSchemas[next.kind].directory}/${filename}`,
         sourceFileName: filename,
         loadedFilePath: saved.path,
         loadedFileMtime: saved.mtimeMs
@@ -135,9 +141,9 @@ export function App() {
       setConflictDraft(null);
       clearUnsavedBackup(next.id);
       setNotice(`${filename} に保存しました`);
-      await refreshJournalFiles();
+      await refreshContentFiles(next.kind);
     } catch (error) {
-      if (error instanceof JournalFileConflictError) {
+      if (error instanceof ContentFileConflictError) {
         setConflictDraft(next);
         setNotice("ファイルが外部で変更されています");
         return;
@@ -149,9 +155,10 @@ export function App() {
   async function reloadConflictFile() {
     const filename = conflictDraft?.loadedFilePath || conflictDraft?.sourceFileName;
     if (!filename) return;
+    const kind = conflictDraft.kind;
     clearUnsavedBackup(conflictDraft.id);
     setConflictDraft(null);
-    await openJournalFile(filename);
+    await openContentFile(filename, kind);
   }
 
   async function forceSaveConflictFile() {
@@ -170,11 +177,11 @@ export function App() {
     }
 
     try {
-      await deleteJournalFile(filename);
+      await deleteContentFile(next.kind, filename);
       setCurrentDraft(null);
       setView("list");
       setNotice(`${filename} を削除しました`);
-      await refreshJournalFiles();
+      await refreshContentFiles(next.kind);
     } catch (error) {
       setNotice(`削除に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
@@ -206,13 +213,15 @@ export function App() {
 
   return (
     <DraftList
-      journalFiles={journalFiles}
-      journalEntries={journalEntries}
-      journalFileApiAvailable={journalFileApiAvailable}
+      activeKind={activeKind}
+      contentFiles={contentFiles}
+      contentEntries={contentEntries}
+      contentFileApiAvailable={contentFileApiAvailable}
       notice={notice}
+      onKindChange={setActiveKind}
       onNew={createAndOpen}
-      onOpenJournalFile={openJournalFile}
-      onRefreshJournalFiles={refreshJournalFiles}
+      onOpenContentFile={openContentFile}
+      onRefreshContentFiles={() => refreshContentFiles(activeKind)}
       onImport={importMarkdown}
     />
   );

@@ -1,4 +1,5 @@
 import type { StoredDraft } from "../types/journal";
+import { defaultFrontmatter } from "../types/journal";
 
 const backupPrefix = "riddle-journal-unsaved:";
 
@@ -10,7 +11,13 @@ export function loadUnsavedBackup(id: string): StoredDraft | null {
   try {
     const raw = localStorage.getItem(backupKey(id));
     if (!raw) return null;
-    return JSON.parse(raw) as StoredDraft;
+    const parsed = JSON.parse(raw) as Partial<StoredDraft>;
+    return {
+      ...parsed,
+      kind: parsed.kind ?? "journal",
+      frontmatter: { ...defaultFrontmatter, ...(parsed.frontmatter ?? {}) },
+      body: parsed.body ?? ""
+    } as StoredDraft;
   } catch {
     return null;
   }

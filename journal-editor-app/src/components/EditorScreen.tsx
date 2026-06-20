@@ -23,6 +23,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
   const [cardToolOpen, setCardToolOpen] = useState(false);
   const [reviewMode, setReviewMode] = useState<ReviewMode | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => setLocalDraft(draft), [draft.id]);
@@ -33,7 +34,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
   }, [localDraft, onSave]);
 
   const markdown = useMemo(() => buildMarkdown(localDraft), [localDraft]);
-  const frontmatter = useMemo(() => buildFrontmatter(localDraft.frontmatter), [localDraft.frontmatter]);
+  const frontmatter = useMemo(() => buildFrontmatter(localDraft.frontmatter, localDraft.kind), [localDraft.frontmatter, localDraft.kind]);
 
   function markEdited(draft: StoredDraft): StoredDraft {
     return { ...draft, editedAt: new Date().toISOString() };
@@ -80,17 +81,15 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
   }
 
   function deleteArticle() {
-    const message = localDraft.sourceFileName
-      ? `${localDraft.sourceFileName} を削除します。よろしいですか？`
-      : "未保存の記事を閉じます。よろしいですか？";
-    if (window.confirm(message)) onDelete(localDraft);
+    setMoreOpen(false);
+    setDeleteConfirmOpen(true);
   }
 
   return (
     <main className="editor-shell">
       <header className="editor-topbar">
         <button className="ghost" onClick={() => publishOpen ? setPublishOpen(false) : onBack()}>{publishOpen ? "編集に戻る" : "閉じる"}</button>
-        <span className="status-pill">{draft.sourceFileName ? `${notice} ・ ${draft.sourceFileName}` : `${notice} ・ 未保存Markdown`}</span>
+        <span className="status-pill">{draft.sourceFileName ? `${notice} ・ ${draft.kind} ・ ${draft.sourceFileName}` : `${notice} ・ ${draft.kind} ・ 未保存Markdown`}</span>
         <div className="editor-actions">
           <div className="more-menu-wrap">
             <button className="icon-button" aria-label="その他" onClick={() => setMoreOpen((open) => !open)}>...</button>
@@ -116,6 +115,21 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
           <div className="button-row">
             <button onClick={onReloadConflict}>再読み込み</button>
             <button className="danger" onClick={onForceSaveConflict}>上書き保存</button>
+          </div>
+        </section>
+      )}
+
+      {deleteConfirmOpen && (
+        <section className="delete-confirm-bar" role="alert">
+          <div>
+            <strong>{localDraft.sourceFileName ? "Markdownファイルを削除します" : "未保存Markdownを閉じます"}</strong>
+            <span>kind: {localDraft.kind}</span>
+            <span>path: {localDraft.sourceFileName || "未保存Markdown"}</span>
+            <span>title: {localDraft.frontmatter.title || "Untitled"}</span>
+          </div>
+          <div className="button-row">
+            <button onClick={() => setDeleteConfirmOpen(false)}>キャンセル</button>
+            <button className="danger" onClick={() => onDelete(localDraft)}>削除する</button>
           </div>
         </section>
       )}

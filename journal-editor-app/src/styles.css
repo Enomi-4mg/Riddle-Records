@@ -159,7 +159,8 @@ textarea {
   text-align: left;
 }
 
-.conflict-bar {
+.conflict-bar,
+.delete-confirm-bar {
   position: sticky;
   top: 64px;
   z-index: 9;
@@ -173,14 +174,26 @@ textarea {
   padding: 0.8rem 1.4rem 0.8rem 6.7rem;
 }
 
-.conflict-bar div:first-child {
+.delete-confirm-bar {
+  border-bottom-color: #f0c8c8;
+  background: #fff4f4;
+  color: #7a1f1a;
+}
+
+.conflict-bar div:first-child,
+.delete-confirm-bar div:first-child {
   display: grid;
   gap: 0.15rem;
 }
 
-.conflict-bar span {
+.conflict-bar span,
+.delete-confirm-bar span {
   color: #7d5b38;
   font-size: 0.9rem;
+}
+
+.delete-confirm-bar span {
+  color: #7a3a36;
 }
 
 .list-shell,
@@ -205,16 +218,25 @@ textarea {
   font-size: 1.55rem;
 }
 
-.list-nav a {
+.list-nav a,
+.list-nav button {
   display: block;
+  width: 100%;
   border-left: 3px solid transparent;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  background: transparent;
   padding: 0.55rem 0 0.55rem 1rem;
   color: #596866;
   font-size: 1.08rem;
   font-weight: 700;
+  text-align: left;
 }
 
-.list-nav a.active {
+.list-nav a.active,
+.list-nav button.active {
   border-left-color: #121a18;
   color: #121a18;
 }
