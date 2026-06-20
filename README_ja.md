@@ -44,6 +44,52 @@ tools/
 - Gallery の作品データは `src/data/gallery.ts` で管理します。
 - Jekyll 時代のファイルは移行後に削除済みです。
 
+## Works と Gallery ページ
+
+`/works/` は作品全体の総合一覧です。`src/data/gallery.ts` の Gallery 作品と `src/content/songs/` の楽曲をまとめ、共通の Works カードとして表示します。
+
+`/gallery/` はイラスト・3DCG・写真などに絞った作品アーカイブとして残しています。Gallery 個別ページは `/gallery/[slug]/` に生成されますが、対象は `detail: true` を指定した item のみです。
+
+Gallery item の主なフィールド:
+
+- `slug`: Gallery 個別ページの URL に使う文字列
+- `detail`: `true` の場合のみ `/gallery/[slug]/` を生成
+- `title`: 作品タイトル
+- `date`: 作品日付
+- `cloudinary_id`: Cloudinary の public ID
+- `description`: カード、meta、リード文に使う短い説明
+- `body`: 個別ページ本文。省略時は `description` を本文にも使います
+- `categories`: Works / Gallery / 個別ページに表示するタグ
+- `article_url`: 関連する Journal 記事、または既存の作品記事
+- `making_article_url`: 関連するメイキング記事
+- `thumbnail`: Journal 一覧のサムネイル照合などに使うフラグ
+
+例:
+
+```ts
+{
+  slug: "work-title",
+  detail: true,
+  title: "作品タイトル",
+  date: "2026-04-30",
+  cloudinary_id: "example_abcd12.jpg",
+  description: "作品の短い説明",
+  body: "Gallery 個別ページに表示する本文です。",
+  categories: ["イラスト"],
+  article_url: "/journal/2026-04-30/",
+  making_article_url: "/journal/2026/04/30/work-making/",
+  thumbnail: true
+}
+```
+
+リンク挙動:
+
+- Works カードは、Gallery item に `detail: true` がある場合 `/gallery/[slug]/` へリンクします。
+- Gallery カードも、`detail: true` がある場合 `/gallery/[slug]/` へリンクします。
+- 個別ページがない Gallery item は、従来どおり Gallery 上では Lightbox を開きます。
+- Works カードで個別ページがない場合は、`article_url`、Cloudinary のフル画像の順にリンク先を決めます。
+- Header の active 判定では、`/gallery/` は引き続き Works グループとして扱います。
+
 ## Journal Editor での記事作成手順
 
 Journal 記事は、独立アプリ `journal-editor-app/` の Journal Editor でMarkdownを生成してから `src/content/journal/` に追加します。

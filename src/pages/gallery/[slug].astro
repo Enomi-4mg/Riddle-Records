@@ -1,0 +1,80 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { galleryItems, getGalleryDetailPath, hasGalleryDetail } from "../../data/gallery";
+
+const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
+const base = import.meta.env.BASE_URL;
+const basePath = base.endsWith("/") ? base : `${base}/`;
+const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const formatDate = (date: string) => new Date(date).toLocaleDateString("ja-JP");
+
+export function getStaticPaths() {
+  return galleryItems.filter(hasGalleryDetail).map((item) => ({
+    params: {
+      slug: item.slug
+    },
+    props: {
+      item
+    }
+  }));
+}
+
+const { item } = Astro.props;
+const imageUrl = `${cloudinaryBase}/w_1400,q_auto,f_auto/v1/${item.cloudinary_id}`;
+const ogImage = `${cloudinaryBase}/w_1200,h_630,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`;
+const bodyParagraphs = (item.body ?? item.description).split(/\n{2,}/).filter(Boolean);
+---
+
+<BaseLayout
+  title={item.title}
+  description={item.description}
+  ogTitle={item.title}
+  ogDescription={item.description}
+  ogType="article"
+  ogImage={ogImage}
+  ogImageAlt={item.title}
+>
+  <article class="gallery-detail journal-entry-animate">
+    <a class="gallery-detail-back" href={href("/gallery/")}>Gallery一覧へ戻る</a>
+
+    <header class="gallery-detail-header">
+      <p class="gallery-detail-kicker">Gallery</p>
+      <h1 class="web_title">{item.title}</h1>
+      <time class="gallery-detail-date" datetime={item.date}>{formatDate(item.date)}</time>
+      <p class="gallery-detail-description">{item.description}</p>
+    </header>
+
+    <a
+      class="gallery-detail-image"
+      href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`}
+      data-lightbox={`gallery-detail-${item.slug}`}
+      data-title={`${item.title} - ${item.description}`}
+    >
+      <img src={imageUrl} alt={item.title} />
+    </a>
+
+    <div class="gallery-detail-tags" aria-label={`${item.title} tags`}>
+      {item.categories.map((category) => <span class="work-tag">{category}</span>)}
+    </div>
+
+    <section class="gallery-detail-body">
+      {bodyParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+    </section>
+
+    {(item.article_url || item.making_article_url) && (
+      <section class="gallery-detail-links">
+        <h2 class="page_title">関連記事</h2>
+        <div class="article-links-horizontal">
+          {item.article_url && (
+            <a href={href(item.article_url)} class="article-link-btn">作品記事</a>
+          )}
+          {item.making_article_url && (
+            <a href={href(item.making_article_url)} class="article-link-btn making-link">メイキング</a>
+          )}
+        </div>
+      </section>
+    )}
+
+    <a class="gallery-detail-back gallery-detail-back-bottom" href={href("/gallery/")}>Gallery一覧へ戻る</a>
+  </article>
+</BaseLayout>

@@ -1,12 +1,14 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { galleryItems } from "../data/gallery";
+import { galleryItems, getGalleryDetailPath, hasGalleryDetail } from "../data/gallery";
 
 const base = import.meta.env.BASE_URL;
 const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const sortedGallery = [...galleryItems].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const getFullImageUrl = (cloudinaryId) => `${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${cloudinaryId}`;
+const getThumbUrl = (cloudinaryId) => `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${cloudinaryId}`;
 ---
 
 <BaseLayout title="Gallery" description="イラスト・3DCG・写真などの作品ギャラリー。" wideContainer={true}>
@@ -33,13 +35,23 @@ const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
   </div>
 
   <div class="gallery-grid" id="gallery-container">
-    {sortedGallery.map((item) => (
+    {sortedGallery.map((item) => {
+      const detailUrl = hasGalleryDetail(item) ? withBase(getGalleryDetailPath(item)) : "";
+      return (
       <div class="gallery-item work-card work-card-unified journal-entry-animate" id={item.cloudinary_id.replace(/\./g, "-")} data-date={item.date} data-categories={item.categories.join(",")}>
-        <a href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link work-thumb">
-          <img src={`${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`} alt={item.title} loading="lazy" />
-        </a>
+        {detailUrl ? (
+          <a href={detailUrl} class="gallery-image-link work-thumb">
+            <img src={getThumbUrl(item.cloudinary_id)} alt={item.title} loading="lazy" />
+          </a>
+        ) : (
+          <a href={getFullImageUrl(item.cloudinary_id)} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link work-thumb">
+            <img src={getThumbUrl(item.cloudinary_id)} alt={item.title} loading="lazy" />
+          </a>
+        )}
         <div class="gallery-info work-copy">
-          <h3 class="work-title">{item.title}</h3>
+          <h3 class="work-title">
+            {detailUrl ? <a href={detailUrl}>{item.title}</a> : item.title}
+          </h3>
           <time class="date work-date" datetime={item.date}>{new Date(item.date).toLocaleDateString("ja-JP")}</time>
           <p class="description work-desc">{item.description}</p>
           <div class="category-list work-tags">
@@ -51,15 +63,16 @@ const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
           {(item.article_url || item.making_article_url) && (
             <div class="article-links-horizontal">
               {item.article_url && (
-                <a href={withBase(item.article_url)} class="article-link-btn">📖 作品記事</a>
+                <a href={withBase(item.article_url)} class="article-link-btn">作品記事</a>
               )}
               {item.making_article_url && (
-                <a href={withBase(item.making_article_url)} class="article-link-btn making-link">📝 メイキング</a>
+                <a href={withBase(item.making_article_url)} class="article-link-btn making-link">メイキング</a>
               )}
             </div>
           )}
         </div>
       </div>
-    ))}
+      );
+    })}
   </div>
 </BaseLayout>

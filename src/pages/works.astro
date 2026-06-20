@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { galleryItems } from "../data/gallery";
+import { galleryItems, getGalleryDetailPath, hasGalleryDetail } from "../data/gallery";
 
 const base = import.meta.env.BASE_URL;
 const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
@@ -20,8 +20,12 @@ const galleryWorks = galleryItems.map((item) => ({
   tags: item.categories,
   image: `${cloudinaryBase}/w_600,h_400,c_fill,q_auto,f_auto/v1/${item.cloudinary_id}`,
   imageAlt: item.title,
-  href: item.article_url ? href(item.article_url) : `${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`,
-  external: !item.article_url
+  href: hasGalleryDetail(item)
+    ? href(getGalleryDetailPath(item))
+    : item.article_url
+      ? href(item.article_url)
+      : `${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.cloudinary_id}`,
+  external: !hasGalleryDetail(item) && !item.article_url
 }));
 
 const songWorks = songs.map((song) => ({

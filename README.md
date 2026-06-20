@@ -44,6 +44,52 @@ tools/
 - Gallery metadata lives in `src/data/gallery.ts`.
 - Old Jekyll files were removed during the migration.
 
+## Works and Gallery Pages
+
+`/works/` is the primary index for all works. It combines Gallery items from `src/data/gallery.ts` and songs from `src/content/songs/`, then displays them with the shared Works card layout.
+
+Gallery remains available at `/gallery/` as an artwork-focused archive. Individual artwork pages are generated at `/gallery/[slug]/` only for Gallery items with `detail: true`.
+
+Gallery item fields:
+
+- `slug`: URL segment for the Gallery detail page
+- `detail`: set to `true` to generate `/gallery/[slug]/`
+- `title`: artwork title
+- `date`: artwork date
+- `cloudinary_id`: Cloudinary public ID
+- `description`: short card, meta, and lead description
+- `body`: optional detail page body text
+- `categories`: tags shown on Works, Gallery, and detail pages
+- `article_url`: related Journal article or legacy artwork article
+- `making_article_url`: related making-of Journal article
+- `thumbnail`: controls Journal thumbnail matching behavior
+
+Example:
+
+```ts
+{
+  slug: "work-title",
+  detail: true,
+  title: "Work title",
+  date: "2026-04-30",
+  cloudinary_id: "example_abcd12.jpg",
+  description: "Short work description",
+  body: "Longer note for the Gallery detail page.",
+  categories: ["Illustration"],
+  article_url: "/journal/2026-04-30/",
+  making_article_url: "/journal/2026/04/30/work-making/",
+  thumbnail: true
+}
+```
+
+Link behavior:
+
+- Works cards link to `/gallery/[slug]/` when the Gallery item has `detail: true`.
+- Gallery cards also link to `/gallery/[slug]/` when `detail: true`.
+- Gallery items without detail pages keep the existing Gallery Lightbox behavior.
+- Works cards without Gallery detail pages fall back to `article_url`, then to the full Cloudinary image.
+- `/gallery/` remains part of the Works navigation group in the header active state.
+
 ## Journal Editor Workflow
 
 Use the standalone React editor in `journal-editor-app/` to create and edit Journal Markdown. The old Astro editor implementation has been replaced by a migration notice at `/tools/journal-editor/`; that URL is kept only as a compatibility landing page for bookmarks and the Information page.

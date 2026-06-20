@@ -199,6 +199,111 @@
 }
 
 /* =====================================
+   ギャラリー個別ページ
+   ===================================== */
+.gallery-detail {
+  max-width: var(--layout-max);
+  margin: 0 auto;
+}
+
+.gallery-detail-back {
+  display: inline-block;
+  margin-bottom: var(--space-md);
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.gallery-detail-back:hover,
+.gallery-detail-header .web_title:hover {
+  color: var(--color-mint-deep);
+}
+
+.gallery-detail-header {
+  margin-bottom: var(--space-lg);
+}
+
+.gallery-detail-header .web_title {
+  margin: 0.25rem 0 0.5rem;
+  padding: 0;
+}
+
+.gallery-detail-kicker {
+  margin: 0;
+  color: var(--color-mint-deep);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.gallery-detail-date {
+  color: var(--color-muted);
+  font-size: 0.95rem;
+}
+
+.gallery-detail-description {
+  max-width: 42rem;
+  margin: var(--space-sm) 0 0;
+  color: var(--color-muted);
+  line-height: 1.8;
+}
+
+.gallery-detail-image {
+  display: block;
+  overflow: hidden;
+  margin: var(--space-lg) 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.gallery-detail-image img {
+  width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+}
+
+.gallery-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: var(--space-md) 0 var(--space-xl);
+}
+
+.gallery-detail-body {
+  display: grid;
+  gap: var(--space-md);
+  margin: var(--space-xl) 0;
+}
+
+.gallery-detail-body p {
+  margin: 0;
+  color: var(--color-ink);
+  line-height: 1.9;
+}
+
+.gallery-detail-links {
+  margin: var(--space-xl) 0;
+  padding: var(--space-lg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.gallery-detail-links .page_title {
+  margin: 0 0 var(--space-sm);
+  padding: 0;
+  font-size: 1.35rem;
+}
+
+.gallery-detail-back-bottom {
+  margin-top: var(--space-md);
+}
+
+/* =====================================
    スマホ対応
    ===================================== */
 @media (max-width: 768px) {
