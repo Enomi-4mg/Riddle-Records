@@ -44,8 +44,6 @@ export function DraftList({ activeKind, contentFiles, contentEntries, contentFil
           {contentKindLabels.map(({ kind, label }) => (
             <button className={kind === activeKind ? "active" : ""} key={kind} onClick={() => onKindChange(kind)}>{label}</button>
           ))}
-          <a>{contentKindSchemas[activeKind].directory}</a>
-          <a>書き出し</a>
         </aside>
 
         <section className="file-card">
@@ -76,7 +74,7 @@ export function DraftList({ activeKind, contentFiles, contentEntries, contentFil
               {contentEntries.map(({ filename, draft }) => (
                 <article className="draft-row note-row" key={filename}>
                   <button className="draft-main" onClick={() => onOpenContentFile(filename)}>
-                    <span className="draft-title">{draft.frontmatter.title || "タイトル未設定"}</span>
+                    <span className="draft-title">{draft.frontmatter.title || "タイトル未設定"} <span className="updated-at">{filename}</span></span>
                     <span className="draft-meta">
                       <span className={draft.frontmatter.draft ? "dot draft" : "dot"} />
                       <span className={`state-label state-${getArticleState(draft)}`}>{getArticleStateLabel(getArticleState(draft))}</span>
@@ -88,7 +86,6 @@ export function DraftList({ activeKind, contentFiles, contentEntries, contentFil
                     </span>
                   </button>
                   <div className="row-actions">
-                    <span className="updated-at">{filename}</span>
                     <button onClick={() => onOpenContentFile(filename)}>開く</button>
                   </div>
                 </article>

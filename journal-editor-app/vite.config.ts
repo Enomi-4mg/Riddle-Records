@@ -239,6 +239,7 @@ function contentApiPlugin() {
 }
 
 export default defineConfig({
+  base: "./",
   plugins: [react(), contentApiPlugin()],
   server: {
     port: 5174

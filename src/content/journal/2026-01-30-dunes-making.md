@@ -1,10 +1,11 @@
-﻿---
+---
 title: "砂の風紋シミュレーション"
 date: 2026-02-07
-og_description: "砂丘と風紋の物理モデルをC++のopenFrameworksにて実装しました。"
-image: result-4_qptaza.gif
-permalink: /journal/2026-01-30/dunes-making/
+type: "journal"
 use_math: true
+permalink: /journal/2026-01-30/dunes-making/
+og_description: "砂丘と風紋の物理モデルをC++のopenFrameworksにて実装しました。"
+image: "result-4_qptaza.gif"
 ---
 
 # 概要
