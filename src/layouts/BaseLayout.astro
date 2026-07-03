@@ -14,10 +14,11 @@ const lightboxScript = "https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/
 const siteBase = import.meta.env.BASE_URL;
 const basePath = siteBase.endsWith("/") ? siteBase : `${siteBase}/`;
 const siteOrigin = Astro.site ?? Astro.url;
-const defaultOgImageUrl = "https://res.cloudinary.com/dzq8y9qes/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/v1/man_lilman_i8bkgb.png";
+const defaultOgImageUrl = "https://res.cloudinary.com/dzq8y9qes/image/upload/w_1200,h_630,c_fill,q_auto,f_jpg/v1/man_lilman_i8bkgb.png";
+const defaultTwitterImageUrl = "https://res.cloudinary.com/dzq8y9qes/image/upload/w_1200,h_628,c_fill,q_85,f_jpg/v1/man_lilman_i8bkgb.png";
 
-const resolveAssetUrl = (value) => {
-  const image = value?.trim() || defaultOgImageUrl;
+const resolveAssetUrl = (value, fallback = defaultOgImageUrl) => {
+  const image = value?.trim() || fallback;
 
   if (/^https?:\/\//.test(image)) {
     return image;
@@ -46,11 +47,16 @@ const {
   ogImageHeight = 630,
   twitterCard = "summary_large_image",
   twitterSite = "@4mgEnomi",
+  twitterCreator = "@4mgEnomi",
+  twitterImage,
+  twitterImageAlt = ogImageAlt,
   wideContainer = false
 } = Astro.props;
 
 const canonicalUrl = new URL(Astro.url.pathname + Astro.url.search, siteOrigin).href;
-const ogImageUrl = resolveAssetUrl(ogImage);
+const ogImageUrl = resolveAssetUrl(ogImage, defaultOgImageUrl);
+const twitterImageUrl = resolveAssetUrl(twitterImage ?? ogImage, defaultTwitterImageUrl);
+const twitterDomain = siteOrigin.hostname;
 ---
 
 <!doctype html>
@@ -73,10 +79,12 @@ const ogImageUrl = resolveAssetUrl(ogImage);
     <meta property="og:locale" content="ja_JP" />
     <meta name="twitter:card" content={twitterCard} />
     <meta name="twitter:site" content={twitterSite} />
+    <meta name="twitter:creator" content={twitterCreator} />
+    <meta name="twitter:domain" content={twitterDomain} />
     <meta name="twitter:title" content={ogTitle} />
     <meta name="twitter:description" content={ogDescription} />
-    <meta name="twitter:image" content={ogImageUrl} />
-    <meta name="twitter:image:alt" content={ogImageAlt} />
+    <meta name="twitter:image" content={twitterImageUrl} />
+    <meta name="twitter:image:alt" content={twitterImageAlt} />
     <meta name="twitter:url" content={canonicalUrl} />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" href={faviconUrl} type="image/x-icon" />
