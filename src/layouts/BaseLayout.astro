@@ -14,18 +14,24 @@ const lightboxScript = "https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/
 const siteBase = import.meta.env.BASE_URL;
 const basePath = siteBase.endsWith("/") ? siteBase : `${siteBase}/`;
 const siteOrigin = Astro.site ?? Astro.url;
+const defaultOgImageUrl = "https://res.cloudinary.com/dzq8y9qes/image/upload/w_1200,h_630,c_fill,q_auto,f_auto/v1/man_lilman_i8bkgb.png";
 
 const resolveAssetUrl = (value) => {
-  if (!value) {
-    return new URL(`${basePath}favicon/icon.jpg`, siteOrigin).href;
+  const image = value?.trim() || defaultOgImageUrl;
+
+  if (/^https?:\/\//.test(image)) {
+    return image;
   }
 
-  if (/^https?:\/\//.test(value)) {
-    return value;
+  if (image.startsWith(basePath)) {
+    return new URL(image, siteOrigin).href;
   }
 
-  const normalizedPath = value.startsWith("/") ? `${basePath}${value.replace(/^\/+/, "")}` : `${basePath}${value}`;
-  return new URL(normalizedPath, siteOrigin).href;
+  if (image.startsWith("/")) {
+    return new URL(`${basePath}${image.replace(/^\/+/, "")}`, siteOrigin).href;
+  }
+
+  return new URL(`${basePath}${image}`, siteOrigin).href;
 };
 
 const {
@@ -36,6 +42,8 @@ const {
   ogType = "website",
   ogImage,
   ogImageAlt = title,
+  ogImageWidth = 1200,
+  ogImageHeight = 630,
   twitterCard = "summary_large_image",
   twitterSite = "@4mgEnomi",
   wideContainer = false
@@ -57,16 +65,19 @@ const ogImageUrl = resolveAssetUrl(ogImage);
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:image" content={ogImageUrl} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:secure_url" content={ogImageUrl} />
+    <meta property="og:image:width" content={ogImageWidth} />
+    <meta property="og:image:height" content={ogImageHeight} />
     <meta property="og:image:alt" content={ogImageAlt} />
     <meta property="og:site_name" content="Riddle Records" />
+    <meta property="og:locale" content="ja_JP" />
     <meta name="twitter:card" content={twitterCard} />
     <meta name="twitter:site" content={twitterSite} />
     <meta name="twitter:title" content={ogTitle} />
     <meta name="twitter:description" content={ogDescription} />
     <meta name="twitter:image" content={ogImageUrl} />
     <meta name="twitter:image:alt" content={ogImageAlt} />
+    <meta name="twitter:url" content={canonicalUrl} />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" href={faviconUrl} type="image/x-icon" />
     <link rel="stylesheet" href={mainStyles} />
