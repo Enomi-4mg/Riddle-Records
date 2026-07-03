@@ -99,17 +99,18 @@ const galleryItems = await getGalleryItems();
     .site-header .menu_toggle {
       grid-column: 1;
       grid-row: 1;
-      position: relative;
-      top: auto;
-      left: auto;
+      position: fixed;
+      top: 12px;
+      left: 12px;
       transform: none;
+      z-index: 1002;
     }
   }
 
   @media screen and (max-width: 600px) {
     .site-header .menu_toggle {
-      top: auto;
-      left: auto;
+      top: 12px;
+      left: 12px;
     }
   }
 </style>
