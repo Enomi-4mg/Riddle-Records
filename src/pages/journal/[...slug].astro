@@ -32,7 +32,9 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const entryDate = formatDate(entry.data.date);
 const summary = entry.data.description ?? entry.data.og_description ?? entry.data.title;
-const ogImage = resolveImageUrl(entry.data.og_image ?? entry.data.image ?? entry.data.thumbnail, "w_1200,h_630,c_fill,q_auto,f_auto");
+const socialImage = entry.data.og_image ?? entry.data.image ?? entry.data.thumbnail;
+const ogImage = resolveImageUrl(socialImage, "w_1200,h_630,c_fill,q_auto,f_jpg");
+const twitterImage = resolveImageUrl(socialImage, "w_1200,h_628,c_fill,q_85,f_jpg");
 const currentIndex = journalEntries.findIndex((candidate) => candidate.id === entry.id);
 const newerEntry = currentIndex > 0 ? journalEntries[currentIndex - 1] : null;
 const olderEntry = currentIndex >= 0 && currentIndex < journalEntries.length - 1 ? journalEntries[currentIndex + 1] : null;
@@ -46,6 +48,8 @@ const olderEntry = currentIndex >= 0 && currentIndex < journalEntries.length - 1
   ogType="article"
   ogImage={ogImage}
   ogImageAlt={entry.data.thumbnail_alt ?? entry.data.title}
+  twitterImage={twitterImage}
+  twitterImageAlt={entry.data.thumbnail_alt ?? entry.data.title}
 >
   <article class="post journal-article" data-use-math={entry.data.use_math ? "true" : undefined}>
     <div class="journal-back-link journal-back-link-top">
