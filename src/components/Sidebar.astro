@@ -4,7 +4,8 @@ const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 ---
 
-<nav class="sidebar">
+<nav class="sidebar" aria-label="Mobile navigation">
+  <button class="sidebar-close" type="button" aria-label="メニューを閉じる">×</button>
   <div class="sidebar_content">
     <ul class="sidebar_menu">
       <li class="menu_item"><a href={href("/")} class={Astro.url.pathname === basePath || Astro.url.pathname === `${basePath}index.html` ? "active" : ""}>Home</a></li>
@@ -12,7 +13,47 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
       <li class="menu_item"><a href={href("/journal/")} class={Astro.url.pathname.includes(`${basePath}journal`) ? "active" : ""}>Journal</a></li>
       <li class="menu_item"><a href={href("/works/")} class={Astro.url.pathname.includes(`${basePath}works`) || Astro.url.pathname.includes(`${basePath}gallery`) || Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""}>Works</a></li>
       <li class="menu_item"><a href={href("/project/")} class={Astro.url.pathname.includes(`${basePath}project`) ? "active" : ""}>Project</a></li>
-      <li class="menu_item"><a href={href("/info/")} class={Astro.url.pathname.includes(`${basePath}info`) ? "active" : ""}>Information</a></li>
     </ul>
   </div>
 </nav>
+
+<style is:global>
+  .sidebar {
+    position: fixed;
+  }
+
+  .sidebar-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(244, 255, 250, 0.22);
+    color: #0a1510;
+    font: inherit;
+    font-size: 2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1001;
+  }
+
+  .sidebar-close:active,
+  .sidebar-close:focus-visible {
+    background: rgba(244, 255, 250, 0.42);
+    outline: none;
+  }
+</style>
+
+<script is:inline>
+  const sidebarCloseButton = document.querySelector('.sidebar-close');
+  const mobileSidebar = document.querySelector('.sidebar');
+
+  sidebarCloseButton?.addEventListener('click', () => {
+    mobileSidebar?.classList.remove('show');
+  });
+</script>
