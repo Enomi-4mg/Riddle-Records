@@ -6,32 +6,54 @@ import { SettingsDrawer } from "./SettingsDrawer";
 import { ReviewPane } from "./ReviewPane";
 import { ImageCardTool } from "./ImageCardTool";
 
-export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDelete, conflictActive, onReloadConflict, onForceSaveConflict, onNotice }: {
+export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDelete, conflictActive, onReloadConflict, onForceSaveConflict, onNotice, onFullPreview }: {
   draft: StoredDraft;
   notice: string;
   onBack: () => void;
   onSave: (draft: StoredDraft) => void;
-  onSaveFile: (draft: StoredDraft, options?: { force?: boolean }) => void;
+  onSaveFile: (draft: StoredDraft, options?: { force?: boolean }) => Promise<StoredDraft | null>;
   onDelete: (draft: StoredDraft) => void;
   conflictActive: boolean;
   onReloadConflict: () => void;
-  onForceSaveConflict: () => void;
+  onForceSaveConflict: () => Promise<StoredDraft | null>;
   onNotice: (notice: string) => void;
+  onFullPreview: (draft: StoredDraft) => void;
 }) {
   const [localDraft, setLocalDraft] = useState(draft);
-  const [publishOpen, setPublishOpen] = useState(false);
-  const [cardToolOpen, setCardToolOpen] = useState(false);
-  const [reviewMode, setReviewMode] = useState<ReviewMode | null>(null);
+  const [panelMode, setPanelMode] = useState<ReviewMode | "settings" | "media" | null>(null);
+  const [panelSide, setPanelSide] = useState<"left" | "right">("right");
+  const [previewScrollRatio, setPreviewScrollRatio] = useState(0);
   const [moreOpen, setMoreOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => setLocalDraft(draft), [draft.id]);
+  const savedEditMarkerRef = useRef(draft.editedAt ?? "");
+  const skipNextAutosaveRef = useRef(true);
+  const hasUnsavedFileChanges = (localDraft.editedAt ?? "") !== savedEditMarkerRef.current;
 
   useEffect(() => {
+    skipNextAutosaveRef.current = true;
+    setLocalDraft(draft);
+    savedEditMarkerRef.current = draft.editedAt ?? "";
+  }, [draft.id]);
+
+  useEffect(() => {
+    if (skipNextAutosaveRef.current) {
+      skipNextAutosaveRef.current = false;
+      return;
+    }
     const timer = window.setTimeout(() => onSave(localDraft), 350);
     return () => window.clearTimeout(timer);
   }, [localDraft, onSave]);
+
+  useEffect(() => {
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedFileChanges) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [hasUnsavedFileChanges]);
 
   const markdown = useMemo(() => buildMarkdown(localDraft), [localDraft]);
   const frontmatter = useMemo(() => buildFrontmatter(localDraft.frontmatter, localDraft.kind), [localDraft.frontmatter, localDraft.kind]);
@@ -48,8 +70,12 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
   }
 
   async function copy(text: string, label: string) {
-    await navigator.clipboard.writeText(text);
-    onNotice(`${label}をコピーしました`);
+    try {
+      await navigator.clipboard.writeText(text);
+      onNotice(`${label}をコピーしました`);
+    } catch {
+      onNotice("コピーできませんでした。ブラウザの権限を確認してください");
+    }
   }
 
   function insertBodyText(text: string) {
@@ -70,14 +96,34 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
     onNotice("カードHTMLを本文に挿入しました");
   }
 
-  function saveDraft() {
-    onSaveFile(localDraft);
+  async function saveFile() {
+    const saved = await onSaveFile(localDraft);
+    syncSavedDraft(saved);
   }
 
-  function saveAsDraft() {
+  function syncSavedDraft(saved: StoredDraft | null) {
+    if (!saved) return;
+    savedEditMarkerRef.current = saved.editedAt ?? "";
+    skipNextAutosaveRef.current = true;
+    setLocalDraft(saved);
+  }
+
+  async function saveAsDraft() {
     const next = markEdited({ ...localDraft, frontmatter: { ...localDraft.frontmatter, draft: true } });
     setLocalDraft(next);
-    onSaveFile(next);
+    const saved = await onSaveFile(next);
+    syncSavedDraft(saved);
+  }
+
+  async function forceSaveFile() {
+    const saved = await onForceSaveConflict();
+    syncSavedDraft(saved);
+  }
+
+  function closeEditor() {
+    if (!hasUnsavedFileChanges || window.confirm("Markdownファイルに保存していない変更があります。閉じますか？")) {
+      onBack();
+    }
   }
 
   function deleteArticle() {
@@ -85,24 +131,52 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
     setDeleteConfirmOpen(true);
   }
 
+  function openReview(mode: ReviewMode, side: "left" | "right") {
+    updatePreviewScrollRatio();
+    setPanelSide(side);
+    setPanelMode((current) => current === mode && panelSide === side ? null : mode);
+  }
+
+  function openPanel(mode: "settings" | "media", side: "left" | "right") {
+    setPanelSide(side);
+    setPanelMode((current) => current === mode && panelSide === side ? null : mode);
+  }
+
+  function closePanel() {
+    setPanelMode(null);
+  }
+
+  function updatePreviewScrollRatio() {
+    const textarea = bodyRef.current;
+    if (!textarea) return;
+    const scrollable = textarea.scrollHeight - textarea.clientHeight;
+    setPreviewScrollRatio(scrollable > 0 ? textarea.scrollTop / scrollable : 0);
+  }
+
   return (
     <main className="editor-shell">
       <header className="editor-topbar">
-        <button className="ghost" onClick={() => publishOpen ? setPublishOpen(false) : onBack()}>{publishOpen ? "編集に戻る" : "閉じる"}</button>
-        <span className="status-pill">{draft.sourceFileName ? `${notice} ・ ${draft.kind} ・ ${draft.sourceFileName}` : `${notice} ・ ${draft.kind} ・ 未保存Markdown`}</span>
+        <button className="ghost" onClick={() => panelMode ? closePanel() : closeEditor()}>{panelMode ? "編集に戻る" : "閉じる"}</button>
+        <span className={hasUnsavedFileChanges ? "status-pill status-pill-unsaved" : "status-pill"}>
+          {localDraft.sourceFileName ? `${notice} ・ ${localDraft.kind} ・ ${localDraft.sourceFileName}` : `${notice} ・ ${localDraft.kind} ・ 未保存Markdown`}
+          {hasUnsavedFileChanges ? " ・ 未保存変更あり" : ""}
+        </span>
         <div className="editor-actions">
           <div className="more-menu-wrap">
             <button className="icon-button" aria-label="その他" onClick={() => setMoreOpen((open) => !open)}>...</button>
             {moreOpen && (
               <div className="more-menu">
-                <button onClick={() => { setReviewMode("preview"); setMoreOpen(false); }}>プレビュー</button>
+                <button onClick={() => { openReview("preview", "right"); setMoreOpen(false); }}>プレビュー</button>
+                <button onClick={() => { openReview("checks", "right"); setMoreOpen(false); }}>チェック</button>
+                <button onClick={() => { openReview("output", "right"); setMoreOpen(false); }}>MD出力</button>
+                <button onClick={() => { onFullPreview(localDraft); setMoreOpen(false); }}>完全プレビュー</button>
                 <button onClick={() => { onNotice(`作成 ${new Date(localDraft.createdAt).toLocaleString()} / 更新 ${new Date(localDraft.updatedAt).toLocaleString()}`); setMoreOpen(false); }}>変更履歴</button>
                 <button className="danger" onClick={deleteArticle}>削除</button>
               </div>
             )}
           </div>
-          <button onClick={saveDraft}>下書き保存</button>
-          <button className="primary" onClick={() => { setPublishOpen(true); setReviewMode(null); }}>公開に進む</button>
+          <button onClick={saveFile}>Markdown保存</button>
+          <button className="primary" onClick={() => openPanel("settings", "right")}>公開に進む</button>
         </div>
       </header>
 
@@ -114,7 +188,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
           </div>
           <div className="button-row">
             <button onClick={onReloadConflict}>再読み込み</button>
-            <button className="danger" onClick={onForceSaveConflict}>上書き保存</button>
+            <button className="danger" onClick={forceSaveFile}>上書き保存</button>
           </div>
         </section>
       )}
@@ -134,17 +208,15 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
         </section>
       )}
 
-      {!publishOpen && (
-        <>
-          <aside className="editor-tool-rail" aria-label="編集ツール">
-            <button className="tool-button active" title="目次" onClick={() => onNotice("見出しを設定すると目次に表示されます")}>☰</button>
-            <button className="tool-button" title="画像カード" onClick={() => setCardToolOpen(true)}>▧</button>
-            <button className="tool-button" title="チェック" onClick={() => setReviewMode(reviewMode === "checks" ? null : "checks")}>✓</button>
-            <button className="tool-button" title="MD出力" onClick={() => setReviewMode(reviewMode === "output" ? null : "output")}>MD</button>
-            <span className="tool-count">{localDraft.body.length}字</span>
-          </aside>
+      <>
+        <aside className="editor-tool-rail" aria-label="編集ツール">
+          <button className="tool-button active" title="目次" onClick={() => onNotice("見出しを設定すると目次に表示されます")}>☰</button>
+          <button className="tool-button" title="画像カード" onClick={() => openPanel("media", "left")}>▧</button>
+          <button className="tool-button" title="MD出力" onClick={() => openReview("output", "left")}>MD</button>
+          <span className="tool-count">{localDraft.body.length}字</span>
+        </aside>
 
-          <section className={reviewMode ? "writing-layout with-review" : "writing-layout"}>
+        <section className={panelMode ? `writing-layout review-open review-open-${panelSide}` : "writing-layout"}>
           <article className="writing-canvas">
             <input
               className="title-input"
@@ -156,53 +228,60 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
               ref={bodyRef}
               className="note-editor"
               value={localDraft.body}
-              onChange={(event) => setLocalDraft((current) => current.body === event.target.value ? current : markEdited({ ...current, body: event.target.value }))}
+              onChange={(event) => {
+                updatePreviewScrollRatio();
+                setLocalDraft((current) => current.body === event.target.value ? current : markEdited({ ...current, body: event.target.value }));
+              }}
+              onScroll={updatePreviewScrollRatio}
               spellCheck={false}
               placeholder="本文を書きはじめる"
             />
           </article>
 
-          {reviewMode && (
+          {panelMode === "preview" || panelMode === "checks" || panelMode === "output" ? (
             <ReviewPane
-              mode={reviewMode}
+              mode={panelMode}
+              side={panelSide}
               draft={localDraft}
               markdown={markdown}
               frontmatter={frontmatter}
-              onClose={() => setReviewMode(null)}
+              previewScrollRatio={previewScrollRatio}
+              onClose={closePanel}
               onCopy={copy}
             />
+          ) : null}
+
+          {panelMode === "settings" && (
+            <aside className={`review-pane review-pane-${panelSide} editor-side-panel`}>
+              <SettingsDrawer
+                draft={localDraft}
+                markdown={markdown}
+                frontmatterOutput={frontmatter}
+                onChange={updateFrontmatter}
+                onBack={closePanel}
+                onSaveDraft={saveAsDraft}
+                onSaveFile={saveFile}
+                onDownload={() => downloadDraft(localDraft)}
+                onCopy={copy}
+              />
+            </aside>
+          )}
+
+          {panelMode === "media" && (
+            <aside className={`review-pane review-pane-${panelSide} editor-side-panel editor-side-panel-wide`}>
+              <ImageCardTool
+                body={localDraft.body}
+                frontmatter={localDraft.frontmatter}
+                onInsert={insertBodyText}
+                onFrontmatterChange={updateFrontmatter}
+                onCopy={copy}
+                onNotice={onNotice}
+                onClose={closePanel}
+              />
+            </aside>
           )}
           </section>
         </>
-      )}
-
-      {publishOpen && (
-        <SettingsDrawer
-          draft={localDraft}
-          markdown={markdown}
-          frontmatterOutput={frontmatter}
-          onChange={updateFrontmatter}
-          onBack={() => setPublishOpen(false)}
-          onSaveDraft={saveAsDraft}
-          onSaveFile={() => onSaveFile(localDraft)}
-          onDownload={() => downloadDraft(localDraft)}
-          onCopy={copy}
-        />
-      )}
-
-      {cardToolOpen && (
-        <div className="drawer-backdrop" role="presentation">
-          <ImageCardTool
-            body={localDraft.body}
-            frontmatter={localDraft.frontmatter}
-            onInsert={insertBodyText}
-            onFrontmatterChange={updateFrontmatter}
-            onCopy={copy}
-            onNotice={onNotice}
-            onClose={() => setCardToolOpen(false)}
-          />
-        </div>
-      )}
     </main>
   );
 }

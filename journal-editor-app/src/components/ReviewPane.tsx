@@ -1,22 +1,34 @@
 import { marked } from "marked";
+import { useEffect, useRef } from "react";
 import type { ReviewMode, StoredDraft } from "../types/journal";
 import { frontmatterSchema, publishChecks, toFrontmatterObject } from "../lib/validation";
 import { Field } from "./shared";
 
-export function ReviewPane({ mode, draft, markdown, frontmatter, onClose, onCopy }: {
+export function ReviewPane({ mode, side, draft, markdown, frontmatter, previewScrollRatio, onClose, onCopy }: {
   mode: ReviewMode;
+  side: "left" | "right";
   draft: StoredDraft;
   markdown: string;
   frontmatter: string;
+  previewScrollRatio: number;
   onClose: () => void;
   onCopy: (text: string, label: string) => void;
 }) {
   const checks = publishChecks(draft.frontmatter, draft.kind);
   const validation = frontmatterSchema.safeParse(toFrontmatterObject(draft.frontmatter));
   const previewHtml = marked.parse(draft.body, { async: false });
+  const previewBodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (mode !== "preview") return;
+    const body = previewBodyRef.current;
+    if (!body) return;
+    const scrollable = body.scrollHeight - body.clientHeight;
+    body.scrollTop = scrollable > 0 ? scrollable * previewScrollRatio : 0;
+  }, [mode, previewHtml, previewScrollRatio]);
 
   return (
-    <aside className="review-pane">
+    <aside className={`review-pane review-pane-${side}`}>
       <header className="review-header">
         <strong>{mode === "preview" ? "Preview" : mode === "checks" ? "Checks" : "Output"}</strong>
         <button onClick={onClose}>閉じる</button>
@@ -27,7 +39,7 @@ export function ReviewPane({ mode, draft, markdown, frontmatter, onClose, onCopy
           <p className="preview-date">{draft.frontmatter.date}</p>
           <h1>{draft.frontmatter.title || "Untitled"}</h1>
           <p className="description-preview">{draft.frontmatter.description || "description preview"}</p>
-          <div className="markdown-preview" dangerouslySetInnerHTML={{ __html: previewHtml }} />
+          <div ref={previewBodyRef} className="markdown-preview markdown-preview-sync" dangerouslySetInnerHTML={{ __html: previewHtml }} />
         </article>
       )}
 

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Legacy Content
+title: 旧コンテンツ
 ---
 
 このフォルダには、Jekyll 導入前の静的 HTML ファイルが保存されています。
@@ -13,18 +13,18 @@ title: Legacy Content
 
 ## 構成
 
-- `diary/` - 古い日記ページ（HTML）
-- `disco/` - 古い曲ページ（HTML）
-- `gallery/` - 古いギャラリーページ（HTML）
-- `info/` - 古い情報ページ（HTML）
+- `diary/`：古い日記ページ（HTML）
+- `disco/`：古い曲ページ（HTML）
+- `gallery/`：古いギャラリーページ（HTML）
+- `info/`：古い情報ページ（HTML）
 
 ## 新しいシステムとの違い
 
-| 項目 | 旧システム（HTML） | 新システム（Markdown + Jekyll） |
+| 項目 | 旧システム（HTML） | 現在のシステム（Markdown と Astro） |
 |------|------------------|------|
 | コンテンツ形式 | HTML（手動編集） | Markdown（自動生成） |
-| 一覧ページ | 手動更新 | Liquid ループで自動生成 |
-| パス管理 | `../../` など相対パス | `\| relative_url` で自動解決 |
+| 一覧ページ | 手動更新 | Astro で自動生成 |
+| パス管理 | `../../` など相対パス | Astro のルーティングで管理 |
 | メンテナンス性 | 低い（ファイルごとに重複） | 高い（テンプレート統一） |
 
 ## 移行手順

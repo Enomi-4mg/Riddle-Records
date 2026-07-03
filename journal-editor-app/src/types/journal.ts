@@ -3,7 +3,7 @@ import type { ContentKind } from "./content";
 export const articleTypes = ["journal", "making", "report"] as const;
 
 export type ArticleType = (typeof articleTypes)[number];
-export type View = "list" | "editor";
+export type View = "list" | "editor" | "full-preview";
 export type ReviewMode = "preview" | "checks" | "output";
 export type DraftSource = "manual" | "imported" | "uploaded";
 

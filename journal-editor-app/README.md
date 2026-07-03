@@ -33,7 +33,7 @@ dev server 上では、Editor から `src/content/<kind>/*.md` を直接開い�
 
 API は kind ごとに固定された `src/content/<kind>/` 配下のサブディレクトリなし `.md` ファイルだけを対象にします。絶対パス、path traversal、`.md` 以外の拡張子、対象ディレクトリ外への書き込みは拒否します。
 
-Generic API:
+共通 API：
 
 - `GET /api/content-list?kind=journal`
 - `GET /api/content-item?kind=journal&path=2026-04-01.md`
@@ -98,7 +98,7 @@ npm run build
 
 既存記事を置き換える場合は、同名ファイルを差し替えてからbuildしてください。
 
-## URL rules
+## URL の規則
 
 - `permalink` があれば override として優先
 - `journal`: `/journal/YYYY-MM-DD/`
@@ -106,7 +106,7 @@ npm run build
 - `making` slugなし: `/journal/YYYY-MM-DD/`
 - `report`: `/journal/YYYY-MM/`
 
-## Roundtrip検証
+## 往復変換の検証
 
 既存 `src/content/*/*.md` を import → export 相当で検証します。
 
@@ -139,7 +139,7 @@ npm run test:roundtrip:write
 
 ### 許容差分
 
-Roundtripでは以下の差分を許容しています。
+往復変換では以下の差分を許容しています。
 
 - BOM除去
 - frontmatterの順序やquoteの正規化
@@ -149,7 +149,7 @@ Roundtripでは以下の差分を許容しています。
 
 本文Markdown、本文HTML、画像カードHTMLが変わる差分は要確認です。
 
-### Markdown import parser の制約
+### Markdown 読み込みパーサーの制約
 
 frontmatter import はフルYAML parserではなく、行ベースの簡易parserです。通常の `key: value`、inline array、単純なblock arrayを想定しています。
 

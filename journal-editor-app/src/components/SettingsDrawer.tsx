@@ -20,29 +20,28 @@ export function SettingsDrawer({ draft, markdown, frontmatterOutput, onChange, o
   const checks = publishChecks(frontmatter, draft.kind);
   const validation = frontmatterSchema.safeParse(toFrontmatterObject(frontmatter));
 
+  function scrollToSection(id: string) {
+    document.getElementById(id)?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }
+
   return (
-    <section className="publish-layout" aria-label="記事設定">
+    <aside className="settings-panel" aria-label="記事設定">
+      <header className="drawer-header">
+        <div>
+          <p>Settings</p>
+          <h2>記事設定</h2>
+        </div>
+        <button onClick={onBack}>閉じる</button>
+      </header>
       <aside className="publish-nav">
         <strong>公開設定</strong>
-        <a href="#publish-basic">基本</a>
-        <a href="#publish-checks">チェック</a>
-        <a href="#publish-media">画像</a>
-        <a href="#publish-output">MD出力</a>
+        <button type="button" onClick={() => scrollToSection("publish-basic")}>基本</button>
+        <button type="button" onClick={() => scrollToSection("publish-checks")}>チェック</button>
+        {draft.kind === "journal" && <button type="button" onClick={() => scrollToSection("publish-media")}>画像</button>}
+        <button type="button" onClick={() => scrollToSection("publish-output")}>MD出力</button>
       </aside>
 
       <article className="publish-panel">
-        <header className="publish-header">
-          <div>
-            <p>Settings</p>
-            <h2>記事設定</h2>
-          </div>
-          <div className="button-row">
-            <button onClick={onBack}>編集に戻る</button>
-            <button onClick={onSaveDraft}>下書きのまま保存</button>
-            <button className="primary" onClick={onSaveFile}>Markdown保存</button>
-          </div>
-        </header>
-
         <section id="publish-basic" className="settings-section">
           <h3>{schema.label} Basic</h3>
           <Field label="title"><input value={frontmatter.title} onChange={(event) => onChange("title", event.target.value)} /></Field>
@@ -150,6 +149,8 @@ export function SettingsDrawer({ draft, markdown, frontmatterOutput, onChange, o
         <section id="publish-output" className="settings-section">
           <h3>MD出力</h3>
           <div className="button-row">
+            <button onClick={onSaveDraft}>下書きのまま保存</button>
+            <button className="primary" onClick={onSaveFile}>Markdown保存</button>
             <button onClick={() => onCopy(markdown, "記事全体")}>記事全体をコピー</button>
             <button onClick={() => onCopy(frontmatterOutput, "frontmatter")}>frontmatterをコピー</button>
             <button onClick={onDownload}>.md ダウンロード</button>
@@ -159,6 +160,6 @@ export function SettingsDrawer({ draft, markdown, frontmatterOutput, onChange, o
           </Field>
         </section>
       </article>
-    </section>
+    </aside>
   );
 }

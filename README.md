@@ -1,26 +1,27 @@
 # Riddle Records
 
-Portfolio site for 4mg, built with Astro.
+4mg のポートフォリオサイトです。
+Astro で構築し、活動記録、楽曲、イラスト、サイト情報を掲載しています。
 
-- Journal: activity logs and reports
-- Music: original songs and releases
-- Gallery: illustrations and artwork
-- About / Info / Tech: profile and site notes
+- Journal：活動記録と報告
+- Music：オリジナル楽曲と公開作品
+- Gallery：イラストと作品
+- About、Info、Tech：プロフィールとサイト情報
 
-## Local Development
+## ローカルでの起動
 
 ```bash
 npm install
 npm run dev -- --host 0.0.0.0
 ```
 
-Build:
+ビルドを確認するには、次のコマンドを実行します。
 
 ```bash
 npm run build
 ```
 
-## Project Layout
+## ディレクトリ構成
 
 ```text
 src/
@@ -39,120 +40,84 @@ legacy/
 tools/
 ```
 
-## Content Notes
+## コンテンツの保存先
 
-- Journal entries live in `src/content/journal/`.
-- Song entries live in `src/content/songs/`.
-- Gallery works live in `src/content/gallery/*.md`.
-- Project entries live in `src/content/projects/*.md`.
-- `src/data/gallery.ts` is kept only as a legacy compatibility source and is currently empty.
-- `src/data/projects.ts` is kept only as a legacy compatibility source and is currently empty.
-- Old Jekyll files were removed during the migration.
+- Journal 記事：`src/content/journal/`
+- 楽曲：`src/content/songs/`
+- Gallery 作品：`src/content/gallery/*.md`
+- Project：`src/content/projects/*.md`
 
-## Works and Gallery Pages
+`src/data/gallery.ts` と `src/data/projects.ts` は旧形式との互換性を保つために残していますが、現在は空です。
+新しいコンテンツは Markdown ファイルとして追加します。
+Jekyll 時代のファイルは移行後に削除済みです。
 
-`/works/` is the primary index for all works. It combines Gallery collection items from `src/content/gallery/*.md` and songs from `src/content/songs/`, then displays them with the shared Works card layout.
+## Works と Gallery
 
-Gallery remains available at `/gallery/` as an artwork-focused archive. Individual artwork pages are generated at `/gallery/[slug]/` only for Gallery items with `detail: true`.
+`/works/` は全作品の一覧です。
+`src/content/gallery/*.md` の Gallery 作品と `src/content/songs/` の楽曲を、共通の Works カードで表示します。
 
-Gallery frontmatter fields:
+`/gallery/` は美術作品に絞ったアーカイブです。
+`detail: true` の Gallery 項目には `/gallery/[slug]/` の個別ページを生成し、それ以外の項目は従来どおり Lightbox で表示します。
 
-- `slug`: URL segment for the Gallery detail page
-- `detail`: set to `true` to generate `/gallery/[slug]/`
-- `title`: artwork title
-- `date`: artwork date, written as `YYYY-MM-DD`
-- `image`: Cloudinary public ID or full image URL
-- `description`: short card, meta, and lead description
-- Markdown body: detail page body text
-- `tags`: tags shown on Works, Gallery, and detail pages
-- `article_url`: related Journal article or legacy artwork article
-- `making_article_url`: related making-of Journal article
-- `thumbnail`: set to `true` when the item should be available as a Journal thumbnail match; set to `false` to exclude it
-- `draft`: set to `true` to hide the item from production builds
+Gallery の標準 frontmatter は次のとおりです。
 
-Legacy fields:
+- `slug`：個別ページの URL に使う文字列
+- `detail`：`true` の場合に個別ページを生成
+- `title`：作品タイトル
+- `date`：`YYYY-MM-DD` 形式の制作日
+- `image`：Cloudinary の公開 ID または画像 URL
+- `description`：カード、メタ情報、導入文に使う短い説明
+- `tags`：一覧と個別ページに表示するタグ
+- `article_url`：関連する Journal 記事
+- `making_article_url`：関連する制作記事
+- `thumbnail`：Journal のサムネイル照合候補に含めるか
+- `draft`：`true` の場合に本番ビルドから除外
 
-- `cloudinary_id`: accepted as a fallback for old data, but new Markdown should use `image`
-- `categories`: accepted as a fallback for old data, but new Markdown should use `tags`
-
-Example:
+Markdown 本文は個別ページの本文になります。
+`cloudinary_id` と `categories` は旧形式との互換性のために読み込めますが、新しいファイルでは `image` と `tags` を使います。
 
 ```md
 ---
-title: Work title
+title: 作品タイトル
 slug: work-title
 date: 2026-04-30
-description: Short work description
+description: 作品の短い説明
 image: example_abcd12.jpg
 thumbnail: true
-thumbnail_alt: Work title
+thumbnail_alt: 作品タイトル
 detail: true
 tags:
-  - Illustration
+  - イラスト
 article_url: /journal/2026-04-30/
 making_article_url: /journal/2026/04/30/work-making/
 draft: false
 ---
 
-Longer note for the Gallery detail page.
+Gallery の個別ページに表示する本文です。
 ```
 
-Link behavior:
+## Project
 
-- Works cards link to `/gallery/[slug]/` when the Gallery item has `detail: true`.
-- Gallery cards also link to `/gallery/[slug]/` when `detail: true`.
-- Gallery items without detail pages keep the existing Gallery Lightbox behavior.
-- Works cards without Gallery detail pages fall back to `article_url`, then to the full image.
-- `/gallery/` remains part of the Works navigation group in the header active state.
+Project ページの正本は `src/content/projects/*.md` です。
+標準 frontmatter は次のとおりです。
 
-## Project Content
+- `title`：プロジェクト名
+- `slug`：`/project/[slug]/` に使う文字列
+- `date`：`YYYY-MM-DD` 形式の日付
+- `description`：カード、メタ情報、導入文に使う短い説明
+- `hero`：メイン画像の URL。空の場合はタイトルを表示
+- `status`：`active`、`paused`、`archived`、`completed` のいずれか
+- `tags`：カードと個別ページに表示するタグ
+- `links`：`label` と `url` を持つ外部リンク
+- `features`：個別ページに表示する機能一覧
+- `draft`：`true` の場合に本番ビルドから除外
 
-Project pages are sourced from `src/content/projects/*.md`. The legacy `src/data/projects.ts` array remains available for compatibility, but the current source of truth is the Project content collection.
+Markdown 本文は個別ページの説明になります。
 
-Project frontmatter fields:
+## Content Editor
 
-- `title`: project title
-- `slug`: URL segment for `/project/[slug]/`
-- `date`: project date, written as `YYYY-MM-DD`
-- `description`: short card, meta, and lead description
-- `hero`: preview image URL; leave blank to use the title fallback
-- `status`: one of `active`, `paused`, `archived`, or `completed`
-- `tags`: tags shown on Project cards and detail pages
-- `links`: external project links with `label` and `url`
-- `features`: feature list shown on the detail page
-- `draft`: set to `true` to hide the item from production builds
-- Markdown body: detail page overview text
-
-Example:
-
-```md
----
-title: "Project title"
-slug: "project-title"
-date: 2026-06-16
-description: "Short project description"
-hero: "/images/projects/example.jpg"
-status: "active"
-tags:
-  - "Web"
-links:
-  - label: "Website"
-    url: "https://example.com"
-features:
-  - "Feature one"
-draft: false
----
-
-Longer project overview.
-```
-
-## Content Editor Workflow
-
-Use the standalone React editor in `journal-editor-app/` to create and edit Journal, Songs, Gallery, and Project Markdown. The folder name is still `journal-editor-app/`, but the app title and role are now **Riddle Records Content Editor**. The old Astro editor implementation has been replaced by a migration notice at `/tools/journal-editor/`; that URL is kept only as a compatibility landing page for bookmarks and the Information page.
-
-### 1. Open the editor
-
-Start the editor app.
+Journal、Songs、Gallery、Projects の Markdown は、`journal-editor-app/` にある Riddle Records Content Editor で作成、編集できます。
+旧 Astro 版エディタの URL `/tools/journal-editor/` は、ブックマークとの互換性を保つ移行案内ページです。
 
 ```bash
 cd journal-editor-app
@@ -160,114 +125,29 @@ npm install
 npm run dev
 ```
 
-Open the Vite dev server URL:
+起動後に `http://localhost:5174/` を開きます。
+開発サーバーでは `src/content/<kind>/*.md` を直接読み書きできます。
+ビルド後の公開環境ではローカルファイルへ書き込めないため、出力欄からコピーするか `.md` ファイルをダウンロードします。
 
-```text
-http://localhost:5174/
-```
+エディタの入力項目は `journal-editor-app/src/types/content.ts`、Astro のコレクションスキーマは `src/content/config.ts` で管理します。
+frontmatter の詳しい仕様と運用方法は [Content Editor の README](journal-editor-app/README.md) を参照してください。
 
-The `Information` page links to the `/tools/journal-editor/` migration notice, not to the editor app itself.
-
-### 2. Fill in post metadata
-
-The React editor generates frontmatter for the selected content kind. `journal-editor-app/src/types/content.ts` defines the Editor UI fields, while `src/content/config.ts` remains the Astro collection schema.
-
-- `title`: post title
-- `date`: post date
-- `og_description`: short list and OGP description
-- `image`: OGP image, either a Cloudinary ID or a full URL
-- `permalink`: public URL
-- `featured_related`: related Cloudinary IDs
-- `use_math`: enable for math-heavy posts
-- `tags`: used for related article matching
-- `thumbnail_class`: optional thumbnail selector
-
-In the dev server, the editor manages `src/content/<kind>/*.md` directly. The UI stays note-like, but the source of truth is Markdown rather than browser `localStorage`. In build/public environments, use the output pane or `.md` download button because local file writes are unavailable.
-
-Available templates:
-
-- `通常Journal`: regular diary or report post
-- `制作メモ`: making-of post with a slugged permalink
-- `月次報告`: monthly report style post
-
-### 3. Insert Cloudinary image cards
-
-Use the image card builder when a post needs Cloudinary images.
-
-1. Enter a Cloudinary ID, such as `example_abcd12.jpg`.
-2. Add a caption and heading.
-3. Press `本文に画像カードを挿入`.
-4. Press `featured_relatedに追加` if the image should be highlighted as related content.
-
-The generated card HTML uses the current Astro URL format and does not use old Jekyll Liquid variables such as `{{ site.cloudinary_url }}`. The editor can also generate `making-comparison-grid` HTML, extract existing cards from the body, add IDs to `featured_related`, and generate TypeScript-style Gallery registration snippets.
-
-### 4. Save the Markdown
-
-Use the editor output pane to copy the generated Markdown, or use the `.md` button to download a Markdown file.
-
-Place the file in the matching `src/content/<kind>/` directory.
-
-Examples:
-
-```text
-src/content/journal/2026-04-30.md
-src/content/journal/2026-04-30-dunes-making.md
-src/content/gallery/work-title.md
-src/content/projects/project-title.md
-```
-
-### 5. Verify the post
-
-Run:
+保存後はルートディレクトリでビルドし、一覧、個別ページ、画像、Lightbox、関連コンテンツを確認します。
 
 ```bash
 npm run build
 ```
 
-Check:
+## デプロイ
 
-- the post appears on `/journal/`
-- the detail page opens
-- OGP image and thumbnails are correct
-- image card Lightbox behavior works
-- `featured_related` and `tags` produce the expected related content
+GitHub Pages へのデプロイは `.github/workflows/astro-pages.yml` で行います。
 
-### 6. Connect Gallery items
-
-If the post introduces a Gallery work, use the editor's Gallery output as a starting point and add or edit a Markdown file in `src/content/gallery/*.md`.
-
-```md
----
-title: Work title
-slug: work-title
-date: 2026-04-30
-image: example_abcd12.jpg
-description: Work description
-tags:
-  - Illustration
-article_url: /journal/2026-04-30/
-thumbnail: true
-detail: true
----
-```
-
-Add `making_article_url` when there is a separate making-of post.
-
-### Markdown import notes
-
-The editor uses a YAML frontmatter parser/writer for Markdown files. Existing Journal, Songs, Gallery, and Project files are checked with `npm run test:content` in `journal-editor-app/`; YAML edge cases are checked with `npm run test:yaml`.
-
-## Deployment
-
-GitHub Pages is handled by `.github/workflows/astro-pages.yml`.
-
-Cloudflare Pages is not used for this repository. If a Cloudflare Pages project
-is still connected to the repo, set its **Ignored build step** command to:
+このリポジトリでは Cloudflare Pages を使いません。
+Cloudflare Pages のプロジェクトがリポジトリに接続されたままの場合は、ビルドを無視するコマンドに次を設定します。
 
 ```bash
 ./scripts/skip-cloudflare-pages.sh
 ```
 
-Cloudflare treats an exit code of `0` from that command as "skip this build",
-so the project remains outside the Cloudflare build target while GitHub Pages
-continues to deploy normally.
+このコマンドが終了コード `0` を返すと、Cloudflare はビルドを省略します。
+GitHub Pages のデプロイには影響しません。

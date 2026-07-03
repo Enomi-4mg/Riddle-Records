@@ -8,11 +8,51 @@ import { ContentFileConflictError, deleteContentFile, loadContentFile, loadConte
 import { clearUnsavedBackup, loadUnsavedBackup, writeUnsavedBackup } from "./lib/unsavedBackup";
 import { DraftList } from "./components/DraftList";
 import { EditorScreen } from "./components/EditorScreen";
+import { FullPreviewScreen } from "./components/FullPreviewScreen";
+
+const pageStateKey = "riddle-content-editor-page-state";
+
+type PersistedPageState = {
+  view: View;
+  activeKind: ContentKind;
+  currentDraft: StoredDraft | null;
+};
+
+function loadPageState(): PersistedPageState | null {
+  try {
+    const raw = localStorage.getItem(pageStateKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PersistedPageState>;
+    if (!parsed.activeKind || !(parsed.activeKind in contentKindSchemas)) return null;
+    if (parsed.view !== "list" && parsed.view !== "editor" && parsed.view !== "full-preview") return null;
+    return {
+      view: parsed.currentDraft ? parsed.view : "list",
+      activeKind: parsed.activeKind,
+      currentDraft: parsed.currentDraft ?? null
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writePageState(state: PersistedPageState) {
+  try {
+    localStorage.setItem(pageStateKey, JSON.stringify(state));
+  } catch {
+    // Page state is a convenience only. Markdown files and unsaved backups remain the durable sources.
+  }
+}
+
+function clearPublishHash() {
+  if (!window.location.hash.startsWith("#publish-")) return;
+  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+}
 
 export function App() {
-  const [view, setView] = useState<View>("list");
-  const [activeKind, setActiveKind] = useState<ContentKind>("journal");
-  const [currentDraft, setCurrentDraft] = useState<StoredDraft | null>(null);
+  const [restoredPageState] = useState(loadPageState);
+  const [view, setView] = useState<View>(restoredPageState?.view ?? "list");
+  const [activeKind, setActiveKind] = useState<ContentKind>(restoredPageState?.activeKind ?? "journal");
+  const [currentDraft, setCurrentDraft] = useState<StoredDraft | null>(restoredPageState?.currentDraft ?? null);
   const [notice, setNotice] = useState("準備できました");
   const [contentFiles, setContentFiles] = useState<ContentFileInfo[]>([]);
   const [contentEntries, setContentEntries] = useState<JournalFileEntry[]>([]);
@@ -22,6 +62,13 @@ export function App() {
   useEffect(() => {
     refreshContentFiles(activeKind);
   }, [activeKind]);
+
+  useEffect(() => {
+    writePageState({ view, activeKind, currentDraft });
+    if (view !== "editor") {
+      clearPublishHash();
+    }
+  }, [view, activeKind, currentDraft]);
 
   async function refreshContentFiles(kind = activeKind) {
     const result = await loadContentFiles(kind);
@@ -113,14 +160,16 @@ export function App() {
   const updateCurrentDraft = useCallback((next: StoredDraft) => {
     const updated = { ...next, updatedAt: nowIso() };
     setCurrentDraft(updated);
-    writeUnsavedBackup(updated);
+    if (updated.editedAt) {
+      writeUnsavedBackup(updated);
+    }
   }, []);
 
-  async function saveCurrentToFile(next: StoredDraft, options: { force?: boolean } = {}) {
+  async function saveCurrentToFile(next: StoredDraft, options: { force?: boolean } = {}): Promise<StoredDraft | null> {
     const filename = next.sourceFileName || generatedFilename(next.frontmatter, next.kind);
     if (!filename) {
       setNotice("保存先ファイル名を作れません。dateかslugを確認してください");
-      return;
+      return null;
     }
 
     try {
@@ -142,13 +191,15 @@ export function App() {
       clearUnsavedBackup(next.id);
       setNotice(`${filename} に保存しました`);
       await refreshContentFiles(next.kind);
+      return updated;
     } catch (error) {
       if (error instanceof ContentFileConflictError) {
         setConflictDraft(next);
         setNotice("ファイルが外部で変更されています");
-        return;
+        return null;
       }
       setNotice(`ファイル保存に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
+      return null;
     }
   }
 
@@ -161,10 +212,10 @@ export function App() {
     await openContentFile(filename, kind);
   }
 
-  async function forceSaveConflictFile() {
+  async function forceSaveConflictFile(): Promise<StoredDraft | null> {
     const draft = currentDraft || conflictDraft;
-    if (!draft) return;
-    await saveCurrentToFile(draft, { force: true });
+    if (!draft) return null;
+    return await saveCurrentToFile(draft, { force: true });
   }
 
   async function deleteCurrentFile(next: StoredDraft) {
@@ -207,6 +258,20 @@ export function App() {
         onReloadConflict={reloadConflictFile}
         onForceSaveConflict={forceSaveConflictFile}
         onNotice={setNotice}
+        onFullPreview={(draft) => {
+          updateCurrentDraft(draft);
+          setCurrentDraft(draft);
+          setView("full-preview");
+        }}
+      />
+    );
+  }
+
+  if (view === "full-preview" && currentDraft) {
+    return (
+      <FullPreviewScreen
+        draft={currentDraft}
+        onBack={() => setView("editor")}
       />
     );
   }

@@ -419,68 +419,6 @@ img {
     max-width:70%;
 }
 
-/* Discography Grid Card Styles */
-.disco-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-card), 1fr));
-    gap: var(--grid-gap);
-    padding: var(--space-xl) 0;
-}
-
-.disco-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    transition: box-shadow 0.3s ease;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-}
-
-.disco-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.disco-card-image {
-    position: relative;
-    overflow: hidden;
-    display: block;
-    aspect-ratio: 16 / 10;
-}
-
-.disco-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0.5rem;
-    max-width: none;
-}
-
-.disco-card-content {
-    text-align: center;
-}
-
-.disco-card-title {
-    font-size: 1rem;
-    font-weight: bold;
-    margin: 0 0 0.25rem 0;
-    line-height: 1.4;
-    color: #0a1510;
-}
-
-.disco-card-title a {
-    color: inherit;
-}
-
-.disco-card-title a:hover {
-    color: #1bb48e;
-}
-
-.disco-card-date {
-    color: #666;
-    font-size: 0.85rem;
-    display: block;
-}
-
 .container {
     max-width: var(--container-page);
     width: 100%;
@@ -868,10 +806,6 @@ img {
     .work_img {
         max-width: 85%;
     }
-    .disco-grid {
-        gap: var(--grid-gap);
-        padding: 1.25rem 0;
-    }
     .works-grid,
     .journal-card-grid {
         gap: var(--grid-gap);
@@ -964,10 +898,6 @@ img {
         grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min-card)), 1fr));
         gap: var(--grid-gap);
     }
-    .disco-grid {
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--grid-min-card)), 1fr));
-        gap: var(--grid-gap);
-    }
     .profile-card {
         margin: 10px auto 16px auto;
         grid-template-columns: 160px 1fr;
@@ -1009,11 +939,6 @@ img {
     .work_img {
         max-width: 90%;
     }
-    .disco-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 1rem 0;
-    }
     body {
         padding-top: 85px;
     }
@@ -1021,10 +946,6 @@ img {
 
 /* Landscape mobile (601px - 800px width) */
 @media screen and (max-height: 500px) and (orientation: landscape) {
-    .disco-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
 }
 
 /* Post Details: Credits and Lyrics */
