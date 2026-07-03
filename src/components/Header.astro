@@ -33,6 +33,87 @@ const galleryItems = await getGalleryItems();
   </div>
 </header>
 
+<style is:global>
+  .site-header .header-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    justify-content: stretch;
+    column-gap: 1.5rem;
+  }
+
+  .site-header .header-logo {
+    grid-column: 2;
+    justify-self: center;
+    order: initial;
+  }
+
+  .site-header .header-nav-left {
+    grid-column: 1;
+    justify-self: end;
+    order: initial;
+    padding-right: 0;
+  }
+
+  .site-header .header-nav-right {
+    grid-column: 3;
+    justify-self: start;
+    order: initial;
+    padding-left: 0;
+  }
+
+  .site-header .menu_toggle {
+    grid-column: 1;
+    justify-self: start;
+    order: initial;
+  }
+
+  @media screen and (min-width: 768px) and (max-width: 1024px) {
+    .site-header .header-container {
+      justify-content: stretch;
+    }
+
+    .site-header .header-nav-left {
+      flex-grow: 0;
+      justify-content: flex-end;
+      padding-right: 0;
+      padding-left: 0;
+    }
+
+    .site-header .header-nav-right {
+      padding-right: 0;
+      padding-left: 0;
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    .site-header .header-container {
+      grid-template-columns: 48px minmax(0, 1fr) 48px;
+      column-gap: 0;
+    }
+
+    .site-header .header-logo {
+      grid-column: 2;
+    }
+
+    .site-header .menu_toggle {
+      grid-column: 1;
+      grid-row: 1;
+      position: relative;
+      top: auto;
+      left: auto;
+      transform: none;
+    }
+  }
+
+  @media screen and (max-width: 600px) {
+    .site-header .menu_toggle {
+      top: auto;
+      left: auto;
+    }
+  }
+</style>
+
 <script is:inline define:vars={{ base, galleryItems }}>
   window.siteBaseUrl = base;
   window.galleryData = galleryItems;
