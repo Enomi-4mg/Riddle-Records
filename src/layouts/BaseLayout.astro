@@ -53,7 +53,7 @@ const {
   wideContainer = false
 } = Astro.props;
 
-const canonicalUrl = new URL(Astro.url.pathname + Astro.url.search, siteOrigin).href;
+const canonicalUrl = new URL(Astro.url.pathname, siteOrigin).href;
 const ogImageUrl = resolveAssetUrl(ogImage, defaultOgImageUrl);
 const twitterImageUrl = resolveAssetUrl(twitterImage ?? ogImage, defaultTwitterImageUrl);
 const twitterDomain = siteOrigin.hostname;
