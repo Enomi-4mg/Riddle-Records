@@ -21,7 +21,8 @@ export async function getStaticPaths() {
 
 const { item } = Astro.props;
 const imageUrl = `${cloudinaryBase}/w_1400,q_auto,f_auto/v1/${item.image}`;
-const ogImage = `${cloudinaryBase}/w_1200,h_630,c_fill,q_auto,f_auto/v1/${item.image}`;
+const ogImage = `${cloudinaryBase}/w_1200,h_630,c_fill,q_auto,f_jpg/v1/${item.image}`;
+const twitterImage = `${cloudinaryBase}/w_1200,h_628,c_fill,q_85,f_jpg/v1/${item.image}`;
 const bodyParagraphs = item.body.split(/\n{2,}/).filter(Boolean);
 ---
 
@@ -33,6 +34,8 @@ const bodyParagraphs = item.body.split(/\n{2,}/).filter(Boolean);
   ogType="article"
   ogImage={ogImage}
   ogImageAlt={item.title}
+  twitterImage={twitterImage}
+  twitterImageAlt={item.title}
 >
   <article class="gallery-detail journal-entry-animate">
     <a class="gallery-detail-back" href={href("/gallery/")}>Gallery一覧へ戻る</a>
