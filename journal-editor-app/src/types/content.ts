@@ -70,7 +70,8 @@ export const contentKindSchemas: Record<ContentKind, ContentKindSchema> = {
       { key: "description", label: "description", type: "textarea" },
       { key: "credits", label: "credits", type: "textarea" },
       { key: "lyrics", label: "lyrics", type: "textarea" },
-      { key: "tags", label: "tags", type: "list" }
+      { key: "tags", label: "tags", type: "list" },
+      { key: "draft", label: "draft", type: "boolean" }
     ]
   },
   gallery: {

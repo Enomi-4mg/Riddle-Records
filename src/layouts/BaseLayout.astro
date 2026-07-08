@@ -2,6 +2,7 @@
 import Header from "../components/Header.astro";
 import Sidebar from "../components/Sidebar.astro";
 import Footer from "../components/Footer.astro";
+import { ClientRouter } from "astro:transitions";
 import mainStyles from "../../assets/css/main.css?url";
 import animationsStyles from "../../assets/css/animations.css?url";
 import galleryStyles from "../../assets/css/gallery.css?url";
@@ -11,6 +12,9 @@ import galleryScript from "../../assets/js/gallery.js?url";
 import siteScript from "../../script.js?url";
 const lightboxStyles = "https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css";
 const lightboxScript = "https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox-plus-jquery.min.js";
+const lightboxStylesIntegrity = "sha512-ZKX+BvQihRJPA8CROKBhDNvoc2aDMOdAlcm7TUQY+35XYtrd3yh95QOOhsPDQY9QnKE0Wqag9y38OIgEvb88cA==";
+const lightboxScriptIntegrity = "sha512-U9dKDqsXAE11UA9kZ0XKFyZ2gQCj+3AwZdBMni7yXSvWqLFEj8C1s7wRmWl9iyij8d5zb4wm56j4z/JVEwS77g==";
+const fontAwesomeIntegrity = "sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw==";
 const siteBase = import.meta.env.BASE_URL;
 const basePath = siteBase.endsWith("/") ? siteBase : `${siteBase}/`;
 const siteOrigin = Astro.site ?? Astro.url;
@@ -87,18 +91,19 @@ const twitterDomain = siteOrigin.hostname;
     <meta name="twitter:image:alt" content={twitterImageAlt} />
     <meta name="twitter:url" content={canonicalUrl} />
     <link rel="canonical" href={canonicalUrl} />
+    <ClientRouter />
     <link rel="icon" href={faviconUrl} type="image/x-icon" />
     <link rel="stylesheet" href={mainStyles} />
     <link rel="stylesheet" href={animationsStyles} />
     <link rel="stylesheet" href={galleryStyles} />
     <link rel="stylesheet" href={journalStyles} />
-    <link rel="stylesheet" href={lightboxStyles} />
+    <link rel="stylesheet" href={lightboxStyles} integrity={lightboxStylesIntegrity} crossorigin="anonymous" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity={fontAwesomeIntegrity} crossorigin="anonymous" />
   </head>
   <body>
     <div class="transition-curtain initial"></div>
@@ -110,6 +115,6 @@ const twitterDomain = siteOrigin.hostname;
     <Footer />
     <script src={galleryScript}></script>
     <script src={siteScript}></script>
-    <script defer src={lightboxScript}></script>
+    <script defer src={lightboxScript} integrity={lightboxScriptIntegrity} crossorigin="anonymous"></script>
   </body>
 </html>

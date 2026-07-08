@@ -2,12 +2,10 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getGalleryItems } from "../../utils/gallery";
-import { resolveImageUrl } from "../../utils/images";
-import { getJournalRoutePath, toJournalRoutePath } from "../../utils/journal";
+import { getJournalRoutePath, getJournalThumbnail } from "../../utils/journal";
 import fallbackIconUrl from "../../../favicon/icon.jpg?url";
 
 const base = import.meta.env.BASE_URL;
-const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const showDrafts = !import.meta.env.PROD;
 const galleryItems = await getGalleryItems();
 const journalEntries = (await getCollection("journal"))
@@ -19,56 +17,6 @@ const basePath = base.endsWith("/") ? base : `${base}/`;
 const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const getJournalUrl = (entry) => withBase(`/journal/${getJournalRoutePath(entry)}/`);
 const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_description ?? "";
-const getGalleryThumbnail = (entry) => {
-  const journalPath = getJournalRoutePath(entry);
-  if (entry.data.thumbnail_class) {
-    const byClass = galleryItems.find((item) => item.thumbnail_class === entry.data.thumbnail_class && item.thumbnail !== false);
-    if (byClass) {
-      return byClass;
-    }
-  }
-
-  return galleryItems.find((item) => {
-    if (item.thumbnail === false) {
-      return false;
-    }
-
-    return (
-      (item.article_url && toJournalRoutePath(item.article_url) === journalPath) ||
-      (item.making_article_url && toJournalRoutePath(item.making_article_url) === journalPath)
-    );
-  }) ?? null;
-};
-const getJournalThumbnail = (entry) => {
-  const explicitThumbnail = resolveImageUrl(entry.data.thumbnail, "w_400,h_400,c_fill,q_auto,f_auto");
-  if (explicitThumbnail) {
-    return {
-      src: explicitThumbnail,
-      alt: entry.data.thumbnail_alt ?? entry.data.title
-    };
-  }
-
-  const galleryThumbnail = getGalleryThumbnail(entry);
-  if (galleryThumbnail) {
-    return {
-      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.image}`,
-      alt: galleryThumbnail.imageAlt
-    };
-  }
-
-  const legacyImage = resolveImageUrl(entry.data.image, "w_400,h_400,c_fill,q_auto,f_auto");
-  if (legacyImage) {
-    return {
-      src: legacyImage,
-      alt: entry.data.thumbnail_alt ?? entry.data.title
-    };
-  }
-
-  return {
-    src: fallbackIconUrl,
-    alt: entry.data.title
-  };
-};
 ---
 
 <BaseLayout title="Journal" description="日記・活動報告の一覧。" wideContainer={true}>
@@ -76,7 +24,7 @@ const getJournalThumbnail = (entry) => {
 
   <div class="journal-list">
     {journalEntries.map((entry) => {
-      const thumbnail = getJournalThumbnail(entry);
+      const thumbnail = getJournalThumbnail(entry, galleryItems, fallbackIconUrl);
       const articleUrl = getJournalUrl(entry);
       return (
         <article class="journal-row journal-entry-animate">

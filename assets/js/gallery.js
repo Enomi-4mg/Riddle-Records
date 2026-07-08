@@ -50,7 +50,7 @@ function initGallery() {
     return raw.split(',').map(c => c.trim()).filter(Boolean);
   };
   
-  // Initial display: show all when the "all" filter is active, otherwise use Gallery defaults.
+  // Initial display follows the active buttons rendered by the page.
   function initializeFilters() {
     const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
     if (allBtn && allBtn.classList.contains('active')) {
@@ -60,10 +60,12 @@ function initGallery() {
       return;
     }
 
-    const activeFilters = ['イラスト', '四コマ漫画'];
+    const activeFilters = Array.from(document.querySelectorAll('.filter-btn.active'))
+      .map(btn => btn.dataset.filter)
+      .filter(f => f !== 'all');
     galleryItems.forEach(item => {
       const categories = getCategories(item);
-      if (activeFilters.some(filter => categories.includes(filter))) {
+      if (activeFilters.length === 0 || activeFilters.some(filter => categories.includes(filter))) {
         item.style.display = '';
       } else {
         item.style.display = 'none';

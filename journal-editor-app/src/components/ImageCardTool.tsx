@@ -63,7 +63,7 @@ export function ImageCardTool({ body, frontmatter, onInsert, onFrontmatterChange
   function analyzeBody() {
     const parsed = extractCardsFromHtml(body);
     setExtractedCards(parsed);
-    if (parsed.some((card) => card.comparisonLabel)) setLayout("making-comparison-grid");
+    if (body.includes("making-comparison-grid") || body.includes("comparison-item")) setLayout("making-comparison-grid");
     onNotice(parsed.length ? `本文から${parsed.length}件のカードを抽出しました` : "本文内にカードが見つかりませんでした");
   }
 
@@ -154,14 +154,6 @@ export function ImageCardTool({ body, frontmatter, onInsert, onFrontmatterChange
               </Field>
               <Field label="making_article_url">
                 <input value={card.makingArticleUrl} onChange={(event) => updateCard(index, { makingArticleUrl: event.target.value })} />
-              </Field>
-            </div>
-            <div className="field-grid">
-              <Field label="comparison_label">
-                <input value={card.comparisonLabel} onChange={(event) => updateCard(index, { comparisonLabel: event.target.value })} />
-              </Field>
-              <Field label="comparison_order">
-                <input type="number" value={card.comparisonOrder} onChange={(event) => updateCard(index, { comparisonOrder: event.target.value })} />
               </Field>
             </div>
             <div className="button-row">

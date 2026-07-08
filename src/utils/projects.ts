@@ -25,27 +25,6 @@ const normalizeDate = (value: Date | string | undefined) => {
   return value;
 };
 
-const rawProjectFiles = import.meta.glob("../content/projects/*.md", {
-  query: "?raw",
-  import: "default",
-  eager: true
-}) as Record<string, string>;
-
-const getRawProjectFile = (entry: ProjectsCollectionEntry) => {
-  const candidates = [`../content/projects/${entry.id}`, `../content/projects/${entry.slug}.md`];
-  const directMatch = candidates.find((candidate) => rawProjectFiles[candidate]);
-  if (directMatch) return rawProjectFiles[directMatch];
-  return Object.entries(rawProjectFiles).find(([path]) => path.endsWith(`/${entry.id}`) || path.endsWith(`/${entry.slug}.md`))?.[1] ?? "";
-};
-
-const getFrontmatterStringValue = (markdown: string, key: string) => {
-  const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match) return undefined;
-  const valueMatch = match[1].match(new RegExp(`^${key}:\\s*(.+?)\\s*$`, "m"));
-  if (!valueMatch) return undefined;
-  return valueMatch[1].replace(/^['"]|['"]$/g, "").trim();
-};
-
 const legacyLinks = (item: ProjectDataItem) => [
   item.externalUrl ? { label: "Website", url: item.externalUrl } : undefined,
   item.sourceUrl ? { label: "GitHub", url: item.sourceUrl } : undefined
@@ -69,10 +48,9 @@ const normalizeLegacyItem = (item: ProjectDataItem): ProjectItemView => ({
 type ProjectsCollectionEntry = Awaited<ReturnType<typeof getCollection<"projects">>>[number];
 
 const normalizeCollectionItem = (entry: ProjectsCollectionEntry): ProjectItemView => {
-  const rawFile = getRawProjectFile(entry);
   return {
     source: "collection",
-    slug: getFrontmatterStringValue(rawFile, "slug") || entry.data.slug || entry.slug,
+    slug: entry.data.slug || entry.slug,
     title: entry.data.title,
     date: normalizeDate(entry.data.date),
     description: entry.data.description,

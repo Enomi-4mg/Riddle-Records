@@ -74,8 +74,6 @@ export function parseImportedMarkdown(markdown: string, overrides: DraftOverride
     detail: typeof imported.detail === "boolean" ? imported.detail : false,
     article_url: typeof imported.article_url === "string" ? imported.article_url : "",
     making_article_url: typeof imported.making_article_url === "string" ? imported.making_article_url : "",
-    comparison_group: typeof imported.comparison_group === "string" ? imported.comparison_group : "",
-    comparison_label: typeof imported.comparison_label === "string" ? imported.comparison_label : "",
     subtitle: typeof imported.subtitle === "string" ? imported.subtitle : "",
     heroImage: typeof imported.heroImage === "string" ? imported.heroImage : "",
     hero: typeof imported.hero === "string" ? imported.hero : typeof imported.heroImage === "string" ? imported.heroImage : "",

@@ -5,6 +5,7 @@ const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const galleryItems = await getGalleryItems();
+const galleryLookupItems = galleryItems.map(({ image, title, slug }) => ({ image, title, slug }));
 ---
 
 <header class="site-header">
@@ -115,7 +116,7 @@ const galleryItems = await getGalleryItems();
   }
 </style>
 
-<script is:inline define:vars={{ base, galleryItems }}>
+<script is:inline define:vars={{ base, galleryLookupItems }}>
   window.siteBaseUrl = base;
-  window.galleryData = galleryItems;
+  window.galleryData = galleryLookupItems;
 </script>

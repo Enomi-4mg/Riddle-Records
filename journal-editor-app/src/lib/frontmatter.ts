@@ -60,8 +60,6 @@ export function buildFrontmatter(frontmatter: FrontmatterForm, kind: ContentKind
     if (galleryTags.length) lines.push(`tags: ${yamlArray(galleryTags)}`);
     if (frontmatter.article_url.trim()) lines.push(`article_url: ${yamlString(frontmatter.article_url.trim())}`);
     if (frontmatter.making_article_url.trim()) lines.push(`making_article_url: ${yamlString(frontmatter.making_article_url.trim())}`);
-    if (frontmatter.comparison_group.trim()) lines.push(`comparison_group: ${yamlString(frontmatter.comparison_group.trim())}`);
-    if (frontmatter.comparison_label.trim()) lines.push(`comparison_label: ${yamlString(frontmatter.comparison_label.trim())}`);
     lines.push(`draft: ${frontmatter.draft ? "true" : "false"}`);
     lines.push("---");
     return lines.join("\n");
@@ -78,6 +76,7 @@ export function buildFrontmatter(frontmatter: FrontmatterForm, kind: ContentKind
     return lines.join("\n");
   }
   if (tags.length) lines.push(`tags: ${yamlArray(tags)}`);
+  if (kind === "songs") lines.push(`draft: ${frontmatter.draft ? "true" : "false"}`);
   if (kind !== "journal") {
     lines.push("---");
     return lines.join("\n");

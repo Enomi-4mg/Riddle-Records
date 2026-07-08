@@ -21,8 +21,6 @@ export type FrontmatterForm = {
   detail: boolean;
   article_url: string;
   making_article_url: string;
-  comparison_group: string;
-  comparison_label: string;
   subtitle: string;
   heroImage: string;
   hero: string;
@@ -95,8 +93,6 @@ export const defaultFrontmatter: FrontmatterForm = {
   detail: false,
   article_url: "",
   making_article_url: "",
-  comparison_group: "",
-  comparison_label: "",
   subtitle: "",
   heroImage: "",
   hero: "",

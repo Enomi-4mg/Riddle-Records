@@ -16,8 +16,6 @@ export type ImageCard = {
   body: string;
   categories: string;
   articleUrl: string;
-  comparisonLabel: string;
-  comparisonOrder: string;
   thumbnail: boolean;
   noGalleryButton: boolean;
   makingArticleUrl: string;
@@ -41,8 +39,6 @@ export function createImageCard(overrides: Partial<ImageCard> = {}): ImageCard {
     body: "",
     categories: "",
     articleUrl: "",
-    comparisonLabel: "",
-    comparisonOrder: "",
     thumbnail: true,
     noGalleryButton: true,
     makingArticleUrl: "",
@@ -96,7 +92,7 @@ export function buildCardsHtml(cards: ImageCard[], layout: CardLayout, lightboxG
   if (layout === "making-comparison-grid") {
     const items = activeCards.map((card) => {
       const caption = card.caption || card.heading || "";
-      const label = card.comparisonLabel || card.heading || caption;
+      const label = card.heading || caption;
       const blockClass = card.noGalleryButton ? " no-gallery-button" : "";
       const id = escapeHtml(card.cloudinaryId.trim());
       return `  <div class="comparison-item${blockClass}">
@@ -129,7 +125,6 @@ export function buildGalleryCode(cards: ImageCard[], layout: CardLayout, frontma
   const activeCards = cleanCards(cards);
   if (!activeCards.length) return "";
   const articleUrl = generatedUrl(frontmatter);
-  const comparisonGroup = slugify(frontmatter.slug) || articleUrl.replace(/^\/+|\/+$/g, "").replace(/\//g, "-");
 
   return activeCards.map((card, index) => {
     const title = card.caption || card.heading || `Card ${index + 1}`;
@@ -151,11 +146,6 @@ export function buildGalleryCode(cards: ImageCard[], layout: CardLayout, frontma
     pushOptionalString(lines, "article_url", cardArticleUrl);
     pushOptionalString(lines, "making_article_url", card.makingArticleUrl);
     lines.push(`  thumbnail: ${card.thumbnail ? "true" : "false"},`);
-    if (layout === "making-comparison-grid") {
-      lines.push(`  comparison_group: ${tsString(comparisonGroup)},`);
-      if (card.comparisonLabel || card.heading) lines.push(`  comparison_label: ${tsString(card.comparisonLabel || card.heading)},`);
-      if (card.comparisonOrder) lines.push(`  comparison_order: ${Number(card.comparisonOrder)},`);
-    }
     lines.push("}");
     return lines.join("\n");
   }).join(",\n");
@@ -183,8 +173,6 @@ export function extractCardsFromHtml(html: string): ImageCard[] {
       heading: labelNode?.textContent?.trim() || caption,
       slug: slugify(labelNode?.textContent?.trim() || caption || `card-${index + 1}`),
       cloudinaryId: extractCloudinaryId(anchor?.getAttribute("href") || img?.getAttribute("src") || ""),
-      comparisonLabel: isComparison ? labelNode?.textContent?.trim() || caption : "",
-      comparisonOrder: String(index + 1),
       noGalleryButton: node.classList.contains("no-gallery-button")
     });
   }).filter((card) => card.cloudinaryId);

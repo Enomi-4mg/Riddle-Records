@@ -35,7 +35,8 @@ const songsCollection = defineCollection({
     credits: z.union([z.string(), z.array(z.string())]).optional(),
     description: z.string().optional(),
     lyrics: z.string().optional(),
-    tags: z.array(z.string()).optional()
+    tags: z.array(z.string()).optional(),
+    draft: z.boolean().optional()
   })
 });
 
@@ -56,10 +57,7 @@ const galleryCollection = defineCollection({
     thumbnail: z.union([z.boolean(), z.string()]).optional(),
     thumbnail_alt: z.string().optional(),
     thumbnail_class: z.string().optional(),
-    draft: z.boolean().optional(),
-    comparison_group: z.string().optional(),
-    comparison_label: z.string().optional(),
-    comparison_order: z.number().optional()
+    draft: z.boolean().optional()
   })
 });
 

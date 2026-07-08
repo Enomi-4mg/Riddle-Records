@@ -87,11 +87,6 @@ render_with_liquid: false
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="comparisonGroup">comparison_group (任意, 複数カードで共有)</label>
-            <input type="text" id="comparisonGroup" placeholder="five-apples">
-        </div>
-
         <div class="card-list" id="cardList"></div>
         <div class="button-row">
             <button class="ghost-btn" onclick="addCard()">＋ カードを追加</button>
@@ -138,8 +133,6 @@ render_with_liquid: false
             cloudinaryId: '',
             description: '',
             categories: '',
-            comparisonLabel: '',
-            comparisonOrder: '',
             thumbnail: true,
             noGalleryButton: true
         });
@@ -152,7 +145,6 @@ render_with_liquid: false
         const articleUrl = document.getElementById('articleUrl');
         const makingUrl = document.getElementById('makingUrl');
         const articleDate = document.getElementById('articleDate');
-        const comparisonGroup = document.getElementById('comparisonGroup');
         const htmlBlock = document.getElementById('htmlBlock');
         const yamlBlock = document.getElementById('yamlBlock');
         const htmlOutput = document.getElementById('htmlOutput');
@@ -174,9 +166,6 @@ render_with_liquid: false
             if (!slug) return;
             if (!articleUrlTouched) {
                 articleUrl.value = `/Journal/${slug}/`;
-            }
-            if (!comparisonGroup.value.trim()) {
-                comparisonGroup.value = slug;
             }
             if (!articleDate.value.trim() && /^\d{4}-\d{2}-\d{2}$/.test(slug)) {
                 articleDate.value = slug;
@@ -231,16 +220,6 @@ render_with_liquid: false
                         <label>categories (カンマ区切り, 任意)</label>
                         <input type="text" value="${escapeHtml(card.categories)}" placeholder="3DCG, Illustration" oninput="updateCard(${index}, 'categories', this.value)">
                     </div>
-                    <div class="flex-row">
-                        <div class="half form-group">
-                            <label>comparison_label (任意)</label>
-                            <input type="text" value="${escapeHtml(card.comparisonLabel)}" oninput="updateCard(${index}, 'comparisonLabel', this.value)">
-                        </div>
-                        <div class="half form-group">
-                            <label>comparison_order (任意, 数値)</label>
-                            <input type="number" value="${escapeHtml(card.comparisonOrder)}" oninput="updateCard(${index}, 'comparisonOrder', this.value)">
-                        </div>
-                    </div>
                     <div class="form-group">
                         <label>
                             <input type="checkbox" ${card.thumbnail ? 'checked' : ''} onchange="updateCard(${index}, 'thumbnail', this.checked)">
@@ -281,8 +260,7 @@ render_with_liquid: false
             const yaml = buildYaml(cleanCards, {
                 articleUrl: articleUrl.value.trim(),
                 makingUrl: makingUrl.value.trim(),
-                date: articleDate.value.trim(),
-                comparisonGroup: comparisonGroup.value.trim()
+                date: articleDate.value.trim()
             });
 
             htmlOutput.value = html;
@@ -314,7 +292,7 @@ ${inner}
         function buildMakingComparisonHtml(cardData, group) {
             const inner = cardData.map(card => {
                 const caption = card.title || card.label || '';
-                const label = card.label || card.comparisonLabel || caption;
+                const label = card.label || caption;
                 const cld = card.cloudinaryId.trim();
                 const labelLine = label ? `\n    <p class="comparison-label">${escapeHtml(label)}</p>` : '';
                                 const blockClass = card.noGalleryButton ? ' no-gallery-button' : '';
@@ -343,10 +321,6 @@ ${inner}
                 }
                 if (meta.articleUrl) lines.push(`  article_url: "${yamlEscape(meta.articleUrl)}"`);
                 if (meta.makingUrl) lines.push(`  making_article_url: "${yamlEscape(meta.makingUrl)}"`);
-                if (meta.comparisonGroup) lines.push(`  comparison_group: "${yamlEscape(meta.comparisonGroup)}"`);
-                const compLabel = card.comparisonLabel || card.label;
-                if (compLabel) lines.push(`  comparison_label: "${yamlEscape(compLabel)}"`);
-                if (card.comparisonOrder) lines.push(`  comparison_order: ${card.comparisonOrder}`);
                 if (card.thumbnail) lines.push(`  thumbnail: true`);
                 return lines.join('\n');
             });
@@ -405,8 +379,6 @@ ${inner}
                     cloudinaryId: cld,
                     description: '',
                     categories: '',
-                    comparisonLabel: label,
-                    comparisonOrder: idx + 1,
                     lightbox,
                     thumbnail: hasThumbnailAttr || true,
                     noGalleryButton: noGalleryButton

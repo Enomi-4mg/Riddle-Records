@@ -11,8 +11,6 @@ export type GalleryItem = {
   making_article_url?: string;
   thumbnail?: boolean;
   thumbnail_class?: string;
-  comparison_group?: string;
-  comparison_label?: string;
 };
 
 export const getGalleryDetailPath = (item: Pick<GalleryItem, "slug">) => `/gallery/${item.slug}/`;

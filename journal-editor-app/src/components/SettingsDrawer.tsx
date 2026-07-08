@@ -83,6 +83,7 @@ export function SettingsDrawer({ draft, markdown, frontmatterOutput, onChange, o
             <>
               <Field label="credits"><textarea rows={4} value={frontmatter.credits} onChange={(event) => onChange("credits", event.target.value)} /></Field>
               <Field label="lyrics"><textarea rows={8} value={frontmatter.lyrics} onChange={(event) => onChange("lyrics", event.target.value)} /></Field>
+              <label className="check-row"><input type="checkbox" checked={frontmatter.draft} onChange={(event) => onChange("draft", event.target.checked)} /> draft</label>
             </>
           )}
           <Field label="tags"><input value={frontmatter.tags} onChange={(event) => onChange("tags", event.target.value)} placeholder="日記, 3DCG, 制作" /></Field>
