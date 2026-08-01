@@ -3,12 +3,14 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
+const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
 const contentDirs = {
-  journal: path.resolve(__dirname, "../src/content/journal"),
-  songs: path.resolve(__dirname, "../src/content/songs"),
-  gallery: path.resolve(__dirname, "../src/content/gallery"),
-  projects: path.resolve(__dirname, "../src/content/projects")
+  journal: path.resolve(repositoryRoot, "src/content/journal"),
+  songs: path.resolve(repositoryRoot, "src/content/songs"),
+  gallery: path.resolve(repositoryRoot, "src/content/gallery"),
+  projects: path.resolve(repositoryRoot, "src/content/projects")
 } as const;
 
 type ContentKind = keyof typeof contentDirs;
@@ -17,7 +19,7 @@ function isContentKind(value: string | null): value is ContentKind {
   return Boolean(value && value in contentDirs);
 }
 
-function isAllowedContentFilename(value: string) {
+export function isAllowedContentFilename(value: string) {
   return Boolean(
     value &&
     !path.isAbsolute(value) &&
@@ -50,7 +52,7 @@ function sendJson(response: ServerResponse, statusCode: number, data: unknown) {
   response.end(JSON.stringify(data));
 }
 
-function isTrustedWriteOrigin(request: IncomingMessage) {
+export function isTrustedWriteOrigin(request: IncomingMessage) {
   const origin = request.headers.origin;
   if (!origin) return true;
   const host = request.headers.host;
@@ -74,7 +76,7 @@ async function listContentFiles(kind: ContentKind) {
   }));
 }
 
-function contentApiPlugin() {
+export function contentApiPlugin() {
   return {
     name: "riddle-content-api",
     configureServer(server: import("vite").ViteDevServer) {

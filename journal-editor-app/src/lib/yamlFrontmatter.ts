@@ -38,5 +38,5 @@ export function yamlArray(items: string[]) {
 }
 
 export function yamlObjectArray(items: Array<Record<string, string>>) {
-  return `\n${items.map((item) => Object.entries(item).map(([key, value], index) => `${index === 0 ? "  -" : "  "} ${key}: ${yamlString(value)}`).join("\n")).join("\n")}`;
+  return `\n${items.map((item) => Object.entries(item).map(([key, value], index) => `${index === 0 ? "  -" : "   "} ${key}: ${yamlString(value)}`).join("\n")).join("\n")}`;
 }

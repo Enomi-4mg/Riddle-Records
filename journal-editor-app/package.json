@@ -8,12 +8,15 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test:yaml": "node scripts/test-yaml-frontmatter.mjs",
+    "test:unit": "node --experimental-loader ./scripts/typescript-loader.mjs --test scripts/unit-tests.mjs",
+    "test:coverage": "node --experimental-loader ./scripts/typescript-loader.mjs --test --experimental-test-coverage --test-coverage-include='src/lib/**/*.ts' --test-coverage-include='../src/utils/*.ts' --test-coverage-include='../src/data/gallery.ts' --test-coverage-include='vite.config.ts' scripts/unit-tests.mjs",
     "test:roundtrip:journal": "node scripts/roundtrip-journal.mjs",
     "test:roundtrip:songs": "node scripts/roundtrip-songs.mjs",
     "test:roundtrip:gallery": "node scripts/roundtrip-content-kind.mjs gallery",
     "test:roundtrip:projects": "node scripts/roundtrip-content-kind.mjs projects",
     "test:roundtrip": "npm run test:yaml && npm run test:roundtrip:journal && npm run test:roundtrip:songs && npm run test:roundtrip:gallery && npm run test:roundtrip:projects",
     "test:content": "npm run test:roundtrip",
+    "test": "npm run test:unit && npm run test:roundtrip",
     "test:roundtrip:write": "node scripts/roundtrip-journal.mjs --write-exported ./roundtrip-exported"
   },
   "dependencies": {

@@ -7,7 +7,10 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "npm --prefix journal-editor-app test && npm run test:build",
+    "test:build": "npm run build && npm --prefix journal-editor-app run build",
+    "test:coverage": "npm --prefix journal-editor-app run test:coverage"
   },
   "dependencies": {
     "astro": "^5.0.0"
