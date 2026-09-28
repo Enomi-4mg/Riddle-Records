@@ -33,6 +33,8 @@ import {
   yamlString
 } from "../src/lib/yamlFrontmatter.ts";
 import { isContentKind } from "../src/types/content.ts";
+import { buildContentMarkdown, createContentDocument, parseContentMarkdown, publicationChecks } from "../src/lib/cmsMarkdown.ts";
+import { validateMediaRegistry } from "../src/types/media.ts";
 import { defaultFrontmatter } from "../src/types/journal.ts";
 import { contentApiPlugin, isAllowedContentFilename, isTrustedWriteOrigin } from "../vite.config.ts";
 import { createWorkerHandler } from "../worker/index.ts";
@@ -672,5 +674,38 @@ describe("site utility behavior", () => {
     for (const kind of ["journal", "songs", "gallery", "projects"]) assert.equal(isContentKind(kind), true);
     assert.equal(isContentKind("pages"), false);
     assert.equal(isContentKind(null), false);
+  });
+});
+
+describe("CMS content model", () => {
+  test("keeps publication and project status independent", () => {
+    const document = createContentDocument("projects");
+    document.common.publication = "published";
+    document.placement.data.status = "archived";
+    const parsed = parseContentMarkdown(buildContentMarkdown(document), "projects");
+    assert.equal(parsed.common.publication, "published");
+    assert.equal(parsed.placement.data.status, "archived");
+  });
+
+  test("preserves unknown frontmatter fields", () => {
+    const source = `---\ntitle: Demo\ndate: 2026-09-28\ndraft: true\ncustom_meta:\n  color: mint\n---\n\nBody\n`;
+    const document = parseContentMarkdown(source, "journal");
+    assert.deepEqual(document.unknownFrontmatter, { custom_meta: { color: "mint" } });
+    assert.match(buildContentMarkdown(document), /custom_meta:\n  color: mint/);
+  });
+
+  test("allows incomplete drafts but reports publishing requirements", () => {
+    const gallery = createContentDocument("gallery");
+    assert.equal(gallery.common.publication, "draft");
+    assert.equal(publicationChecks(gallery).every((check) => check.ok), false);
+  });
+});
+
+describe("Media Registry", () => {
+  test("rejects duplicate ids and type/public id pairs", () => {
+    const asset = { id: "one", publicId: "folder/image.jpg", type: "image", displayName: "Image", tags: [], alt: "" };
+    assert.equal(validateMediaRegistry({ version: 1, assets: [asset] }), null);
+    assert.match(validateMediaRegistry({ version: 1, assets: [asset, { ...asset, id: "two" }] }), /public ID/);
+    assert.match(validateMediaRegistry({ version: 1, assets: [asset, { ...asset, publicId: "other.jpg" }] }), /ID/);
   });
 });

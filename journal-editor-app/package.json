@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "check:worker": "tsc --noEmit --target ES2022 --module ESNext --moduleResolution Bundler --lib ES2022,WebWorker worker/index.ts",
+    "check:worker": "tsc --noEmit --skipLibCheck --target ES2022 --module ESNext --moduleResolution Bundler --lib ES2022,WebWorker worker/index.ts",
     "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
     "test:yaml": "node scripts/test-yaml-frontmatter.mjs",
@@ -19,14 +19,21 @@
     "test:roundtrip": "npm run test:yaml && npm run test:roundtrip:journal && npm run test:roundtrip:songs && npm run test:roundtrip:gallery && npm run test:roundtrip:projects",
     "test:content": "npm run test:roundtrip",
     "test": "npm run test:unit && npm run test:roundtrip",
-    "test:roundtrip:write": "node scripts/roundtrip-journal.mjs --write-exported ./roundtrip-exported"
+    "test:roundtrip:write": "node scripts/roundtrip-journal.mjs --write-exported ./roundtrip-exported",
+    "media:rebuild": "node scripts/build-media-registry.mjs"
   },
   "dependencies": {
+    "@tiptap/core": "^3.31.3",
+    "@tiptap/extension-image": "^3.31.3",
+    "@tiptap/extension-link": "^3.31.3",
+    "@tiptap/react": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
     "@vitejs/plugin-react": "^4.3.4",
     "js-yaml": "^5.2.1",
     "marked": "^15.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "turndown": "^7.2.4",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
     "zod": "^3.24.1"
@@ -36,6 +43,7 @@
     "@types/node": "^26.0.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "@types/turndown": "^5.0.6",
     "wrangler": "4.142.0"
   }
 }

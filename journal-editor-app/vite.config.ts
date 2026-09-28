@@ -12,6 +12,7 @@ const contentDirs = {
   gallery: path.resolve(repositoryRoot, "src/content/gallery"),
   projects: path.resolve(repositoryRoot, "src/content/projects")
 } as const;
+const mediaRegistryPath = path.resolve(repositoryRoot, "src/data/media-registry.json");
 
 type ContentKind = keyof typeof contentDirs;
 
@@ -81,7 +82,7 @@ export function contentApiPlugin() {
     name: "riddle-content-api",
     configureServer(server: import("vite").ViteDevServer) {
       server.middlewares.use(async (request, response, next) => {
-        if (!request.url?.startsWith("/api/content-")) {
+        if (!request.url?.startsWith("/api/content-") && !request.url?.startsWith("/api/media-registry")) {
           next();
           return;
         }
@@ -96,11 +97,31 @@ export function contentApiPlugin() {
 
           if (request.method === "GET" && url.pathname === "/api/content-list") {
             const kind = url.searchParams.get("kind");
-            if (!isContentKind(kind)) {
+            if (kind && !isContentKind(kind)) {
               sendJson(response, 400, { error: "Invalid content kind" });
               return;
             }
-            sendJson(response, 200, { files: await listContentFiles(kind) });
+            const kinds = kind ? [kind] : Object.keys(contentDirs) as ContentKind[];
+            sendJson(response, 200, { files: (await Promise.all(kinds.map(listContentFiles))).flat() });
+            return;
+          }
+
+          if (request.method === "GET" && url.pathname === "/api/media-registry") {
+            const [source, stat] = await Promise.all([fs.readFile(mediaRegistryPath, "utf8"), fs.stat(mediaRegistryPath)]);
+            sendJson(response, 200, { registry: JSON.parse(source), revision: `mtime:${stat.mtimeMs}` });
+            return;
+          }
+
+          if (request.method === "PUT" && url.pathname === "/api/media-registry") {
+            if (!isTrustedWriteOrigin(request)) { sendJson(response, 403, { error: "Forbidden origin" }); return; }
+            const payload = JSON.parse(await readRequestBody(request)) as { registry?: unknown; expectedRevision?: string; force?: boolean };
+            if (!payload.registry || typeof payload.registry !== "object") { sendJson(response, 400, { error: "Invalid registry" }); return; }
+            const stat = await fs.stat(mediaRegistryPath).catch(() => null);
+            const currentRevision = stat ? `mtime:${stat.mtimeMs}` : undefined;
+            if (payload.force !== true && payload.expectedRevision !== currentRevision) { sendJson(response, 409, { error: "Media Registry has changed", currentRevision }); return; }
+            await fs.writeFile(mediaRegistryPath, `${JSON.stringify(payload.registry, null, 2)}\n`, "utf8");
+            const next = await fs.stat(mediaRegistryPath);
+            sendJson(response, 200, { registry: payload.registry, revision: `mtime:${next.mtimeMs}` });
             return;
           }
 

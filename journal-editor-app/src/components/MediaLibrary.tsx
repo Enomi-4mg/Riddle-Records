@@ -1,0 +1,21 @@
+import { useMemo, useState } from "react";
+import { mediaUrl } from "../lib/mediaRegistry";
+import type { MediaAsset, MediaRegistry, MediaType } from "../types/media";
+
+const blankAsset = (): MediaAsset => ({ id: crypto.randomUUID(), publicId: "", type: "image", displayName: "", tags: [], alt: "" });
+export function MediaLibrary({ registry, editable, onChange, onSelect, onSave, saving }: { registry: MediaRegistry; editable?: boolean; onChange?: (value: MediaRegistry) => void; onSelect?: (asset: MediaAsset) => void; onSave?: () => void; saving?: boolean }) {
+  const [query, setQuery] = useState(""); const [type, setType] = useState<"all" | MediaType>("all"); const [editing, setEditing] = useState<MediaAsset | null>(null);
+  const assets = useMemo(() => registry.assets.filter((asset) => (type === "all" || asset.type === type) && [asset.displayName, asset.publicId, asset.alt, ...asset.tags].join(" ").toLowerCase().includes(query.toLowerCase())), [registry, query, type]);
+  function commit(asset: MediaAsset) { if (!onChange) return; const exists = registry.assets.some((item) => item.id === asset.id); onChange({ ...registry, assets: exists ? registry.assets.map((item) => item.id === asset.id ? asset : item) : [...registry.assets, asset] }); setEditing(null); }
+  return <section className="media-library">
+    <header className="section-heading"><div><p>Media Registry</p><h1>メディア</h1></div>{editable && <div className="button-row"><button onClick={() => setEditing(blankAsset())}>メディアを登録</button><button className="primary" disabled={saving} onClick={onSave}>{saving ? "保存中…" : "変更を保存"}</button></div>}</header>
+    <div className="filter-bar"><input aria-label="メディア検索" placeholder="表示名、public ID、タグを検索" value={query} onChange={(event) => setQuery(event.target.value)} /><div className="segmented">{(["all", "image", "video", "audio"] as const).map((item) => <button className={type === item ? "active" : ""} onClick={() => setType(item)} key={item}>{item === "all" ? "すべて" : item === "image" ? "画像" : item === "video" ? "動画" : "音声"}</button>)}</div></div>
+    <div className="media-grid">{assets.map((asset) => <article className="media-card" key={asset.id}>
+      <button className="media-preview" onClick={() => onSelect?.(asset)}>{asset.type === "image" ? <img src={mediaUrl(asset.publicId, asset.type)} alt={asset.alt || asset.displayName} /> : <span>{asset.type === "video" ? "▶" : "♪"}</span>}</button>
+      <div className="media-copy"><strong>{asset.displayName}</strong><span>{asset.type} · {asset.tags.join(", ") || "タグなし"}</span><code>{asset.publicId}</code></div>
+      <div className="button-row"><button onClick={() => navigator.clipboard.writeText(asset.publicId)}>IDをコピー</button>{editable && <><button onClick={() => setEditing(asset)}>編集</button><button className="danger" onClick={() => onChange?.({ ...registry, assets: registry.assets.filter((item) => item.id !== asset.id) })}>削除</button></>}</div>
+    </article>)}</div>
+    {!assets.length && <div className="empty-state"><h2>該当するメディアがありません</h2></div>}
+    {editing && <div className="modal-backdrop"><form className="media-dialog" onSubmit={(event) => { event.preventDefault(); commit(editing); }}><h2>メディア情報</h2><label>表示名<input required value={editing.displayName} onChange={(event) => setEditing({ ...editing, displayName: event.target.value })} /></label><label>種類<select value={editing.type} onChange={(event) => setEditing({ ...editing, type: event.target.value as MediaType })}><option value="image">画像</option><option value="video">動画</option><option value="audio">音声</option></select></label><label>Cloudinary public ID<input required value={editing.publicId} onChange={(event) => setEditing({ ...editing, publicId: event.target.value })} /></label><label>alt<input value={editing.alt} onChange={(event) => setEditing({ ...editing, alt: event.target.value })} /></label><label>タグ<input value={editing.tags.join(", ")} onChange={(event) => setEditing({ ...editing, tags: event.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} /></label><div className="button-row"><button type="button" onClick={() => setEditing(null)}>キャンセル</button><button className="primary" type="submit">反映</button></div></form></div>}
+  </section>;
+}

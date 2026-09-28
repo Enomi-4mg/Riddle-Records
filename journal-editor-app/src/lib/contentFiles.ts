@@ -21,9 +21,9 @@ async function readError(response: Response) {
   }
 }
 
-export async function loadContentFiles(kind: ContentKind): Promise<ContentFileListResult> {
+export async function loadContentFiles(kind?: ContentKind): Promise<ContentFileListResult> {
   try {
-    const response = await fetch(`/api/content-list?kind=${encodeURIComponent(kind)}`);
+    const response = await fetch(kind ? `/api/content-list?kind=${encodeURIComponent(kind)}` : "/api/content-list");
     if (!response.ok) {
       return { available: false, files: [], error: await readError(response) };
     }
@@ -37,7 +37,7 @@ export async function loadContentFiles(kind: ContentKind): Promise<ContentFileLi
           "kind" in file &&
           "path" in file &&
           "revision" in file &&
-          file.kind === kind &&
+          (!kind || file.kind === kind) &&
           typeof file.path === "string" &&
           typeof file.revision === "string"
         ))

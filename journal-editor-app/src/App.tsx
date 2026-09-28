@@ -1,322 +1,50 @@
-import { useCallback, useEffect, useState } from "react";
-import type { JournalFileEntry, StoredDraft, View } from "./types/journal";
-import type { ContentFileInfo, ContentKind } from "./types/content";
-import { contentKindSchemas } from "./types/content";
-import { buildMarkdown, createEditorDraft, nowIso, parseImportedMarkdown } from "./lib/markdown";
-import { generatedFilename } from "./lib/permalink";
+import { useEffect, useMemo, useState } from "react";
 import { ContentFileConflictError, deleteContentFile, loadContentFile, loadContentFiles, saveContentFile } from "./lib/contentFiles";
-import { clearUnsavedBackup, loadUnsavedBackup, writeUnsavedBackup } from "./lib/unsavedBackup";
-import { DraftList } from "./components/DraftList";
-import { EditorScreen } from "./components/EditorScreen";
-import { FullPreviewScreen } from "./components/FullPreviewScreen";
+import { buildContentMarkdown, createContentDocument, generatedContentFilename, parseContentMarkdown } from "./lib/cmsMarkdown";
+import { loadMediaRegistry, MediaRegistryConflictError, saveMediaRegistry } from "./lib/mediaRegistry";
+import { ContentList } from "./components/ContentList";
+import { CmsEditor } from "./components/CmsEditor";
+import { MediaLibrary } from "./components/MediaLibrary";
+import type { ContentDocument, ContentFileInfo, ContentKind, EditingStatus } from "./types/content";
+import type { MediaRegistry } from "./types/media";
+import { validateMediaRegistry } from "./types/media";
 
-const pageStateKey = "riddle-content-editor-page-state";
-
-type PersistedPageState = {
-  view: View;
-  activeKind: ContentKind;
-  currentDraft: StoredDraft | null;
-};
-
-function loadPageState(): PersistedPageState | null {
-  try {
-    const raw = localStorage.getItem(pageStateKey);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<PersistedPageState>;
-    if (!parsed.activeKind || !(parsed.activeKind in contentKindSchemas)) return null;
-    if (parsed.view !== "list" && parsed.view !== "editor" && parsed.view !== "full-preview") return null;
-    return {
-      view: parsed.currentDraft ? parsed.view : "list",
-      activeKind: parsed.activeKind,
-      currentDraft: parsed.currentDraft ?? null
-    };
-  } catch {
-    return null;
-  }
-}
-
-function writePageState(state: PersistedPageState) {
-  try {
-    localStorage.setItem(pageStateKey, JSON.stringify(state));
-  } catch {
-    // Page state is a convenience only. Markdown files and unsaved backups remain the durable sources.
-  }
-}
-
-function clearPublishHash() {
-  if (!window.location.hash.startsWith("#publish-")) return;
-  window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-}
+type Screen = "content" | "editor" | "media";
+const emptyRegistry: MediaRegistry = { version: 1, assets: [] };
+const backupKey = (id: string) => `riddle-cms-backup:${id}`;
 
 export function App() {
-  const [restoredPageState] = useState(loadPageState);
-  const [view, setView] = useState<View>(restoredPageState?.view ?? "list");
-  const [activeKind, setActiveKind] = useState<ContentKind>(restoredPageState?.activeKind ?? "journal");
-  const [currentDraft, setCurrentDraft] = useState<StoredDraft | null>(restoredPageState?.currentDraft ?? null);
-  const [notice, setNotice] = useState("準備できました");
-  const [contentFiles, setContentFiles] = useState<ContentFileInfo[]>([]);
-  const [contentEntries, setContentEntries] = useState<JournalFileEntry[]>([]);
-  const [contentFileApiAvailable, setContentFileApiAvailable] = useState(false);
-  const [conflictDraft, setConflictDraft] = useState<StoredDraft | null>(null);
-  const [conflictOperation, setConflictOperation] = useState<"save" | "delete" | null>(null);
+  const [screen, setScreen] = useState<Screen>("content"); const [files, setFiles] = useState<ContentFileInfo[]>([]); const [documents, setDocuments] = useState<ContentDocument[]>([]);
+  const [current, setCurrent] = useState<ContentDocument | null>(null); const [editingStatus, setEditingStatus] = useState<EditingStatus>("clean"); const [notice, setNotice] = useState("準備できました");
+  const [registry, setRegistry] = useState(emptyRegistry); const [registryRevision, setRegistryRevision] = useState<string>(); const [registrySaving, setRegistrySaving] = useState(false);
+  const [conflict, setConflict] = useState<"save" | "delete" | null>(null);
 
-  useEffect(() => {
-    refreshContentFiles(activeKind);
-  }, [activeKind]);
-
-  useEffect(() => {
-    writePageState({ view, activeKind, currentDraft });
-    if (view !== "editor") {
-      clearPublishHash();
-    }
-  }, [view, activeKind, currentDraft]);
-
-  async function refreshContentFiles(kind = activeKind) {
-    const result = await loadContentFiles(kind);
-    setContentFileApiAvailable(result.available);
-    setContentFiles(result.files);
-    if (!result.available) {
-      setContentEntries([]);
-      setNotice("ローカルファイルAPIは利用できません。コピー/ダウンロード運用になります");
-      return;
-    }
-
-    const entries = await Promise.all(result.files.map(async (fileInfo): Promise<JournalFileEntry | null> => {
-      try {
-        const filename = fileInfo.path;
-        const file = await loadContentFile(kind, filename);
-        const importedAt = nowIso();
-        return {
-          file: { path: file.path, revision: file.revision },
-          filename,
-          draft: parseImportedMarkdown(file.markdown, {
-            kind,
-            id: `file:${file.path}`,
-            createdAt: importedAt,
-            updatedAt: importedAt,
-            importedAt,
-            source: "imported",
-            sourcePath: `${contentKindSchemas[kind].directory}/${file.path}`,
-            sourceFileName: file.path,
-            loadedFilePath: file.path,
-            loadedFileRevision: file.revision
-          })
-        };
-      } catch {
-        return null;
-      }
-    }));
-    setContentEntries(entries.filter((entry): entry is JournalFileEntry => Boolean(entry)));
+  async function refresh() {
+    const result = await loadContentFiles(); setFiles(result.files);
+    if (!result.available) { setNotice(result.error || "コンテンツAPIを利用できません"); return; }
+    const loaded = await Promise.all(result.files.map(async (file) => { try { const value = await loadContentFile(file.kind, file.path); return parseContentMarkdown(value.markdown, file.kind, { path: file.path, revision: value.revision }); } catch { return null; } }));
+    setDocuments(loaded.filter((value): value is ContentDocument => Boolean(value)));
   }
+  async function refreshRegistry() { try { const value = await loadMediaRegistry(); setRegistry(value.registry); setRegistryRevision(value.revision); } catch (error) { setNotice(`メディアを読み込めません: ${error instanceof Error ? error.message : "Unknown error"}`); } }
+  useEffect(() => { void refresh(); void refreshRegistry(); }, []);
 
-  function createAndOpen() {
-    const draft = createEditorDraft({ kind: activeKind, frontmatter: activeKind === "songs" ? { type: "journal", draft: false } : undefined });
-    setCurrentDraft(draft);
-    setView("editor");
-    setNotice(`新しい${contentKindSchemas[activeKind].label} Markdownを作成しました`);
+  function openDocument(doc: ContentDocument) {
+    const backup = localStorage.getItem(backupKey(doc.id)); let next = doc;
+    if (backup && window.confirm("保存されていない編集を復元しますか？")) { try { next = JSON.parse(backup) as ContentDocument; } catch { /* ignore invalid backup */ } }
+    setCurrent(next); setEditingStatus(backup ? "dirty" : "clean"); setScreen("editor");
   }
-
-  function importMarkdown(markdown: string, filename?: string) {
-    const importedAt = nowIso();
-    const draft = parseImportedMarkdown(markdown, {
-      kind: activeKind,
-      id: filename ? `uploaded:${filename}` : undefined,
-      createdAt: importedAt,
-      updatedAt: importedAt,
-      importedAt,
-      source: "uploaded",
-      sourceFileName: filename?.endsWith(".md") ? filename : undefined
-    });
-    const backup = loadUnsavedBackup(draft.id);
-    setCurrentDraft(backup && window.confirm("未保存の一時退避データがあります。復元しますか？") ? backup : draft);
-    setView("editor");
-    setNotice(filename ? `${filename} を読み込みました` : "Markdownを読み込みました");
+  function changeDocument(next: ContentDocument) { const edited = { ...next, editedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }; setCurrent(edited); setEditingStatus("dirty"); localStorage.setItem(backupKey(next.id), JSON.stringify(edited)); }
+  async function persist(doc: ContentDocument, force = false) {
+    const filename = generatedContentFilename(doc); if (!filename) { setNotice("日付またはslugを入力してください"); setEditingStatus("error"); return null; }
+    setEditingStatus("saving");
+    try { const saved = await saveContentFile(doc.placement.kind, filename, buildContentMarkdown(doc), { expectedRevision: doc.file?.revision, force }); const next = { ...doc, source: "imported" as const, file: { path: saved.path, revision: saved.revision }, updatedAt: new Date().toISOString() }; setCurrent(next); setEditingStatus("clean"); setConflict(null); localStorage.removeItem(backupKey(doc.id)); setNotice("保存しました"); await refresh(); return next; }
+    catch (error) { if (error instanceof ContentFileConflictError) { setConflict("save"); setEditingStatus("conflict"); setNotice("外部で変更されています"); } else { setEditingStatus("error"); setNotice(`保存できません: ${error instanceof Error ? error.message : "Unknown error"}`); } return null; }
   }
+  async function reloadCurrent() { if (!current?.file) return; const loaded = await loadContentFile(current.placement.kind, current.file.path); localStorage.removeItem(backupKey(current.id)); setCurrent(parseContentMarkdown(loaded.markdown, current.placement.kind, { path: loaded.path, revision: loaded.revision })); setConflict(null); setEditingStatus("clean"); }
+  async function removeCurrent(force = false) { if (!current) return; if (!current.file) { setCurrent(null); setScreen("content"); return; } try { await deleteContentFile(current.placement.kind, current.file.path, { expectedRevision: current.file.revision, force }); localStorage.removeItem(backupKey(current.id)); setCurrent(null); setScreen("content"); setConflict(null); await refresh(); } catch (error) { if (error instanceof ContentFileConflictError) { setConflict("delete"); setEditingStatus("conflict"); } else setNotice(`削除できません: ${error instanceof Error ? error.message : "Unknown error"}`); } }
+  async function persistRegistry(force = false) { const validationError = validateMediaRegistry(registry); if (validationError) { setNotice(validationError); return; } setRegistrySaving(true); try { const value = await saveMediaRegistry(registry, registryRevision, force); setRegistryRevision(value.revision); setNotice("メディア情報を保存しました"); } catch (error) { setNotice(error instanceof MediaRegistryConflictError ? "メディア情報が外部で変更されています。再読み込みしてください" : `メディアを保存できません: ${error instanceof Error ? error.message : "Unknown error"}`); } finally { setRegistrySaving(false); } }
 
-  async function openContentFile(filename: string, kind = activeKind) {
-    try {
-      const file = await loadContentFile(kind, filename);
-      const importedAt = nowIso();
-      const draft = parseImportedMarkdown(file.markdown, {
-        kind,
-        id: `file:${file.path}`,
-        createdAt: importedAt,
-        updatedAt: importedAt,
-        importedAt,
-        source: "imported",
-        sourcePath: `${contentKindSchemas[kind].directory}/${file.path}`,
-        sourceFileName: file.path,
-        loadedFilePath: file.path,
-        loadedFileRevision: file.revision
-      });
-      const backup = loadUnsavedBackup(draft.id);
-      setCurrentDraft(backup && window.confirm("未保存の一時退避データがあります。復元しますか？") ? backup : draft);
-      setView("editor");
-      setNotice(`${file.path} を読み込みました`);
-    } catch (error) {
-      setNotice(`読み込みに失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
-  }
-
-  const updateCurrentDraft = useCallback((next: StoredDraft) => {
-    const updated = { ...next, updatedAt: nowIso() };
-    setCurrentDraft(updated);
-    if (updated.editedAt) {
-      writeUnsavedBackup(updated);
-    }
-  }, []);
-
-  async function saveCurrentToFile(next: StoredDraft, options: { force?: boolean } = {}): Promise<StoredDraft | null> {
-    const filename = next.sourceFileName || generatedFilename(next.frontmatter, next.kind);
-    if (!filename) {
-      setNotice("保存先ファイル名を作れません。dateかslugを確認してください");
-      return null;
-    }
-
-    try {
-      const saved = await saveContentFile(next.kind, filename, buildMarkdown(next), {
-        expectedRevision: next.loadedFileRevision,
-        force: options.force
-      });
-      const updated = {
-        ...next,
-        updatedAt: nowIso(),
-        source: "imported" as const,
-        sourcePath: `${contentKindSchemas[next.kind].directory}/${filename}`,
-        sourceFileName: filename,
-        loadedFilePath: saved.path,
-        loadedFileRevision: saved.revision,
-        loadedFileMtime: undefined
-      };
-      setCurrentDraft(updated);
-      setConflictDraft(null);
-      setConflictOperation(null);
-      clearUnsavedBackup(next.id);
-      setNotice(`${filename} に保存しました`);
-      await refreshContentFiles(next.kind);
-      return updated;
-    } catch (error) {
-      if (error instanceof ContentFileConflictError) {
-        setConflictDraft(next);
-        setConflictOperation("save");
-        setNotice("ファイルが外部で変更されています");
-        return null;
-      }
-      setNotice(`ファイル保存に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
-      return null;
-    }
-  }
-
-  async function reloadConflictFile() {
-    const filename = conflictDraft?.loadedFilePath || conflictDraft?.sourceFileName;
-    if (!filename) return;
-    const kind = conflictDraft.kind;
-    clearUnsavedBackup(conflictDraft.id);
-    setConflictDraft(null);
-    setConflictOperation(null);
-    await openContentFile(filename, kind);
-  }
-
-  async function forceConflict(): Promise<StoredDraft | null> {
-    const draft = currentDraft || conflictDraft;
-    if (!draft) return null;
-    if (conflictOperation === "delete") {
-      const filename = draft.sourceFileName;
-      if (!filename) return null;
-      try {
-        await deleteContentFile(draft.kind, filename, { force: true });
-        clearUnsavedBackup(draft.id);
-        setConflictDraft(null);
-        setConflictOperation(null);
-        setCurrentDraft(null);
-        setView("list");
-        setNotice(`${filename} を削除しました`);
-        await refreshContentFiles(draft.kind);
-      } catch (error) {
-        setNotice(`削除に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
-      }
-      return null;
-    }
-    return await saveCurrentToFile(draft, { force: true });
-  }
-
-  async function deleteCurrentFile(next: StoredDraft) {
-    const filename = next.source === "imported" ? next.sourceFileName : undefined;
-    if (!filename) {
-      setCurrentDraft(null);
-      setView("list");
-      setNotice("未保存の記事を閉じました");
-      return;
-    }
-
-    try {
-      await deleteContentFile(next.kind, filename, { expectedRevision: next.loadedFileRevision });
-      setCurrentDraft(null);
-      setView("list");
-      setNotice(`${filename} を削除しました`);
-      await refreshContentFiles(next.kind);
-    } catch (error) {
-      if (error instanceof ContentFileConflictError) {
-        setConflictDraft(next);
-        setConflictOperation("delete");
-        setNotice("ファイルが外部で変更されています");
-        return;
-      }
-      setNotice(`削除に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
-  }
-
-  function closeEditor() {
-    setCurrentDraft(null);
-    setView("list");
-  }
-
-  if (view === "editor" && currentDraft) {
-    return (
-      <EditorScreen
-        draft={currentDraft}
-        notice={notice}
-        onBack={() => {
-          closeEditor();
-        }}
-        onSave={updateCurrentDraft}
-        onSaveFile={saveCurrentToFile}
-        onDelete={deleteCurrentFile}
-        conflictActive={Boolean(conflictDraft)}
-        conflictOperation={conflictOperation}
-        onReloadConflict={reloadConflictFile}
-        onForceConflict={forceConflict}
-        onNotice={setNotice}
-        onFullPreview={(draft) => {
-          updateCurrentDraft(draft);
-          setCurrentDraft(draft);
-          setView("full-preview");
-        }}
-      />
-    );
-  }
-
-  if (view === "full-preview" && currentDraft) {
-    return (
-      <FullPreviewScreen
-        draft={currentDraft}
-        onBack={() => setView("editor")}
-      />
-    );
-  }
-
-  return (
-    <DraftList
-      activeKind={activeKind}
-      contentFiles={contentFiles}
-      contentEntries={contentEntries}
-      contentFileApiAvailable={contentFileApiAvailable}
-      notice={notice}
-      onKindChange={setActiveKind}
-      onNew={createAndOpen}
-      onOpenContentFile={openContentFile}
-      onRefreshContentFiles={() => refreshContentFiles(activeKind)}
-      onImport={importMarkdown}
-    />
-  );
+  const shellNav = useMemo(() => <nav className="cms-nav"><button className={screen !== "media" ? "active" : ""} onClick={() => { setScreen("content"); setCurrent(null); }}>コンテンツ</button><button className={screen === "media" ? "active" : ""} onClick={() => setScreen("media")}>メディア</button></nav>, [screen]);
+  if (screen === "editor" && current) return <CmsEditor document={current} status={editingStatus} notice={notice} registry={registry} conflict={conflict} onChange={changeDocument} onSave={() => persist(current)} onPublish={() => persist({ ...current, common: { ...current.common, publication: "published" } })} onUnpublish={() => persist({ ...current, common: { ...current.common, publication: "draft" } })} onBack={() => { if (editingStatus !== "dirty" || window.confirm("保存していない変更があります。閉じますか？")) { setScreen("content"); setCurrent(null); } }} onReload={reloadCurrent} onForce={() => conflict === "delete" ? removeCurrent(true) : persist(current, true)} onDelete={() => removeCurrent()} />;
+  return <main className="cms-shell"><header className="global-bar"><strong className="brand">Riddle Records CMS</strong>{shellNav}<span className="status-pill">{notice}</span></header>{screen === "media" ? <MediaLibrary registry={registry} editable onChange={setRegistry} onSave={() => persistRegistry()} saving={registrySaving} /> : <ContentList documents={documents} files={files} onOpen={openDocument} onNew={(kind: ContentKind) => { const doc = createContentDocument(kind); setCurrent(doc); setEditingStatus("dirty"); setScreen("editor"); }} />}</main>;
 }

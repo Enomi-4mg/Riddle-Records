@@ -4,6 +4,7 @@ const contentDirectories = {
   gallery: "src/content/gallery",
   projects: "src/content/projects"
 } as const;
+const mediaRegistryPath = "src/data/media-registry.json";
 
 type ContentKind = keyof typeof contentDirectories;
 
@@ -142,24 +143,37 @@ async function readPayload(request: Request) {
 async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Promise<Response> {
   const url = new URL(request.url);
 
-  if ((request.method === "POST" || request.method === "DELETE") && !validateWriteOrigin(request)) {
+  if ((request.method === "POST" || request.method === "PUT" || request.method === "DELETE") && !validateWriteOrigin(request)) {
     return json(403, { error: "Forbidden origin" });
   }
 
   if (request.method === "GET" && url.pathname === "/api/content-list") {
     const kind = url.searchParams.get("kind");
-    if (!isContentKind(kind)) return json(400, { error: "Invalid content kind" });
-    const response = await githubRequest(
-      fetcher,
-      env,
-      `${githubPath(kind)}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`
-    );
-    const entries = await response.json() as GitHubFile[];
-    const files = entries
-      .filter((entry) => entry.type === "file" && isAllowedContentFilename(entry.name))
-      .map((entry) => ({ kind, path: entry.name, revision: entry.sha }))
-      .sort((a, b) => b.path.localeCompare(a.path));
+    if (kind && !isContentKind(kind)) return json(400, { error: "Invalid content kind" });
+    const kinds: ContentKind[] = kind && isContentKind(kind) ? [kind] : Object.keys(contentDirectories) as ContentKind[];
+    const files = (await Promise.all(kinds.map(async (entryKind) => {
+      const response = await githubRequest(fetcher, env, `${githubPath(entryKind)}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
+      const entries = await response.json() as GitHubFile[];
+      return entries.filter((entry) => entry.type === "file" && isAllowedContentFilename(entry.name)).map((entry) => ({ kind: entryKind, path: entry.name, revision: entry.sha }));
+    }))).flat().sort((a, b) => b.path.localeCompare(a.path));
     return json(200, { files });
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/media-registry") {
+    const response = await githubRequest(fetcher, env, `${mediaRegistryPath.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
+    const file = await response.json() as GitHubFile;
+    if (file.encoding !== "base64" || typeof file.content !== "string") return json(502, { error: "GitHub returned an unsupported registry response" });
+    return json(200, { registry: JSON.parse(decodeBase64Utf8(file.content)), revision: file.sha });
+  }
+
+  if (request.method === "PUT" && url.pathname === "/api/media-registry") {
+    const payload = await readPayload(request); if (!payload || !payload.registry || typeof payload.registry !== "object") return json(400, { error: "Invalid registry" });
+    const response = await githubRequest(fetcher, env, `${mediaRegistryPath.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
+    const current = await response.json() as GitHubFile;
+    const expected = typeof payload.expectedRevision === "string" ? payload.expectedRevision : undefined;
+    if (payload.force !== true && expected !== current.sha) return json(409, { error: "Media Registry has changed", currentRevision: current.sha });
+    const update = await githubRequest(fetcher, env, mediaRegistryPath.split("/").map(encodeURIComponent).join("/"), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "Update media registry via CMS", content: encodeBase64Utf8(`${JSON.stringify(payload.registry, null, 2)}\n`), branch: env.GITHUB_BRANCH, sha: current.sha }) });
+    const result = await update.json() as { content?: { sha?: string } }; return json(200, { registry: payload.registry, revision: result.content?.sha });
   }
 
   if (request.method === "GET" && url.pathname === "/api/content-item") {
