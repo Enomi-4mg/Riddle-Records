@@ -33,12 +33,70 @@ dev server 上では、Editor から `src/content/<kind>/*.md` を直接開い�
 
 API は kind ごとに固定された `src/content/<kind>/` 配下のサブディレクトリなし `.md` ファイルだけを対象にします。絶対パス、path traversal、`.md` 以外の拡張子、対象ディレクトリ外への書き込みは拒否します。
 
+ローカルAPIとCloudflare Worker APIは同じ契約を使います。`revision` はローカルではmtime由来の文字列、WorkerではGitHub blob SHAです。
+
 共通 API：
 
 - `GET /api/content-list?kind=journal`
 - `GET /api/content-item?kind=journal&path=2026-04-01.md`
 - `POST /api/content-item`
-- `DELETE /api/content-item?kind=journal&path=2026-04-01.md`
+- `DELETE /api/content-item`
+
+保存リクエストは `{ kind, path, markdown, expectedRevision?, force? }`、削除リクエストは `{ kind, path, expectedRevision, force? }` をJSONで送ります。既存ファイルが読み込み後に更新されていた場合は `409 Conflict` になり、現在の内容を再読み込みするか明示的に強制保存します。削除にも同じ競合検査を適用します。
+
+## Cloudflare Workerへのデプロイ
+
+本番Editorは `https://cms.4mg.dev/` でReact SPAと `/api/*` を同じWorkerから配信します。`workers.dev` とpreview URLは無効で、custom domain以外からWorkerへ到達させない設定です。
+
+### 1. GitHub token
+
+GitHubでFine-grained personal access tokenを作成します。
+
+- Repository access: `Enomi-4mg/Riddle-Records` のみ
+- Repository permission: Contents `Read and write`
+- それ以外の権限は追加しない
+
+トークンはリポジトリやGitHub Actionsへ保存せず、Worker Secretとして登録します。
+
+```sh
+cd journal-editor-app
+npx wrangler secret put GITHUB_TOKEN
+```
+
+通常設定は `wrangler.jsonc` の `GITHUB_OWNER`、`GITHUB_REPO`、`GITHUB_BRANCH` にあり、保存先は `main` 固定です。
+
+### 2. GitHub Actions secrets
+
+Repository settingsのActions secretsへ次を登録します。
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_API_TOKEN`: 対象アカウントのWorkers Scripts編集に必要な最小権限を持つトークン
+
+`main` の `journal-editor-app/**` またはデプロイworkflowが変わると、テスト、roundtrip検証、buildの成功後にWorkerをデプロイします。初回はActionsを手動実行することもできます。
+
+### 3. Custom DomainとAccess
+
+初回デプロイ後、Cloudflare Zero TrustでSelf-hosted applicationを作成します。
+
+- Application domain: `cms.4mg.dev`
+- Path: `*`
+- Policy action: Allow
+- Include rule: 管理者本人のメールアドレス1件
+
+Access applicationはEditorだけでなく `/api/*` を含むhostname全体へ適用します。許可メールはCloudflare側だけに設定し、リポジトリには記録しません。Access未認証と認証済みの両方で、画面とAPIが同じ保護範囲にあることを確認してください。
+
+### 4. 手動確認・デプロイ
+
+```sh
+cd journal-editor-app
+npm ci
+npm run check:worker
+npm test
+npm run build
+npm run deploy
+```
+
+CMSから保存するとGitHub `main` へ1操作1commitで反映され、既存のGitHub Pages workflowが公開サイトを再構築します。
 
 ### 削除操作の注意
 

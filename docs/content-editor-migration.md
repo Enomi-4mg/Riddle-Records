@@ -55,10 +55,15 @@ Gallery と Projects は現在、コンテンツコレクションを正本と�
 - `GET /api/content-list?kind=journal`
 - `GET /api/content-item?kind=journal&path=YYYY-MM-DD.md`
 - `POST /api/content-item`
+- `DELETE /api/content-item`
 
 同じ API を `songs`、`gallery`、`projects` にも使います。
 各コンテンツ種別は固定のディレクトリに対応します。
 API は絶対パス、`..`、サブディレクトリ、`.md` 以外のファイル名を拒否します。
+
+ローカルVite APIとCloudflare Worker APIは `revision` / `expectedRevision` を共通の版識別子として使います。ローカルではmtime、WorkerではGitHub blob SHAが実体です。保存と削除の両方で版を比較し、不一致の場合は `409 Conflict` を返します。
+
+本番の `cms.4mg.dev` はReactの静的アセットとAPIを単一Cloudflare Workerから配信し、hostname全体をCloudflare Accessで保護します。WorkerはGitHub Contents APIを通して `main` のMarkdownだけを更新します。
 
 ## 移行手順
 
