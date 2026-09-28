@@ -58,6 +58,7 @@ export function App() {
   const [contentEntries, setContentEntries] = useState<JournalFileEntry[]>([]);
   const [contentFileApiAvailable, setContentFileApiAvailable] = useState(false);
   const [conflictDraft, setConflictDraft] = useState<StoredDraft | null>(null);
+  const [conflictOperation, setConflictOperation] = useState<"save" | "delete" | null>(null);
 
   useEffect(() => {
     refreshContentFiles(activeKind);
@@ -86,7 +87,7 @@ export function App() {
         const file = await loadContentFile(kind, filename);
         const importedAt = nowIso();
         return {
-          file: { path: file.path, mtimeMs: file.mtimeMs },
+          file: { path: file.path, revision: file.revision },
           filename,
           draft: parseImportedMarkdown(file.markdown, {
             kind,
@@ -98,7 +99,7 @@ export function App() {
             sourcePath: `${contentKindSchemas[kind].directory}/${file.path}`,
             sourceFileName: file.path,
             loadedFilePath: file.path,
-            loadedFileMtime: file.mtimeMs
+            loadedFileRevision: file.revision
           })
         };
       } catch {
@@ -146,7 +147,7 @@ export function App() {
         sourcePath: `${contentKindSchemas[kind].directory}/${file.path}`,
         sourceFileName: file.path,
         loadedFilePath: file.path,
-        loadedFileMtime: file.mtimeMs
+        loadedFileRevision: file.revision
       });
       const backup = loadUnsavedBackup(draft.id);
       setCurrentDraft(backup && window.confirm("未保存の一時退避データがあります。復元しますか？") ? backup : draft);
@@ -174,7 +175,7 @@ export function App() {
 
     try {
       const saved = await saveContentFile(next.kind, filename, buildMarkdown(next), {
-        expectedMtime: next.loadedFileMtime,
+        expectedRevision: next.loadedFileRevision,
         force: options.force
       });
       const updated = {
@@ -184,10 +185,12 @@ export function App() {
         sourcePath: `${contentKindSchemas[next.kind].directory}/${filename}`,
         sourceFileName: filename,
         loadedFilePath: saved.path,
-        loadedFileMtime: saved.mtimeMs
+        loadedFileRevision: saved.revision,
+        loadedFileMtime: undefined
       };
       setCurrentDraft(updated);
       setConflictDraft(null);
+      setConflictOperation(null);
       clearUnsavedBackup(next.id);
       setNotice(`${filename} に保存しました`);
       await refreshContentFiles(next.kind);
@@ -195,6 +198,7 @@ export function App() {
     } catch (error) {
       if (error instanceof ContentFileConflictError) {
         setConflictDraft(next);
+        setConflictOperation("save");
         setNotice("ファイルが外部で変更されています");
         return null;
       }
@@ -209,12 +213,30 @@ export function App() {
     const kind = conflictDraft.kind;
     clearUnsavedBackup(conflictDraft.id);
     setConflictDraft(null);
+    setConflictOperation(null);
     await openContentFile(filename, kind);
   }
 
-  async function forceSaveConflictFile(): Promise<StoredDraft | null> {
+  async function forceConflict(): Promise<StoredDraft | null> {
     const draft = currentDraft || conflictDraft;
     if (!draft) return null;
+    if (conflictOperation === "delete") {
+      const filename = draft.sourceFileName;
+      if (!filename) return null;
+      try {
+        await deleteContentFile(draft.kind, filename, { force: true });
+        clearUnsavedBackup(draft.id);
+        setConflictDraft(null);
+        setConflictOperation(null);
+        setCurrentDraft(null);
+        setView("list");
+        setNotice(`${filename} を削除しました`);
+        await refreshContentFiles(draft.kind);
+      } catch (error) {
+        setNotice(`削除に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
+      }
+      return null;
+    }
     return await saveCurrentToFile(draft, { force: true });
   }
 
@@ -228,12 +250,18 @@ export function App() {
     }
 
     try {
-      await deleteContentFile(next.kind, filename);
+      await deleteContentFile(next.kind, filename, { expectedRevision: next.loadedFileRevision });
       setCurrentDraft(null);
       setView("list");
       setNotice(`${filename} を削除しました`);
       await refreshContentFiles(next.kind);
     } catch (error) {
+      if (error instanceof ContentFileConflictError) {
+        setConflictDraft(next);
+        setConflictOperation("delete");
+        setNotice("ファイルが外部で変更されています");
+        return;
+      }
       setNotice(`削除に失敗しました: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }
@@ -255,8 +283,9 @@ export function App() {
         onSaveFile={saveCurrentToFile}
         onDelete={deleteCurrentFile}
         conflictActive={Boolean(conflictDraft)}
+        conflictOperation={conflictOperation}
         onReloadConflict={reloadConflictFile}
-        onForceSaveConflict={forceSaveConflictFile}
+        onForceConflict={forceConflict}
         onNotice={setNotice}
         onFullPreview={(draft) => {
           updateCurrentDraft(draft);

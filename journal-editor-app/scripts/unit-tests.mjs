@@ -35,6 +35,7 @@ import {
 import { isContentKind } from "../src/types/content.ts";
 import { defaultFrontmatter } from "../src/types/journal.ts";
 import { contentApiPlugin, isAllowedContentFilename, isTrustedWriteOrigin } from "../vite.config.ts";
+import { createWorkerHandler } from "../worker/index.ts";
 import { getGalleryDetailPath, hasGalleryDetail, validateGalleryItems } from "../../src/data/gallery.ts";
 import { resolveImageUrl } from "../../src/utils/images.ts";
 import {
@@ -88,7 +89,7 @@ function withLocalStorage(callback) {
   }
 }
 
-function requestContentApi({ method = "GET", url, headers = {} }) {
+function requestContentApi({ method = "GET", url, headers = {}, body = "" }) {
   let middleware;
   contentApiPlugin().configureServer({
     middlewares: { use: (handler) => { middleware = handler; } }
@@ -109,6 +110,10 @@ function requestContentApi({ method = "GET", url, headers = {} }) {
       })
     };
     Promise.resolve(middleware(request, response, () => resolve({ nextCalled: true }))).catch(reject);
+    queueMicrotask(() => {
+      if (body) request.emit("data", body);
+      request.emit("end");
+    });
   });
 }
 
@@ -330,14 +335,14 @@ describe("content file API client", () => {
     await withFetch(async (url) => {
       requestedUrl = String(url);
       return new Response(JSON.stringify({ files: [
-        { kind: "journal", path: "valid.md", mtimeMs: 10 },
-        { kind: "songs", path: "wrong-kind.md", mtimeMs: 20 },
-        { kind: "journal", path: 42, mtimeMs: 30 }
+        { kind: "journal", path: "valid.md", revision: "sha-10" },
+        { kind: "songs", path: "wrong-kind.md", revision: "sha-20" },
+        { kind: "journal", path: 42, revision: "sha-30" }
       ] }), { status: 200, headers: { "Content-Type": "application/json" } });
     }, async () => {
       const result = await loadContentFiles("journal");
       assert.equal(requestedUrl, "/api/content-list?kind=journal");
-      assert.deepEqual(result, { available: true, files: [{ kind: "journal", path: "valid.md", mtimeMs: 10 }] });
+      assert.deepEqual(result, { available: true, files: [{ kind: "journal", path: "valid.md", revision: "sha-10" }] });
     });
   });
 
@@ -358,36 +363,41 @@ describe("content file API client", () => {
     const requests = [];
     await withFetch(async (url, options = {}) => {
       requests.push([String(url), options]);
-      if (options.method === "POST") return Response.json({ kind: "journal", path: "a b.md", saved: true, mtimeMs: 12 });
+      if (options.method === "POST") return Response.json({ kind: "journal", path: "a b.md", saved: true, revision: "sha-12" });
       if (options.method === "DELETE") return Response.json({ kind: "journal", path: "a b.md", deleted: true });
-      return Response.json({ kind: "journal", path: "a b.md", markdown: "# body", mtimeMs: 11 });
+      return Response.json({ kind: "journal", path: "a b.md", markdown: "# body", revision: "sha-11" });
     }, async () => {
       assert.equal((await loadContentFile("journal", "a b.md")).markdown, "# body");
-      assert.equal((await saveContentFile("journal", "a b.md", "# next", { expectedMtime: 11 })).saved, true);
-      assert.equal((await deleteContentFile("journal", "a b.md")).deleted, true);
+      assert.equal((await saveContentFile("journal", "a b.md", "# next", { expectedRevision: "sha-11" })).saved, true);
+      assert.equal((await deleteContentFile("journal", "a b.md", { expectedRevision: "sha-12" })).deleted, true);
     });
     assert.equal(requests[0][0], "/api/content-item?kind=journal&path=a%20b.md");
     assert.deepEqual(JSON.parse(requests[1][1].body), {
       kind: "journal",
       path: "a b.md",
       markdown: "# next",
-      expectedMtime: 11
+      expectedRevision: "sha-11"
     });
     assert.equal(requests[2][1].method, "DELETE");
+    assert.deepEqual(JSON.parse(requests[2][1].body), {
+      kind: "journal",
+      path: "a b.md",
+      expectedRevision: "sha-12"
+    });
   });
 
   test("raises a typed error for write conflicts", async () => {
     await withFetch(async () => Response.json({
       error: "changed",
-      currentMtime: 20,
-      expectedMtime: 10
+      currentRevision: "sha-20",
+      expectedRevision: "sha-10"
     }, { status: 409 }), async () => {
       await assert.rejects(
-        saveContentFile("journal", "entry.md", "body", { expectedMtime: 10 }),
+        saveContentFile("journal", "entry.md", "body", { expectedRevision: "sha-10" }),
         (error) => error instanceof ContentFileConflictError &&
           error.message === "changed" &&
-          error.currentMtime === 20 &&
-          error.expectedMtime === 10
+          error.currentRevision === "sha-20" &&
+          error.expectedRevision === "sha-10"
       );
     });
   });
@@ -425,12 +435,152 @@ describe("content file API server boundary", () => {
 
     const forbidden = await requestContentApi({
       method: "DELETE",
-      url: "/api/content-item?kind=journal&path=entry.md",
-      headers: { host: "localhost:5174", origin: "https://evil.example" }
+      url: "/api/content-item",
+      headers: { host: "localhost:5174", origin: "https://evil.example" },
+      body: JSON.stringify({ kind: "journal", path: "entry.md", expectedRevision: "mtime:1" })
     });
     assert.equal(forbidden.statusCode, 403);
 
     assert.deepEqual(await requestContentApi({ url: "/not-an-api" }), { nextCalled: true });
+  });
+
+  test("uses revision conflicts for local saves and deletes", async () => {
+    const staleRevision = "mtime:0";
+    const save = await requestContentApi({
+      method: "POST",
+      url: "/api/content-item",
+      body: JSON.stringify({ kind: "journal", path: "2026-04-01.md", markdown: "unchanged", expectedRevision: staleRevision })
+    });
+    assert.equal(save.statusCode, 409);
+    assert.equal(JSON.parse(save.body).expectedRevision, staleRevision);
+    assert.match(JSON.parse(save.body).currentRevision, /^mtime:/);
+
+    const deletion = await requestContentApi({
+      method: "DELETE",
+      url: "/api/content-item",
+      body: JSON.stringify({ kind: "journal", path: "2026-04-01.md", expectedRevision: staleRevision })
+    });
+    assert.equal(deletion.statusCode, 409);
+    assert.equal(JSON.parse(deletion.body).expectedRevision, staleRevision);
+  });
+});
+
+describe("Cloudflare Worker content API", () => {
+  const env = {
+    ASSETS: { fetch: async () => new Response("asset") },
+    GITHUB_TOKEN: "test-token",
+    GITHUB_OWNER: "Enomi-4mg",
+    GITHUB_REPO: "Riddle-Records",
+    GITHUB_BRANCH: "main"
+  };
+
+  test("serves assets outside API routes and validates paths before GitHub access", async () => {
+    const requests = [];
+    const handler = createWorkerHandler(async (...args) => {
+      requests.push(args);
+      return Response.json([]);
+    });
+    assert.equal(await (await handler(new Request("https://cms.4mg.dev/editor"), env)).text(), "asset");
+    const invalid = await handler(new Request("https://cms.4mg.dev/api/content-item?kind=journal&path=..%2Fsecret.md"), env);
+    assert.equal(invalid.status, 400);
+    assert.equal(requests.length, 0);
+  });
+
+  test("lists and reads GitHub content with SHA revisions", async () => {
+    const calls = [];
+    const handler = createWorkerHandler(async (url, options) => {
+      calls.push([String(url), options]);
+      if (String(url).includes("entry.md")) {
+        return Response.json({ type: "file", name: "entry.md", path: "src/content/journal/entry.md", sha: "sha-1", encoding: "base64", content: Buffer.from("# 本文", "utf8").toString("base64") });
+      }
+      return Response.json([
+        { type: "file", name: "entry.md", path: "src/content/journal/entry.md", sha: "sha-1" },
+        { type: "dir", name: "nested", path: "src/content/journal/nested", sha: "sha-dir" }
+      ]);
+    });
+    const listing = await handler(new Request("https://cms.4mg.dev/api/content-list?kind=journal"), env);
+    assert.deepEqual(await listing.json(), { files: [{ kind: "journal", path: "entry.md", revision: "sha-1" }] });
+    const item = await handler(new Request("https://cms.4mg.dev/api/content-item?kind=journal&path=entry.md"), env);
+    assert.deepEqual(await item.json(), { kind: "journal", path: "entry.md", markdown: "# 本文", revision: "sha-1" });
+    assert.ok(calls.every(([url]) => url.includes("ref=main")));
+    assert.ok(calls.every(([, options]) => options.headers.Authorization === "Bearer test-token"));
+  });
+
+  test("creates, updates, force-updates, and deletes through the Contents API", async () => {
+    let current = null;
+    const writes = [];
+    const handler = createWorkerHandler(async (url, options = {}) => {
+      if (!options.method || options.method === "GET") {
+        return current ? Response.json({ type: "file", name: "entry.md", path: "src/content/journal/entry.md", sha: current, encoding: "base64", content: btoa("old") }) : new Response("", { status: 404 });
+      }
+      const body = JSON.parse(options.body);
+      writes.push([options.method, body]);
+      if (options.method === "PUT") {
+        current = `sha-${writes.length}`;
+        return Response.json({ content: { sha: current } });
+      }
+      current = null;
+      return Response.json({ commit: { sha: "commit-delete" } });
+    });
+
+    const create = await handler(new Request("https://cms.4mg.dev/api/content-item", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "journal", path: "entry.md", markdown: "new" })
+    }), env);
+    assert.equal((await create.json()).revision, "sha-1");
+    assert.equal(writes[0][1].sha, undefined);
+
+    const update = await handler(new Request("https://cms.4mg.dev/api/content-item", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "journal", path: "entry.md", markdown: "next", expectedRevision: "sha-1" })
+    }), env);
+    assert.equal((await update.json()).revision, "sha-2");
+    assert.equal(writes[1][1].sha, "sha-1");
+
+    const forced = await handler(new Request("https://cms.4mg.dev/api/content-item", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "journal", path: "entry.md", markdown: "forced", expectedRevision: "stale", force: true })
+    }), env);
+    assert.equal((await forced.json()).revision, "sha-3");
+    assert.equal(writes[2][1].sha, "sha-2");
+
+    const deleted = await handler(new Request("https://cms.4mg.dev/api/content-item", {
+      method: "DELETE", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: "journal", path: "entry.md", expectedRevision: "sha-3" })
+    }), env);
+    assert.equal((await deleted.json()).deleted, true);
+    assert.equal(writes[3][1].sha, "sha-3");
+  });
+
+  test("returns conflicts without mutating GitHub", async () => {
+    let writes = 0;
+    const handler = createWorkerHandler(async (_url, options = {}) => {
+      if (options.method) writes += 1;
+      return Response.json({ type: "file", name: "entry.md", path: "src/content/journal/entry.md", sha: "current", encoding: "base64", content: btoa("old") });
+    });
+    for (const method of ["POST", "DELETE"]) {
+      const response = await handler(new Request("https://cms.4mg.dev/api/content-item", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "journal", path: "entry.md", markdown: "next", expectedRevision: "stale" })
+      }), env);
+      assert.equal(response.status, 409);
+      assert.equal((await response.json()).currentRevision, "current");
+    }
+    assert.equal(writes, 0);
+  });
+
+  test("normalizes GitHub authentication, rate-limit, and upstream errors", async () => {
+    for (const [status, headers, expectedStatus, message] of [
+      [401, {}, 502, "GitHub authentication failed"],
+      [403, { "x-ratelimit-remaining": "0" }, 503, "GitHub API rate limit exceeded"],
+      [500, {}, 502, "GitHub API is unavailable"]
+    ]) {
+      const handler = createWorkerHandler(async () => new Response("secret upstream body", { status, headers }));
+      const response = await handler(new Request("https://cms.4mg.dev/api/content-list?kind=journal"), env);
+      assert.equal(response.status, expectedStatus);
+      assert.deepEqual(await response.json(), { error: message });
+    }
   });
 });
 
@@ -450,6 +600,13 @@ describe("unsaved backups", () => {
       values.set("riddle-journal-unsaved:broken", "not-json");
       assert.equal(loadUnsavedBackup("broken"), null);
     });
+  });
+
+  test("ignores legacy mtime metadata when creating migrated drafts", () => {
+    const draft = createEditorDraft({ loadedFilePath: "legacy.md", loadedFileMtime: 123 });
+    assert.equal(draft.loadedFilePath, "legacy.md");
+    assert.equal(draft.loadedFileRevision, undefined);
+    assert.equal(draft.loadedFileMtime, undefined);
   });
 });
 

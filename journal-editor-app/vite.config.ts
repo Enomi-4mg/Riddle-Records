@@ -72,7 +72,7 @@ async function listContentFiles(kind: ContentKind) {
     .sort((a, b) => b.localeCompare(a));
   return await Promise.all(filenames.map(async (filename) => {
     const stat = await fs.stat(path.join(contentDir, filename));
-    return { kind, path: filename, mtimeMs: stat.mtimeMs };
+    return { kind, path: filename, revision: `mtime:${stat.mtimeMs}` };
   }));
 }
 
@@ -121,7 +121,7 @@ export function contentApiPlugin() {
               fs.readFile(filePath, "utf8"),
               fs.stat(filePath)
             ]);
-            sendJson(response, 200, { kind, path: filename, markdown, mtimeMs: stat.mtimeMs });
+            sendJson(response, 200, { kind, path: filename, markdown, revision: `mtime:${stat.mtimeMs}` });
             return;
           }
 
@@ -135,7 +135,7 @@ export function contentApiPlugin() {
             const contentDir = getContentDir(kind);
             const filename = typeof payload.path === "string" ? payload.path : "";
             const markdown = typeof payload.markdown === "string" ? payload.markdown : "";
-            const expectedMtime = "expectedMtime" in payload && typeof payload.expectedMtime === "number" ? payload.expectedMtime : undefined;
+            const expectedRevision = "expectedRevision" in payload && typeof payload.expectedRevision === "string" ? payload.expectedRevision : undefined;
             const force = "force" in payload && payload.force === true;
             if (!contentDir || !isContentKind(kind)) {
               sendJson(response, 400, { error: "Invalid content kind" });
@@ -148,26 +148,34 @@ export function contentApiPlugin() {
             await fs.mkdir(contentDir, { recursive: true });
             const filePath = path.join(contentDir, filename);
             const currentStat = await fs.stat(filePath).catch(() => null);
-            if (!force && expectedMtime !== undefined && currentStat && currentStat.mtimeMs !== expectedMtime) {
+            const currentRevision = currentStat ? `mtime:${currentStat.mtimeMs}` : undefined;
+            if (!force && ((currentRevision && expectedRevision !== currentRevision) || (!currentRevision && expectedRevision))) {
               sendJson(response, 409, {
                 error: "File has changed on disk",
                 kind,
                 path: filename,
-                expectedMtime,
-                currentMtime: currentStat.mtimeMs
+                expectedRevision,
+                currentRevision
               });
               return;
             }
             await fs.writeFile(filePath, markdown, "utf8");
             const nextStat = await fs.stat(filePath);
-            sendJson(response, 200, { kind, path: filename, saved: true, mtimeMs: nextStat.mtimeMs });
+            sendJson(response, 200, { kind, path: filename, saved: true, revision: `mtime:${nextStat.mtimeMs}` });
             return;
           }
 
           if (request.method === "DELETE" && url.pathname === "/api/content-item") {
-            const kind = url.searchParams.get("kind");
+            const payload = JSON.parse(await readRequestBody(request)) as unknown;
+            if (!payload || typeof payload !== "object" || !("kind" in payload) || !("path" in payload)) {
+              sendJson(response, 400, { error: "Invalid payload" });
+              return;
+            }
+            const kind = typeof payload.kind === "string" ? payload.kind : "";
             const contentDir = getContentDir(kind);
-            const filename = url.searchParams.get("path") ?? "";
+            const filename = typeof payload.path === "string" ? payload.path : "";
+            const expectedRevision = "expectedRevision" in payload && typeof payload.expectedRevision === "string" ? payload.expectedRevision : undefined;
+            const force = "force" in payload && payload.force === true;
             if (!contentDir || !isContentKind(kind)) {
               sendJson(response, 400, { error: "Invalid content kind" });
               return;
@@ -176,7 +184,18 @@ export function contentApiPlugin() {
               sendJson(response, 400, { error: "Invalid content filename" });
               return;
             }
-            await fs.unlink(path.join(contentDir, filename));
+            const filePath = path.join(contentDir, filename);
+            const currentStat = await fs.stat(filePath).catch(() => null);
+            if (!currentStat) {
+              sendJson(response, 404, { error: "Content file not found" });
+              return;
+            }
+            const currentRevision = `mtime:${currentStat.mtimeMs}`;
+            if (!force && expectedRevision !== currentRevision) {
+              sendJson(response, 409, { error: "File has changed on disk", kind, path: filename, expectedRevision, currentRevision });
+              return;
+            }
+            await fs.unlink(filePath);
             sendJson(response, 200, { kind, path: filename, deleted: true });
             return;
           }

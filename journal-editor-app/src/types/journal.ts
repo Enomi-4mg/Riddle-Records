@@ -55,6 +55,8 @@ export type StoredDraft = {
   sourcePath?: string;
   sourceFileName?: string;
   loadedFilePath?: string;
+  loadedFileRevision?: string;
+  /** Legacy localStorage field. It is intentionally ignored after migration. */
   loadedFileMtime?: number;
   frontmatter: FrontmatterForm;
   body: string;
@@ -62,7 +64,7 @@ export type StoredDraft = {
 
 export type JournalFileInfo = {
   path: string;
-  mtimeMs: number;
+  revision: string;
 };
 
 export type JournalFileEntry = {

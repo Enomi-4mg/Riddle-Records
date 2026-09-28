@@ -6,7 +6,7 @@ import { SettingsDrawer } from "./SettingsDrawer";
 import { ReviewPane } from "./ReviewPane";
 import { ImageCardTool } from "./ImageCardTool";
 
-export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDelete, conflictActive, onReloadConflict, onForceSaveConflict, onNotice, onFullPreview }: {
+export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDelete, conflictActive, conflictOperation, onReloadConflict, onForceConflict, onNotice, onFullPreview }: {
   draft: StoredDraft;
   notice: string;
   onBack: () => void;
@@ -14,8 +14,9 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
   onSaveFile: (draft: StoredDraft, options?: { force?: boolean }) => Promise<StoredDraft | null>;
   onDelete: (draft: StoredDraft) => void;
   conflictActive: boolean;
+  conflictOperation: "save" | "delete" | null;
   onReloadConflict: () => void;
-  onForceSaveConflict: () => Promise<StoredDraft | null>;
+  onForceConflict: () => Promise<StoredDraft | null>;
   onNotice: (notice: string) => void;
   onFullPreview: (draft: StoredDraft) => void;
 }) {
@@ -116,7 +117,7 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
   }
 
   async function forceSaveFile() {
-    const saved = await onForceSaveConflict();
+    const saved = await onForceConflict();
     syncSavedDraft(saved);
   }
 
@@ -184,11 +185,11 @@ export function EditorScreen({ draft, notice, onBack, onSave, onSaveFile, onDele
         <section className="conflict-bar" role="alert">
           <div>
             <strong>ファイルが外部で変更されています</strong>
-            <span>保存前に再読み込みするか、現在の編集内容で上書き保存してください。</span>
+            <span>{conflictOperation === "delete" ? "削除前に再読み込みするか、現在のファイルを強制削除してください。" : "保存前に再読み込みするか、現在の編集内容で上書き保存してください。"}</span>
           </div>
           <div className="button-row">
             <button onClick={onReloadConflict}>再読み込み</button>
-            <button className="danger" onClick={forceSaveFile}>上書き保存</button>
+            <button className="danger" onClick={forceSaveFile}>{conflictOperation === "delete" ? "強制削除" : "上書き保存"}</button>
           </div>
         </section>
       )}

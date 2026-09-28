@@ -24,7 +24,7 @@ export type ContentKindSchema = {
 export type ContentFileInfo = {
   kind: ContentKind;
   path: string;
-  mtimeMs: number;
+  revision: string;
 };
 
 export type ContentFileListResult = {

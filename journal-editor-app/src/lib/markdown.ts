@@ -24,7 +24,7 @@ export function createEditorDraft(overrides: DraftOverrides = {}): StoredDraft {
     sourcePath: overrides.sourcePath,
     sourceFileName: overrides.sourceFileName,
     loadedFilePath: overrides.loadedFilePath,
-    loadedFileMtime: overrides.loadedFileMtime,
+    loadedFileRevision: overrides.loadedFileRevision,
     kind: overrides.kind ?? "journal",
     frontmatter: { ...defaultFrontmatter, ...overrides.frontmatter },
     body: overrides.body ?? defaultBody
