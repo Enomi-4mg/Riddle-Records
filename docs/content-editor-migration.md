@@ -1,5 +1,17 @@
 # Content Editor 移行計画
 
+## 2026年 CMS刷新
+
+Content Editorは、4種別のファイル一覧から、ContentとMediaを横断して扱うCMSへ刷新しました。
+
+- Content一覧はJournal、Songs、Gallery、Projectsをまとめて検索・絞り込みできます。
+- 公開状態は`draft`から抽象化した「下書き」「公開中」、編集状態は「未保存」「保存中」「保存済み」「競合」「保存エラー」として別々に扱います。
+- 本文はTiptapのVisual Editorで編集し、保存時に既存Markdownへ変換します。未知のfrontmatterと既存HTML埋め込みは互換データとして保持します。
+- Media Registryの正本は`src/data/media-registry.json`です。Cloudinaryへのアップロードや管理API連携は行いません。
+- Registryはコンテンツと同様にrevisionを使って更新し、競合時は409を返します。
+
+既存Markdownは移行時に一括書き換えません。編集して保存したファイルだけが新しい変換処理を通ります。
+
 ## 目的
 
 `journal-editor-app/` を Journal 専用エディタから、次のコンテンツを扱う Content Editor へ拡張します。
