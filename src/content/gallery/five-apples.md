@@ -8,9 +8,11 @@ thumbnail: true
 thumbnail_alt: "五つのりんご"
 detail: false
 tags: ["3DCG"]
-article_url: "/journal/2025-06-06/"
-making_article_url: ""
 draft: false
 ---
 
 Blender のチュートリアルをもとに制作した、五つのりんごの3DCG作品です。
+
+## 関連記事
+
+- [作品記事](/journal/2025-06-06/)

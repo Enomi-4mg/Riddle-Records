@@ -8,9 +8,11 @@ thumbnail: false
 thumbnail_alt: "Cry"
 detail: true
 tags: ["イラスト"]
-article_url: "/journal/2026-01-17/"
-making_article_url: ""
 draft: false
 ---
 
 夏コミ2025の寄稿用に制作したイラストです。青色を使っています。
+
+## 関連記事
+
+- [作品記事](/journal/2026-01-17/)

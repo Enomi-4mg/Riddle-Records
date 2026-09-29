@@ -8,8 +8,6 @@ thumbnail: true
 thumbnail_alt: "友達"
 detail: true
 tags: ["イラスト"]
-article_url: ""
-making_article_url: ""
 draft: false
 ---
 

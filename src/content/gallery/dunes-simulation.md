@@ -8,9 +8,11 @@ thumbnail: true
 thumbnail_alt: "砂の風紋シミュレーション"
 detail: false
 tags: ["3DCG"]
-article_url: "/journal/2026-01-30/dunes-making/"
-making_article_url: ""
 draft: false
 ---
 
 砂の風紋をシミュレーションした3DCG作品です。
+
+## 関連記事
+
+- [作品記事](/journal/2026-01-30/dunes-making/)

@@ -46,8 +46,19 @@ const normalizeDataItem = (item: GalleryItem): GalleryItemView => ({
 
 type GalleryCollectionEntry = Awaited<ReturnType<typeof getCollection<"gallery">>>[number];
 
+function galleryBodySections(body: string) {
+  const match = body.match(/(?:^|\n)## 関連記事\s*\n([\s\S]*?)(?=\n## |$)/);
+  const links = match ? [...match[1].matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)] : [];
+  return {
+    body: match ? body.replace(match[0], "").trim() : body.trim(),
+    articleUrl: links.find((link) => link[1] === "作品記事")?.[2],
+    makingArticleUrl: links.find((link) => link[1] === "メイキング")?.[2]
+  };
+}
+
 const normalizeCollectionItem = (entry: GalleryCollectionEntry): GalleryItemView => {
   const image = entry.data.image ?? entry.data.cloudinary_id ?? "";
+  const sections = galleryBodySections(entry.body ?? "");
   return {
     source: "collection",
     slug: entry.data.slug || entry.slug,
@@ -57,10 +68,10 @@ const normalizeCollectionItem = (entry: GalleryCollectionEntry): GalleryItemView
     image,
     imageAlt: entry.data.thumbnail_alt ?? entry.data.title,
     description: entry.data.description ?? "",
-    body: entry.body?.trim() || entry.data.description || "",
+    body: sections.body || entry.data.description || "",
     tags: entry.data.tags ?? entry.data.categories ?? [],
-    article_url: entry.data.article_url,
-    making_article_url: entry.data.making_article_url,
+    article_url: sections.articleUrl ?? entry.data.article_url,
+    making_article_url: sections.makingArticleUrl ?? entry.data.making_article_url,
     thumbnail: entry.data.thumbnail ?? true,
     thumbnail_alt: entry.data.thumbnail_alt ?? entry.data.title,
     thumbnail_class: entry.data.thumbnail_class

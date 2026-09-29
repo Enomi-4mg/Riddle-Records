@@ -45,9 +45,18 @@ const normalizeLegacyItem = (item: ProjectDataItem): ProjectItemView => ({
   draft: false
 });
 
+function projectBodySections(body: string) {
+  const match = body.match(/(?:^|\n)## 主な機能\s*\n([\s\S]*?)(?=\n## |$)/);
+  return {
+    body: match ? body.replace(match[0], "").trim() : body.trim(),
+    features: match ? match[1].split("\n").flatMap((line) => { const item = line.match(/^\s*[-*]\s+(.+)$/); return item ? [item[1]] : []; }) : []
+  };
+}
+
 type ProjectsCollectionEntry = Awaited<ReturnType<typeof getCollection<"projects">>>[number];
 
 const normalizeCollectionItem = (entry: ProjectsCollectionEntry): ProjectItemView => {
+  const sections = projectBodySections(entry.body ?? "");
   return {
     source: "collection",
     slug: entry.data.slug || entry.slug,
@@ -61,8 +70,8 @@ const normalizeCollectionItem = (entry: ProjectsCollectionEntry): ProjectItemVie
       entry.data.externalUrl ? { label: "Website", url: entry.data.externalUrl } : undefined,
       entry.data.sourceUrl ? { label: "GitHub", url: entry.data.sourceUrl } : undefined
     ].filter((link): link is { label: string; url: string } => Boolean(link)),
-    features: entry.data.features ?? [],
-    body: entry.body?.trim() || entry.data.description,
+    features: sections.features.length ? sections.features : entry.data.features ?? [],
+    body: sections.body || entry.data.description,
     draft: entry.data.draft === true
   };
 };

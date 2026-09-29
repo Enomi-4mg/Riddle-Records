@@ -8,9 +8,11 @@ thumbnail: true
 thumbnail_alt: "四コマ漫画：宿題"
 detail: true
 tags: ["四コマ漫画"]
-article_url: "/journal/2025-10-01/"
-making_article_url: ""
 draft: false
 ---
 
 四コマ漫画形式で描いた練習作品。
+
+## 関連記事
+
+- [作品記事](/journal/2025-10-01/)

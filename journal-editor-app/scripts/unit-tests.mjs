@@ -33,7 +33,7 @@ import {
   yamlString
 } from "../src/lib/yamlFrontmatter.ts";
 import { isContentKind } from "../src/types/content.ts";
-import { buildContentMarkdown, createContentDocument, parseContentMarkdown, publicationChecks } from "../src/lib/cmsMarkdown.ts";
+import { buildContentMarkdown, createContentDocument, normalizeYouTubeId, parseContentMarkdown, publicationChecks } from "../src/lib/cmsMarkdown.ts";
 import { markdownToEditorHtml } from "../src/lib/editorMarkdown.ts";
 import { validateMediaRegistry } from "../src/types/media.ts";
 import { defaultFrontmatter } from "../src/types/journal.ts";
@@ -689,6 +689,21 @@ describe("site utility behavior", () => {
 });
 
 describe("CMS content model", () => {
+  test("moves legacy feature and related links into editable body without duplicating them", () => {
+    const project = parseContentMarkdown("---\ntitle: Demo\ndate: 2026-09-29\nfeatures: [One, Two]\n---\n\nIntro\n", "projects");
+    assert.match(project.body, /## 主な機能\n\n- One\n- Two/);
+    assert.doesNotMatch(buildContentMarkdown(project), /^features:/m);
+    assert.equal((parseContentMarkdown(buildContentMarkdown(project), "projects").body.match(/## 主な機能/g) || []).length, 1);
+    const gallery = parseContentMarkdown("---\ntitle: Demo\ndate: 2026-09-29\narticle_url: /journal/one/\n---\n\nIntro\n", "gallery");
+    assert.match(gallery.body, /\[作品記事\]\(\/journal\/one\/\)/);
+    assert.doesNotMatch(buildContentMarkdown(gallery), /^article_url:/m);
+  });
+
+  test("accepts YouTube URLs while storing only the video ID", () => {
+    assert.equal(normalizeYouTubeId("https://youtu.be/2kTaqYkdbP8"), "2kTaqYkdbP8");
+    assert.equal(normalizeYouTubeId("https://www.youtube.com/watch?v=2kTaqYkdbP8&t=5"), "2kTaqYkdbP8");
+    assert.equal(normalizeYouTubeId("https://example.com/watch?v=2kTaqYkdbP8"), "");
+  });
   test("keeps publication and project status independent", () => {
     const document = createContentDocument("projects");
     document.common.publication = "published";
