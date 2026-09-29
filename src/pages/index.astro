@@ -2,7 +2,6 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getGalleryItems, getSortedGalleryItems } from "../utils/gallery";
-import { getSortedProjectItems } from "../utils/projects";
 import { getJournalRoutePath, getJournalThumbnail } from "../utils/journal";
 import fallbackIconUrl from "../../favicon/icon.jpg?url";
 
@@ -21,19 +20,12 @@ const latestJournal = journals[0];
 const latestSong = songs[0];
 const galleryItems = await getGalleryItems();
 const latestGallery = (await getSortedGalleryItems())[0];
-const latestProject = (await getSortedProjectItems())[0];
 const latestWorkDate = latestGallery && latestSong
   ? new Date(latestGallery.date).getTime() >= latestSong.data.date.getTime()
     ? latestGallery.date
     : latestSong.data.date.toISOString().slice(0, 10)
   : latestGallery?.date ?? latestSong?.data.date.toISOString().slice(0, 10);
-const latestContentDate = [
-  latestJournal?.data.date,
-  latestSong?.data.date,
-  latestGallery?.date ? new Date(latestGallery.date) : undefined,
-  latestProject?.date ? new Date(latestProject.date) : undefined
-].filter((date): date is Date => date instanceof Date && !Number.isNaN(date.getTime()))
-  .sort((left, right) => right.getTime() - left.getTime())[0];
+const siteUpdatedAt = new Date(import.meta.env.PUBLIC_SITE_UPDATED_AT ?? new Date().toISOString());
 const summarize = (text) => (text ? text.replace(/\s+/g, " ").trim().slice(0, 70) : "");
 const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_description ?? entry.body;
 ---
@@ -43,7 +35,7 @@ const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_des
     <h1 class="home-welcome">ようこそ！<br />Riddle Records 公式サイトへ。</h1>
     <p>4mgのポートフォリオサイトです。</p>
     <p>ページ上部のヘッダーメニューからも各ページへ移動できます。</p>
-    {latestContentDate && <p><small>最終更新：{latestContentDate.toLocaleDateString("ja-JP")}</small></p>}
+    <p><small>サイト最終更新：{siteUpdatedAt.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}</small></p>
   </section>
 
   <section class="home-latest journal-entry-animate">

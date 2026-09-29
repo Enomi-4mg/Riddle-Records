@@ -1404,6 +1404,13 @@ main.container pre {
     position: relative;
 }
 
+/* 歌詞はコードブロック用の暗色スタイルから除外する */
+.post .post-lyrics pre {
+    background-color: var(--color-paper);
+    border: 1px solid var(--color-line);
+    color: var(--color-ink);
+}
+
 /* 言語ラベル表示 */
 .post pre[class*="language-"]::before,
 main.container pre[class*="language-"]::before {
