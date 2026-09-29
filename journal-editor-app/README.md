@@ -43,8 +43,11 @@ API は kind ごとに固定された `src/content/<kind>/` 配下のサブデ�
 - `DELETE /api/content-item`
 - `POST /api/site-deploy`（CMSからサイト公開を起動）
 - `GET /api/site-deploy?deploymentId=...`（公開状況を確認）
+- `POST /api/pending-batch`（複数の保留変更を1コミットで反映）
 
 保存リクエストは `{ kind, path, markdown, expectedRevision?, force? }`、削除リクエストは `{ kind, path, expectedRevision, force? }` をJSONで送ります。既存ファイルが読み込み後に更新されていた場合は `409 Conflict` になり、現在の内容を再読み込みするか明示的に強制保存します。削除にも同じ競合検査を適用します。
+
+CMSは1タブでの利用を想定しています。別タブが開いている間は後から開いたタブの編集とデプロイを停止します。デプロイのworkflowが見つからない場合は5分後に失敗として扱い、画面の「デプロイ追跡を解除」から保留変更を残したまま再試行できます。公開workflowは実行時点の`main`をビルドします。
 
 ## Cloudflare Workerへのデプロイ
 
@@ -56,7 +59,7 @@ GitHubでFine-grained personal access tokenを作成します。
 
 - Repository access: `Enomi-4mg/Riddle-Records` のみ
 - Repository permission: Contents `Read and write`
-- それ以外の権限は追加しない
+- Repository permission: Actions `Read`（公開状況の確認に使用）
 
 トークンはリポジトリやGitHub Actionsへ保存せず、Worker Secretとして登録します。
 

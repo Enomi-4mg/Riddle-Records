@@ -17,7 +17,7 @@ const mediaRegistryPath = path.resolve(repositoryRoot, "src/data/media-registry.
 type ContentKind = keyof typeof contentDirs;
 
 function isContentKind(value: string | null): value is ContentKind {
-  return Boolean(value && value in contentDirs);
+  return Boolean(value && Object.prototype.hasOwnProperty.call(contentDirs, value));
 }
 
 export function isAllowedContentFilename(value: string) {
@@ -82,7 +82,7 @@ export function contentApiPlugin() {
     name: "riddle-content-api",
     configureServer(server: import("vite").ViteDevServer) {
       server.middlewares.use(async (request, response, next) => {
-        if (!request.url?.startsWith("/api/content-") && !request.url?.startsWith("/api/media-registry") && !request.url?.startsWith("/api/site-deploy")) {
+        if (!request.url?.startsWith("/api/content-") && !request.url?.startsWith("/api/media-registry") && !request.url?.startsWith("/api/site-deploy") && !request.url?.startsWith("/api/pending-batch")) {
           next();
           return;
         }
@@ -103,6 +103,34 @@ export function contentApiPlugin() {
           }
           if ((request.method === "POST" || request.method === "DELETE") && !isTrustedWriteOrigin(request)) {
             sendJson(response, 403, { error: "Forbidden origin" });
+            return;
+          }
+
+          if (request.method === "POST" && url.pathname === "/api/pending-batch") {
+            const payload = JSON.parse(await readRequestBody(request)) as { contents?: Array<{ id: string; kind: string; path: string; operation: "save" | "delete"; markdown?: string; expectedRevision?: string; force?: boolean }>; media?: { registry: unknown; expectedRevision?: string; force?: boolean } };
+            if (!Array.isArray(payload.contents) || !payload.contents.length && !payload.media) { sendJson(response, 400, { error: "Invalid batch" }); return; }
+            const checked: Array<{ id: string; path: string; filePath: string; operation: "save" | "delete"; markdown?: string }> = [];
+            for (const entry of payload.contents) {
+              if (!entry || typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || !["save", "delete"].includes(entry.operation) || entry.operation === "save" && typeof entry.markdown !== "string") { sendJson(response, 400, { error: "Invalid batch content" }); return; }
+              const filePath = path.join(contentDirs[entry.kind], entry.path);
+              const stat = await fs.stat(filePath).catch(() => null);
+              const currentRevision = stat ? `mtime:${stat.mtimeMs}` : undefined;
+              if (!entry.force && currentRevision !== entry.expectedRevision) { sendJson(response, 409, { target: "content", documentId: entry.id, operation: entry.operation, expectedRevision: entry.expectedRevision, currentRevision }); return; }
+              checked.push({ id: entry.id, path: entry.path, filePath, operation: entry.operation, markdown: entry.markdown });
+            }
+            if (payload.media) {
+              const stat = await fs.stat(mediaRegistryPath).catch(() => null);
+              const currentRevision = stat ? `mtime:${stat.mtimeMs}` : undefined;
+              if (!payload.media.force && currentRevision !== payload.media.expectedRevision) { sendJson(response, 409, { target: "media", operation: "save", expectedRevision: payload.media.expectedRevision, currentRevision }); return; }
+            }
+            const results = [];
+            for (const entry of checked) {
+              if (entry.operation === "delete") { await fs.unlink(entry.filePath); results.push({ id: entry.id, path: entry.path }); }
+              else { await fs.writeFile(entry.filePath, entry.markdown!, "utf8"); const stat = await fs.stat(entry.filePath); results.push({ id: entry.id, path: entry.path, revision: `mtime:${stat.mtimeMs}` }); }
+            }
+            let mediaRevision: string | undefined;
+            if (payload.media) { await fs.writeFile(mediaRegistryPath, `${JSON.stringify(payload.media.registry, null, 2)}\n`, "utf8"); mediaRevision = `mtime:${(await fs.stat(mediaRegistryPath)).mtimeMs}`; }
+            sendJson(response, 200, { commitSha: "local", contents: results, mediaRevision });
             return;
           }
 
