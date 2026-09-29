@@ -6,10 +6,6 @@ on:
     types: [cms_site_deploy]
   workflow_dispatch:
     inputs:
-      commit_sha:
-        description: Commit to deploy (leave empty for current main)
-        required: false
-        type: string
       deployment_id:
         description: CMS deployment identifier
         required: false
@@ -17,12 +13,10 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -31,7 +25,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.client_payload.commit_sha || inputs.commit_sha || github.sha }}
+          ref: main
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -47,7 +41,7 @@ jobs:
 
       - name: Set site update date
         env:
-          DEPLOY_SHA: ${{ github.event.client_payload.commit_sha || inputs.commit_sha || github.sha }}
+          DEPLOY_SHA: HEAD
         run: |
           git show -s --format='PUBLIC_SITE_UPDATED_AT=%cI' "$DEPLOY_SHA" >> "$GITHUB_ENV"
 
@@ -60,6 +54,9 @@ jobs:
           path: ./dist
 
   deploy:
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -504,7 +504,7 @@ describe("Cloudflare Worker content API", () => {
     assert.equal((await response.json()).sha, "site-sha");
     assert.equal(calls.length, 2);
     assert.match(calls[1][0], /repos\/Enomi-4mg\/Riddle-Records\/dispatches/);
-    assert.deepEqual(JSON.parse(calls[1][1].body), { event_type: "cms_site_deploy", client_payload: { commit_sha: "site-sha", deployment_id: id } });
+    assert.deepEqual(JSON.parse(calls[1][1].body), { event_type: "cms_site_deploy", client_payload: { deployment_id: id } });
   });
 
   test("reports only the matching site deployment run", async () => {
@@ -515,6 +515,40 @@ describe("Cloudflare Worker content API", () => {
     ] }));
     const response = await handler(new Request(`https://cms.4mg.dev/api/site-deploy?deploymentId=${id}`), env);
     assert.deepEqual(await response.json(), { deploymentId: id, sha: "selected", status: "completed", conclusion: "success", url: "https://github.com/run/1" });
+  });
+
+  test("authenticates deployment polling and stops waiting for a missing run", async () => {
+    let authorization;
+    const handler = createWorkerHandler(async (_url, options) => { authorization = options.headers.Authorization; return Response.json({ workflow_runs: [] }); });
+    const id = "123e4567-e89b-42d3-a456-426614174000";
+    const response = await handler(new Request(`https://cms.4mg.dev/api/site-deploy?deploymentId=${id}&startedAt=2020-01-01T00%3A00%3A00Z`), env);
+    assert.equal(authorization, `Bearer ${env.GITHUB_TOKEN}`);
+    assert.deepEqual(await response.json(), { deploymentId: id, sha: "", status: "completed", conclusion: "workflow run not found" });
+  });
+
+  test("commits multiple files through one Git ref update", async () => {
+    const calls = [];
+    let blob = 0;
+    const handler = createWorkerHandler(async (url, options = {}) => {
+      const address = String(url); calls.push([address, options]);
+      if (address.includes("git/ref/heads") && options.method !== "PATCH") return Response.json({ object: { sha: "head" } });
+      if (address.includes("git/commits/head")) return Response.json({ tree: { sha: "base-tree" } });
+      if (address.includes("/contents/")) return new Response(null, { status: 404 });
+      if (address.endsWith("git/blobs")) return Response.json({ sha: `blob-${++blob}` });
+      if (address.endsWith("git/trees")) return Response.json({ sha: "new-tree" });
+      if (address.endsWith("git/commits")) return Response.json({ sha: "new-commit" });
+      return Response.json({});
+    });
+    const response = await handler(new Request("https://cms.4mg.dev/api/pending-batch", { method: "POST", body: JSON.stringify({ contents: [
+      { id: "one", kind: "journal", path: "one.md", operation: "save", markdown: "first" },
+      { id: "two", kind: "projects", path: "two.md", operation: "save", markdown: "second" }
+    ] }) }), env);
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).commitSha, "new-commit");
+    assert.equal(calls.filter(([, options]) => options.method === "PATCH").length, 1);
+    assert.equal(calls.filter(([address]) => address.endsWith("git/blobs")).length, 2);
+    const invalid = await handler(new Request("https://cms.4mg.dev/api/pending-batch", { method: "POST", body: JSON.stringify({ contents: [{ id: "x", kind: "toString", path: "x.md", operation: "save", markdown: "x" }] }) }), env);
+    assert.equal(invalid.status, 400);
   });
 
   test("serves assets outside API routes and validates paths before GitHub access", async () => {
@@ -799,6 +833,31 @@ describe("pending deployment storage", () => {
     queue = await applyPendingChanges(queue, (next) => { queue = next; }, dependencies);
     assert.deepEqual(writes, ["journal", "gallery", "gallery"]);
     assert.deepEqual(queue.contents.map((item) => item.applied), [true, true]);
+  });
+
+  test("stores the new media revision after a successful write", async () => {
+    const media = { version: 1, assets: [] };
+    const queue = { ...emptyPending(), media: { registry: media, expectedRevision: "old" } };
+    const result = await applyPendingChanges(queue, () => {}, {
+      readRevision: async () => undefined, saveContent: async () => { throw new Error("unexpected"); }, deleteContent: async () => { throw new Error("unexpected"); },
+      loadMedia: async () => ({ registry: media, revision: "old" }), saveMedia: async () => ({ registry: media, revision: "new", commitSha: "commit" })
+    });
+    assert.equal(result.media.expectedRevision, "new");
+    assert.equal(result.media.applied, true);
+  });
+
+  test("uses one batch commit for multiple pending documents", async () => {
+    const first = createContentDocument("journal"); first.common.title = "First";
+    const second = createContentDocument("gallery"); second.common.title = "Second"; second.placement.data.slug = "second";
+    const queue = upsertPending(upsertPending(emptyPending(), { document: first, operation: "save" }), { document: second, operation: "save" });
+    let batches = 0;
+    const result = await applyPendingChanges(queue, () => {}, {
+      readRevision: async () => undefined, saveContent: async () => { throw new Error("individual write"); }, deleteContent: async () => { throw new Error("individual delete"); },
+      loadMedia: async () => { throw new Error("unexpected"); }, saveMedia: async () => { throw new Error("unexpected"); },
+      commitBatch: async (payload) => { batches += 1; return { commitSha: "commit", contents: payload.contents.map((entry) => ({ id: entry.id, path: entry.path, revision: `revision-${entry.id}` })) }; }
+    });
+    assert.equal(batches, 1);
+    assert.deepEqual(result.contents.map((entry) => entry.applied), [true, true]);
   });
 });
 

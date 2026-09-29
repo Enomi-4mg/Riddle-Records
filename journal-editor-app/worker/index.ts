@@ -1,3 +1,5 @@
+import { validateMediaRegistry, type MediaRegistry } from "../src/types/media";
+
 const contentDirectories = {
   journal: "src/content/journal",
   songs: "src/content/songs",
@@ -39,7 +41,13 @@ function json(status: number, data: unknown) {
 }
 
 function isContentKind(value: unknown): value is ContentKind {
-  return typeof value === "string" && value in contentDirectories;
+  return typeof value === "string" && Object.hasOwn(contentDirectories, value);
+}
+
+function isMediaRegistry(value: unknown): value is MediaRegistry {
+  if (!value || typeof value !== "object") return false;
+  const registry = value as Record<string, unknown>;
+  return registry.version === 1 && Array.isArray(registry.assets) && registry.assets.every((asset) => asset && typeof asset === "object" && typeof asset.id === "string" && typeof asset.publicId === "string" && typeof asset.displayName === "string" && ["image", "video", "audio"].includes(asset.type) && Array.isArray(asset.tags) && asset.tags.every((tag: unknown) => typeof tag === "string") && typeof asset.alt === "string");
 }
 
 export function isAllowedContentFilename(value: unknown): value is string {
@@ -153,6 +161,74 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     return json(403, { error: "Forbidden origin" });
   }
 
+  if (url.pathname === "/api/pending-batch" && request.method === "POST") {
+    const payload = await readPayload(request);
+    const rawContents = payload?.contents;
+    if (!Array.isArray(rawContents) || !rawContents.length && !payload?.media) return json(400, { error: "Invalid batch" });
+    const contents: Array<{ id: string; kind: ContentKind; path: string; operation: "save" | "delete"; markdown?: string; expectedRevision?: string; force?: boolean }> = [];
+    const paths = new Set<string>();
+    for (const raw of rawContents) {
+      if (!raw || typeof raw !== "object") return json(400, { error: "Invalid batch content" });
+      const entry = raw as Record<string, unknown>;
+      if (typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || (entry.operation !== "save" && entry.operation !== "delete") || (entry.operation === "save" && typeof entry.markdown !== "string") || (entry.expectedRevision !== undefined && typeof entry.expectedRevision !== "string") || (entry.force !== undefined && typeof entry.force !== "boolean")) return json(400, { error: "Invalid batch content" });
+      const path = `${contentDirectories[entry.kind]}/${entry.path}`;
+      if (paths.has(path)) return json(400, { error: "Duplicate batch path" });
+      paths.add(path);
+      contents.push({ id: entry.id, kind: entry.kind, path: entry.path, operation: entry.operation, markdown: entry.markdown as string | undefined, expectedRevision: entry.expectedRevision as string | undefined, force: entry.force as boolean | undefined });
+    }
+    const rawMedia = payload?.media;
+    let media: { registry: MediaRegistry; expectedRevision?: string; force?: boolean } | undefined;
+    if (rawMedia !== undefined) {
+      if (!rawMedia || typeof rawMedia !== "object" || !("registry" in rawMedia)) return json(400, { error: "Invalid media" });
+      const value = rawMedia as Record<string, unknown>;
+      if (!isMediaRegistry(value.registry) || (value.expectedRevision !== undefined && typeof value.expectedRevision !== "string") || (value.force !== undefined && typeof value.force !== "boolean")) return json(400, { error: "Invalid media" });
+      const registry = value.registry;
+      const error = validateMediaRegistry(registry);
+      if (error) return json(400, { error });
+      media = { registry, expectedRevision: value.expectedRevision as string | undefined, force: value.force as boolean | undefined };
+    }
+    const ref = await githubRepositoryRequest(fetcher, env, `git/ref/heads/${encodeURIComponent(env.GITHUB_BRANCH)}`);
+    const headSha = (await ref.json() as { object?: { sha?: string } }).object?.sha;
+    if (!headSha) return json(502, { error: "GitHub did not return the branch head" });
+    const commit = await githubRepositoryRequest(fetcher, env, `git/commits/${headSha}`);
+    const baseTree = (await commit.json() as { tree?: { sha?: string } }).tree?.sha;
+    if (!baseTree) return json(502, { error: "GitHub did not return the tree" });
+    const tree: Array<{ path: string; mode: "100644"; type: "blob"; sha: string | null }> = [];
+    const results: Array<{ id: string; path: string; revision?: string }> = [];
+    for (const entry of contents) {
+      const current = await getGitHubFile(fetcher, env, entry.kind, entry.path);
+      if (!entry.force && current?.sha !== entry.expectedRevision) return json(409, { target: "content", documentId: entry.id, operation: entry.operation, expectedRevision: entry.expectedRevision, currentRevision: current?.sha });
+      if (entry.operation === "delete" && !current) return json(409, { target: "content", documentId: entry.id, operation: "delete", expectedRevision: entry.expectedRevision });
+      const path = `${contentDirectories[entry.kind]}/${entry.path}`;
+      if (entry.operation === "delete") { tree.push({ path, mode: "100644", type: "blob", sha: null }); results.push({ id: entry.id, path: entry.path }); }
+      else {
+        const blob = await githubRepositoryRequest(fetcher, env, "git/blobs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: entry.markdown, encoding: "utf-8" }) });
+        const sha = (await blob.json() as { sha?: string }).sha;
+        if (!sha) return json(502, { error: "GitHub did not return the blob" });
+        tree.push({ path, mode: "100644", type: "blob", sha }); results.push({ id: entry.id, path: entry.path, revision: sha });
+      }
+    }
+    let mediaRevision: string | undefined;
+    if (media) {
+      const current = await githubRequest(fetcher, env, `${mediaRegistryPath}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
+      const file = await current.json() as GitHubFile;
+      if (!media.force && file.sha !== media.expectedRevision) return json(409, { target: "media", operation: "save", expectedRevision: media.expectedRevision, currentRevision: file.sha });
+      const blob = await githubRepositoryRequest(fetcher, env, "git/blobs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: `${JSON.stringify(media.registry, null, 2)}\n`, encoding: "utf-8" }) });
+      mediaRevision = (await blob.json() as { sha?: string }).sha;
+      if (!mediaRevision) return json(502, { error: "GitHub did not return the blob" });
+      tree.push({ path: mediaRegistryPath, mode: "100644", type: "blob", sha: mediaRevision });
+    }
+    const builtTree = await githubRepositoryRequest(fetcher, env, "git/trees", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ base_tree: baseTree, tree }) });
+    const treeSha = (await builtTree.json() as { sha?: string }).sha;
+    if (!treeSha) return json(502, { error: "GitHub did not return the new tree" });
+    const newCommit = await githubRepositoryRequest(fetcher, env, "git/commits", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "Update CMS content and media", tree: treeSha, parents: [headSha] }) });
+    const commitSha = (await newCommit.json() as { sha?: string }).sha;
+    if (!commitSha) return json(502, { error: "GitHub did not return the commit" });
+    try { await githubRepositoryRequest(fetcher, env, `git/refs/heads/${encodeURIComponent(env.GITHUB_BRANCH)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sha: commitSha, force: false }) }); }
+    catch (error) { if (error instanceof GitHubApiError && (error.status === 409 || error.status === 422)) return json(503, { error: "main changed during commit; retry deployment" }); throw error; }
+    return json(200, { commitSha, contents: results, mediaRevision });
+  }
+
   if (url.pathname === "/api/site-deploy" && request.method === "POST") {
     const payload = await readPayload(request);
     const deploymentId = payload?.deploymentId;
@@ -162,19 +238,25 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     if (!headSha) return json(502, { error: "GitHub did not return the branch head" });
     const requestedSha = payload?.commitSha;
     if (requestedSha !== undefined && (typeof requestedSha !== "string" || !/^[a-f0-9]{40}$/.test(requestedSha))) return json(400, { error: "Invalid commit SHA" });
-    const sha = typeof requestedSha === "string" ? requestedSha : headSha;
-    await githubRepositoryRequest(fetcher, env, "dispatches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event_type: "cms_site_deploy", client_payload: { commit_sha: sha, deployment_id: deploymentId } }) });
-    return json(200, { deploymentId, sha, status: "queued" });
+    if (typeof requestedSha === "string" && requestedSha !== headSha) {
+      const comparison = await githubRepositoryRequest(fetcher, env, `compare/${requestedSha}...${headSha}`);
+      const status = (await comparison.json() as { status?: string }).status;
+      if (status !== "ahead" && status !== "identical") return json(409, { error: "CMS changes are not included in main" });
+    }
+    await githubRepositoryRequest(fetcher, env, "dispatches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event_type: "cms_site_deploy", client_payload: { deployment_id: deploymentId } }) });
+    return json(200, { deploymentId, sha: headSha, status: "queued" });
   }
 
   if (url.pathname === "/api/site-deploy" && request.method === "GET") {
     const deploymentId = url.searchParams.get("deploymentId");
     if (!deploymentId || !/^[a-f0-9-]{36}$/i.test(deploymentId)) return json(400, { error: "Invalid deployment ID" });
-    const response = await fetcher(`https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/actions/workflows/astro-pages.yml/runs?event=repository_dispatch&per_page=30`, { headers: { Accept: "application/vnd.github+json", "User-Agent": "Riddle-Records-Content-Editor", "X-GitHub-Api-Version": "2022-11-28" } });
+    const response = await githubRepositoryRequest(fetcher, env, "actions/workflows/astro-pages.yml/runs?event=repository_dispatch&per_page=30");
     if (!response.ok) throw new GitHubApiError(response.status, response.status === 403 && response.headers.get("x-ratelimit-remaining") === "0");
     const runs = (await response.json() as { workflow_runs?: Array<{ display_title: string; head_sha: string; status: "queued" | "in_progress" | "completed"; conclusion?: string | null; html_url?: string }> }).workflow_runs ?? [];
     const run = runs.find((item) => item.display_title.includes(deploymentId));
-    return json(200, run ? { deploymentId, sha: run.head_sha, status: run.status, conclusion: run.conclusion, url: run.html_url } : { deploymentId, sha: "", status: "queued" });
+    const startedAt = url.searchParams.get("startedAt");
+    const missingTooLong = startedAt && Number.isFinite(Date.parse(startedAt)) && Date.now() - Date.parse(startedAt) > 300_000;
+    return json(200, run ? { deploymentId, sha: run.head_sha, status: run.status, conclusion: run.conclusion, url: run.html_url } : missingTooLong ? { deploymentId, sha: "", status: "completed", conclusion: "workflow run not found" } : { deploymentId, sha: "", status: "queued" });
   }
 
   if (request.method === "GET" && url.pathname === "/api/content-list") {
@@ -197,13 +279,23 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
   }
 
   if (request.method === "PUT" && url.pathname === "/api/media-registry") {
-    const payload = await readPayload(request); if (!payload || !payload.registry || typeof payload.registry !== "object") return json(400, { error: "Invalid registry" });
+    const payload = await readPayload(request); if (!payload || !isMediaRegistry(payload.registry)) return json(400, { error: "Invalid registry" });
+    const registryError = validateMediaRegistry(payload.registry);
+    if (registryError) return json(400, { error: registryError });
     const response = await githubRequest(fetcher, env, `${mediaRegistryPath.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
     const current = await response.json() as GitHubFile;
     const expected = typeof payload.expectedRevision === "string" ? payload.expectedRevision : undefined;
     if (payload.force !== true && expected !== current.sha) return json(409, { error: "Media Registry has changed", currentRevision: current.sha });
-    const update = await githubRequest(fetcher, env, mediaRegistryPath.split("/").map(encodeURIComponent).join("/"), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "Update media registry via CMS", content: encodeBase64Utf8(`${JSON.stringify(payload.registry, null, 2)}\n`), branch: env.GITHUB_BRANCH, sha: current.sha }) });
-    const result = await update.json() as { content?: { sha?: string }; commit?: { sha?: string } }; return json(200, { registry: payload.registry, revision: result.content?.sha, commitSha: result.commit?.sha });
+    try {
+      const update = await githubRequest(fetcher, env, mediaRegistryPath.split("/").map(encodeURIComponent).join("/"), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "Update media registry via CMS", content: encodeBase64Utf8(`${JSON.stringify(payload.registry, null, 2)}\n`), branch: env.GITHUB_BRANCH, sha: current.sha }) });
+      const result = await update.json() as { content?: { sha?: string }; commit?: { sha?: string } }; return json(200, { registry: payload.registry, revision: result.content?.sha, commitSha: result.commit?.sha });
+    } catch (error) {
+      if (error instanceof GitHubApiError && (error.status === 409 || error.status === 422)) {
+        const latest = await githubRequest(fetcher, env, `${mediaRegistryPath}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
+        return json(409, { error: "Media Registry has changed", expectedRevision: expected, currentRevision: (await latest.json() as GitHubFile).sha });
+      }
+      throw error;
+    }
   }
 
   if (request.method === "GET" && url.pathname === "/api/content-item") {
