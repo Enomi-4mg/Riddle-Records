@@ -27,7 +27,7 @@ Astro本体側の旧Editor `src/pages/tools/journal-editor.astro` は、現在�
 
 ### ローカルCMSモード
 
-dev server 上では、Editor から `src/content/<kind>/*.md` を開いて編集できます。`Journal` / `Songs` / `Gallery` / `Projects` の変更はまずブラウザ内に保留され、「サイトをデプロイ」でローカルの `.md` ファイルへ反映します。
+dev server 上では、Editor から `src/content/<kind>/*.md` を開いて編集できます。`Journal` / `Songs` / `Gallery` / `Projects` の変更はまずブラウザ内に保留され、「記事をデプロイ」でローカルの `.md` ファイルへ反映します。
 
 ローカルでの反映はVite dev server APIを使います。本番CMSでは同じ操作がGitHubへのコミットとGitHub Pagesの起動になります。
 
@@ -98,7 +98,7 @@ npm run build
 npm run deploy
 ```
 
-CMSの編集・公開切替・削除・メディア情報変更は、そのブラウザのlocalStorageに保留されます。別端末には同期されず、ブラウザデータを消すと失われます。CMS全体の「サイトをデプロイ」を押すと、保留した各ファイルをGitHub `main`へ1ファイル1commitで反映し、最後にGitHub Pages workflowを手動起動します。GitHub側で競合があれば反映を止めます。途中で失敗した場合は、未完了の操作を保持して再試行できます。
+CMSの編集・公開切替・削除・メディア情報変更は、そのブラウザのlocalStorageに保留されます。別端末には同期されず、ブラウザデータを消すと失われます。CMS全体の「記事をデプロイ」を押すと、保留した各ファイルをGitHub `main`へ1ファイル1commitで反映し、最後にGitHub Pages workflowを手動起動します。GitHub側で競合があれば反映を止めます。途中で失敗した場合は、未完了の操作を保持して再試行できます。
 
 ローカルCMSでは同じボタンで保留内容をローカルファイルに書き込みます。GitHub Pagesは起動しません。CMSアプリ自身は`main`へのコード変更時に従来どおり自動デプロイされます。
 
@@ -114,7 +114,7 @@ Editor の削除操作は dev server 上の実ファイルを削除します。�
 2. Editor 画面で `title` と本文 Markdown を書きます。
 3. 説明・タグ・画像などの表示内容は記事キャンバスで、日付・種別・slugなどの管理情報は`記事設定`で入力します。
 4. `チェック` で公開前チェックを確認します。
-5. ブラウザに保留した変更を「サイトをデプロイ」で反映します。公開状態の切替だけではサイトは更新されません。
+5. ブラウザに保留した変更を「記事をデプロイ」で反映します。公開状態の切替だけではサイトは更新されません。
 
 ### 画像カード / Gallery支援
 
