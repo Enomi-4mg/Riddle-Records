@@ -83,14 +83,47 @@ button.primary {
 .editor-document { width: min(820px, calc(100% - 2rem)); margin: 2.5rem auto 6rem; }
 .title-input { border: 0; border-bottom: 1px solid var(--cms-border); border-radius: 0; background: transparent; padding: 1rem 0; font-size: clamp(1.9rem, 5vw, 3rem); font-weight: 750; }
 .title-input:focus { outline: 0; border-bottom-color: var(--cms-mint-dark); }
-.visual-editor { margin-top: 1.5rem; border: 1px solid var(--cms-border); border-radius: 8px; background: #fff; overflow: hidden; }
-.editor-toolbar { position: sticky; top: var(--editor-topbar-height); z-index: 4; display: flex; gap: .25rem; overflow-x: auto; border-bottom: 1px solid var(--cms-border); background: #f7fffb; padding: .55rem; }
-.editor-toolbar button { white-space: nowrap; padding: .4rem .6rem; }
-.tiptap { min-height: 55vh; padding: clamp(1.25rem, 4vw, 3rem); font-size: 1.04rem; line-height: 1.85; outline: 0; }
+.visual-editor { position: relative; margin-top: 1.5rem; border: 1px solid var(--cms-border); border-radius: 8px; background: #fff; overflow: visible; }
+.tiptap { min-height: 55vh; padding: clamp(1.25rem, 4vw, 3rem) clamp(1.25rem, 5vw, 3.8rem); font-size: 1.04rem; line-height: 1.85; outline: 0; }
+.tiptap > *:first-child { margin-top: 0; }
+.tiptap > *:last-child { margin-bottom: 0; }
+.tiptap p.is-editor-empty:first-child::before { float: left; height: 0; color: #9aa7a3; content: "本文を入力。空行で / を入力するとブロックを選べます"; pointer-events: none; }
 .tiptap h2 { margin-top: 2.4rem; font-size: 1.7rem; }
 .tiptap blockquote { margin-inline: 0; border-left: 3px solid var(--cms-mint); padding-left: 1rem; color: var(--cms-muted); }
 .tiptap img { max-width: 100%; border-radius: 7px; }
+.tiptap pre { overflow-x: auto; border-radius: 7px; background: #18211e; color: #f3faf7; padding: 1rem 1.2rem; }
+.tiptap code { border-radius: 4px; background: #edf3f0; padding: .12em .3em; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.tiptap pre code { background: transparent; padding: 0; }
+.tiptap ul[data-type="taskList"] { padding-left: 0; list-style: none; }
+.tiptap ul[data-type="taskList"] li { display: flex; gap: .6rem; align-items: flex-start; }
+.tiptap ul[data-type="taskList"] li > label { padding-top: .2rem; }
+.tiptap ul[data-type="taskList"] li > div { flex: 1; }
+.tiptap li > p, .tiptap li > div > p { margin: 0; }
+.tiptap li + li { margin-top: .28rem; }
+.tiptap table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.tiptap th, .tiptap td { position: relative; min-width: 80px; border: 1px solid #cdd8d4; padding: .45rem .6rem; vertical-align: top; }
+.tiptap th { background: #edf7f3; text-align: left; }
+.tiptap .selectedCell::after { position: absolute; inset: 0; background: rgba(42, 220, 163, .15); content: ""; pointer-events: none; }
 .raw-html-block { display: grid; place-items: center; min-height: 90px; border: 1px dashed #8ab6a7; border-radius: 7px; background: #eafff5; color: #235e4b; font-family: system-ui, sans-serif; }
+.raw-html-block small { color: #51786b; }
+.block-controls { position: absolute; z-index: 8; left: -3.3rem; display: flex; gap: .15rem; align-items: flex-start; height: 2rem; transition: top .08s ease-out; }
+.block-control { width: 1.55rem; height: 1.8rem; border: 0; border-radius: 5px; padding: 0; background: transparent; color: #75827e; font-size: 1rem; }
+.block-control:hover { background: #edf3f0; color: var(--cms-ink); }
+.drag-handle { cursor: grab; letter-spacing: -.28em; padding-right: .28em; }
+.block-popover, .slash-menu { position: absolute; z-index: 40; display: grid; width: 230px; max-height: min(520px, 70vh); overflow-y: auto; border: 1px solid var(--cms-border); border-radius: 10px; background: #fff; box-shadow: 0 16px 44px rgba(18,26,24,.16); padding: .45rem; }
+.block-popover { top: 2.1rem; left: 0; }
+.block-popover p, .slash-menu p { margin: .45rem .55rem .2rem; color: var(--cms-muted); font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.block-popover button, .slash-menu button { border: 0; border-radius: 6px; background: transparent; padding: .48rem .58rem; text-align: left; }
+.block-popover button:hover, .slash-menu button:hover { background: #edf7f3; }
+.action-popover { width: 210px; }
+.action-popover details { border-bottom: 1px solid var(--cms-border); padding-bottom: .3rem; }
+.action-popover summary { cursor: pointer; padding: .48rem .58rem; font-size: .9rem; }
+.compact-block-picker { display: grid; max-height: 260px; overflow-y: auto; }
+.slash-menu { min-width: 240px; }
+.slash-menu span { padding: .7rem; color: var(--cms-muted); font-size: .85rem; }
+.bubble-menu { display: flex; gap: .2rem; border: 1px solid #34413d; border-radius: 8px; background: #17211e; box-shadow: 0 10px 30px rgba(0,0,0,.22); padding: .25rem; }
+.bubble-menu button { min-width: 2rem; border: 0; border-radius: 5px; background: transparent; color: #f7fbf9; padding: .35rem .45rem; }
+.bubble-menu button:hover, .bubble-menu button.active { background: #34443f; color: #72ebc3; }
 .cms-settings { width: min(380px, 92vw); height: calc(100vh - var(--editor-topbar-height)); position: sticky; top: var(--editor-topbar-height); overflow-y: auto; border-left: 1px solid var(--cms-border); background: #fff; padding: 1.25rem; }
 .cms-settings header, .media-picker-panel > header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .cms-settings h2 { font-size: 1.55rem; }
@@ -117,6 +150,8 @@ button.primary {
   .content-row { grid-template-columns: 1fr auto; }.content-row time { display: none; }
   .cms-editor-layout { display: block; }.cms-settings { position: fixed; inset: var(--editor-topbar-height) 0 0 auto; z-index: 20; height: auto; }
   .editor-actions { width: 100%; }.editor-actions button { flex: 1; }
+  .block-controls { left: .25rem; }
+  .tiptap { padding-left: 3.2rem; }
 }
 
 button.ghost {

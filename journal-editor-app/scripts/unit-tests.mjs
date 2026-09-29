@@ -34,6 +34,7 @@ import {
 } from "../src/lib/yamlFrontmatter.ts";
 import { isContentKind } from "../src/types/content.ts";
 import { buildContentMarkdown, createContentDocument, parseContentMarkdown, publicationChecks } from "../src/lib/cmsMarkdown.ts";
+import { markdownToEditorHtml } from "../src/lib/editorMarkdown.ts";
 import { validateMediaRegistry } from "../src/types/media.ts";
 import { defaultFrontmatter } from "../src/types/journal.ts";
 import { contentApiPlugin, isAllowedContentFilename, isTrustedWriteOrigin } from "../vite.config.ts";
@@ -155,6 +156,16 @@ describe("permalink and article state", () => {
 });
 
 describe("YAML and Markdown conversion", () => {
+  test("prepares task lists and raw image HTML for structured editing", () => {
+    const tasks = markdownToEditorHtml("- [ ] todo\n- [x] done");
+    assert.match(tasks, /<ul data-type="taskList">/);
+    assert.match(tasks, /data-checked="false"/);
+    assert.match(tasks, /data-checked="true"/);
+    const rawImage = markdownToEditorHtml('<img src="legacy.jpg" alt="legacy">');
+    assert.match(rawImage, /data-raw-html=/);
+    assert.doesNotMatch(rawImage, /<img src="legacy.jpg"/);
+  });
+
   test("parses nested YAML and serializes escaped values", () => {
     assert.equal(parseYamlScalar("null"), "");
     assert.deepEqual(parseYamlFrontmatter("title: demo\ntags: [a, b]\nmeta:\n  enabled: true\nempty:"), {
