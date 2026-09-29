@@ -1099,3 +1099,10 @@ code {
     grid-template-columns: 1fr;
   }
 }
+.canvas-lead { width: 100%; min-height: 4rem; margin: 0 0 1.5rem; border: 0; border-bottom: 1px solid #d9e8df; background: transparent; font: inherit; resize: vertical; }
+.canvas-fields { display: grid; gap: .75rem; margin: 1rem 0 2rem; padding: 1rem; border: 1px solid #d9e8df; border-radius: .5rem; background: #f8fffb; }
+.canvas-fields h2 { margin: .5rem 0 0; font-size: 1.1rem; }
+.canvas-fields label, .canvas-tags { display: grid; gap: .35rem; }
+.canvas-fields input, .canvas-fields select, .canvas-fields textarea, .canvas-tags input { width: 100%; padding: .6rem; border: 1px solid #cadbd1; border-radius: .35rem; background: white; font: inherit; }
+.canvas-fields textarea { min-height: 5rem; }
+.canvas-tags { margin-top: 2rem; }
