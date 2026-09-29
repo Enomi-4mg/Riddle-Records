@@ -37,47 +37,46 @@ const bodyParagraphs = item.body.split(/\n{2,}/).filter(Boolean);
   twitterImage={twitterImage}
   twitterImageAlt={item.title}
 >
-  <article class="gallery-detail journal-entry-animate">
-    <a class="gallery-detail-back" href={href("/gallery/")}>Gallery一覧へ戻る</a>
-
-    <header class="gallery-detail-header">
-      <p class="gallery-detail-kicker">Gallery</p>
-      <h1 class="web_title">{item.title}</h1>
-      <time class="gallery-detail-date" datetime={item.date}>{formatDate(item.date)}</time>
-      <p class="gallery-detail-description">{item.description}</p>
-    </header>
-
-    <a
-      class="gallery-detail-image"
-      href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.image}`}
-      data-lightbox={`gallery-detail-${item.slug}`}
-      data-title={`${item.title} - ${item.description}`}
-    >
-      <img src={imageUrl} alt={item.imageAlt} />
-    </a>
-
-    <div class="gallery-detail-tags" aria-label={`${item.title} tags`}>
-      {item.tags.map((category) => <span class="work-tag">{category}</span>)}
+  <article class="gallery-detail journal-article journal-entry-animate">
+    <div class="journal-back-link journal-back-link-top">
+      <a href={href("/works/")}>Works一覧へ戻る</a>
     </div>
 
-    <section class="gallery-detail-body">
+    <header class="journal-hero">
+      <p class="journal-date"><time datetime={item.date}>{formatDate(item.date)}</time></p>
+      <h1 class="page_title">{item.title}</h1>
+      <p class="journal-summary">{item.description}</p>
+    </header>
+
+    <div class="journal-content work-detail-content">
+      <a
+        class="work-detail-image"
+        href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.image}`}
+        data-lightbox={`gallery-detail-${item.slug}`}
+        data-title={`${item.title} - ${item.description}`}
+      >
+        <img src={imageUrl} alt={item.imageAlt} />
+      </a>
+
+      <div class="work-tags" aria-label={`${item.title} tags`}>
+        {item.tags.map((category) => <span class="work-tag">{category}</span>)}
+      </div>
+
       {bodyParagraphs.map((paragraph) => <p>{paragraph}</p>)}
-    </section>
 
-    {(item.article_url || item.making_article_url) && (
-      <section class="gallery-detail-links">
-        <h2 class="page_title">関連記事</h2>
-        <div class="article-links-horizontal">
-          {item.article_url && (
-            <a href={href(item.article_url)} class="article-link-btn">作品記事</a>
-          )}
-          {item.making_article_url && (
-            <a href={href(item.making_article_url)} class="article-link-btn making-link">メイキング</a>
-          )}
-        </div>
-      </section>
-    )}
+      {(item.article_url || item.making_article_url) && (
+        <section class="work-detail-links">
+          <h2>関連記事</h2>
+          <div class="article-links-horizontal">
+            {item.article_url && <a href={href(item.article_url)} class="article-link-btn">作品記事</a>}
+            {item.making_article_url && <a href={href(item.making_article_url)} class="article-link-btn making-link">メイキング</a>}
+          </div>
+        </section>
+      )}
+    </div>
 
-    <a class="gallery-detail-back gallery-detail-back-bottom" href={href("/gallery/")}>Gallery一覧へ戻る</a>
+    <div class="journal-back-link">
+      <a href={href("/works/")}>Works一覧へ戻る</a>
+    </div>
   </article>
 </BaseLayout>

@@ -43,15 +43,15 @@ const { project } = Astro.props;
       <p class="journal-summary">{project.description}</p>
     </header>
 
-    <div class={`project-hero${project.hero ? "" : " project-hero-fallback"}`}>
-      {project.hero ? (
-        <img src={project.hero} alt={`${project.title} preview`} />
-      ) : (
-        <span>{project.title}</span>
-      )}
-    </div>
-
     <div class="journal-content project-content">
+      <div class={`project-hero${project.hero ? "" : " project-hero-fallback"}`}>
+        {project.hero ? (
+          <img src={project.hero} alt={`${project.title} preview`} />
+        ) : (
+          <span>{project.title}</span>
+        )}
+      </div>
+
       <section class="project-section">
         <h2>概要</h2>
         <p>{project.body || project.description}</p>

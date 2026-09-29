@@ -36,28 +36,31 @@ const entryDateIso = song.id.split("/").pop()?.replace(/\.md$/, "") ?? song.data
   ogImageWidth={480}
   ogImageHeight={360}
 >
-  <article class="post song-article">
-    <header class="song-hero">
-      <time class="post-date" datetime={entryDateIso}>
-        {song.data.date.getFullYear()}年{String(song.data.date.getMonth() + 1).padStart(2, "0")}月{String(song.data.date.getDate()).padStart(2, "0")}日
-      </time>
-      <h1 class="page_title">{song.data.title}</h1>
-      {song.data.description && <p>{song.data.description}</p>}
-    </header>
-
-    <div class="song-video responsive-video-container">
-      <iframe
-        width="560"
-        height="315"
-        src={`https://www.youtube.com/embed/${song.data.youtube_id}`}
-        title={song.data.title}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen
-      ></iframe>
+  <article class="post journal-article song-article">
+    <div class="journal-back-link journal-back-link-top">
+      <a href={withBase("/works/")}>Works一覧へ戻る</a>
     </div>
 
-    <div class="post-content song-content">
+    <header class="journal-hero">
+      <p class="journal-date"><time datetime={entryDateIso}>
+        {song.data.date.getFullYear()}年{String(song.data.date.getMonth() + 1).padStart(2, "0")}月{String(song.data.date.getDate()).padStart(2, "0")}日
+      </time></p>
+      <h1 class="page_title">{song.data.title}</h1>
+      {song.data.description && <p class="journal-summary">{song.data.description}</p>}
+    </header>
+
+    <div class="post-content journal-content song-content">
+      <div class="song-video responsive-video-container">
+        <iframe
+          width="560"
+          height="315"
+          src={`https://www.youtube.com/embed/${song.data.youtube_id}`}
+          title={song.data.title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+        ></iframe>
+      </div>
       <Content />
     </div>
 
@@ -78,105 +81,9 @@ const entryDateIso = song.id.split("/").pop()?.replace(/\.md$/, "") ?? song.data
         </details>
       </section>
     )}
+
+    <div class="journal-back-link">
+      <a href={withBase("/works/")}>Works一覧へ戻る</a>
+    </div>
   </article>
 </BaseLayout>
-
-<style>
-  .song-article {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-
-  .song-hero {
-    margin-bottom: 1.5rem;
-  }
-
-  .post-date {
-    display: inline-block;
-    margin-bottom: 0.5rem;
-    color: rgba(20, 40, 30, 0.72);
-  }
-
-  .song-video {
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%;
-    height: 0;
-    margin: 1.5rem 0;
-    overflow: hidden;
-    background: #000;
-    border-radius: 1rem;
-  }
-
-  .song-video iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-  }
-
-  .song-meta {
-    margin-top: 2rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(20, 40, 30, 0.08);
-  }
-
-  .post-credits,
-  .post-lyrics {
-    padding: 1.5rem;
-    border-radius: 0.5rem;
-  }
-
-  .post-lyrics details {
-    cursor: pointer;
-  }
-
-  .post-lyrics summary {
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #0a1510;
-    user-select: none;
-    padding: 0.5rem;
-    margin: -0.5rem -0.5rem 0 -0.5rem;
-    transition: background-color 0.2s ease;
-  }
-
-  .post-lyrics summary:hover {
-    background-color: rgba(27, 180, 142, 0.1);
-    border-radius: 0.3rem;
-  }
-
-  .post-credits {
-    background-color: rgba(27, 180, 142, 0.1);
-    border-left: 4px solid #1bb48e;
-  }
-
-  .post-credits h3 {
-    margin-top: 0;
-    color: #1bb48e;
-    font-size: 1.2rem;
-  }
-
-  .post-credits pre {
-    margin: 0.5rem 0 0;
-    padding: 0.75rem;
-    white-space: pre-wrap;
-    word-break: break-word;
-    background-color: rgba(255, 255, 255, 0.65);
-    border-radius: 0.35rem;
-    overflow-x: auto;
-  }
-
-  .post-lyrics {
-    margin-top: 1.5rem;
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-
-  .post-lyrics pre {
-    white-space: pre-wrap;
-    word-break: break-word;
-    margin: 1rem 0 0;
-    line-height: 1.8;
-  }
-</style>

@@ -627,3 +627,34 @@
     font-size: 0.7rem;
   }
 }
+
+/* Media in Works detail pages sits inside the same article card as Journal content. */
+.work-detail-image {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+.work-detail-image img {
+  display: block;
+  width: 100%;
+  max-height: 78vh;
+  object-fit: contain;
+}
+
+.work-detail-content .work-tags {
+  margin: 0;
+}
+
+.work-detail-links {
+  margin-top: 1rem;
+}
+
+.work-detail-links .article-links-horizontal {
+  margin-top: 0.75rem;
+}
+
+.song-article .song-video {
+  margin: 0 auto 1rem;
+  border-radius: var(--radius-md);
+}
