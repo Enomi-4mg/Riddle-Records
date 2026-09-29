@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { buildContentMarkdown, publicationChecks } from "../lib/cmsMarkdown";
+import { buildContentMarkdown, normalizeYouTubeId, publicationChecks } from "../lib/cmsMarkdown";
 import { mediaUrl } from "../lib/mediaRegistry";
 import type { ContentDocument, EditingStatus, ProjectStatus } from "../types/content";
 import type { MediaAsset, MediaRegistry } from "../types/media";
@@ -40,14 +40,15 @@ function CanvasFields({ doc, position, update, pickMedia }: { doc: ContentDocume
   if (doc.placement.kind === "journal") return null;
   if (doc.placement.kind === "songs") {
     const data = doc.placement.data;
-    return position === "before" ? <section className="canvas-fields"><h2>動画</h2><label>YouTube URL または ID<input value={data.youtubeId} onChange={(event) => update({ ...data, youtubeId: event.target.value })} /></label></section> : <section className="canvas-fields"><h2>クレジット</h2><textarea value={data.credits} onChange={(event) => update({ ...data, credits: event.target.value })} /><h2>歌詞</h2><textarea rows={9} value={data.lyrics} onChange={(event) => update({ ...data, lyrics: event.target.value })} /></section>;
+    const videoId = normalizeYouTubeId(data.youtubeId);
+    return position === "before" ? <section className="canvas-fields"><h2>動画</h2><label>YouTube URL または ID<input value={data.youtubeId} onChange={(event) => update({ ...data, youtubeId: event.target.value })} /></label>{videoId && <div className="canvas-video-preview"><iframe src={`https://www.youtube-nocookie.com/embed/${videoId}`} title={`${doc.common.title || "Song"} 動画プレビュー`} loading="lazy" allowFullScreen /></div>}</section> : <section className="canvas-fields"><h2>クレジット</h2><textarea value={data.credits} onChange={(event) => update({ ...data, credits: event.target.value })} /><h2>歌詞</h2><textarea rows={9} value={data.lyrics} onChange={(event) => update({ ...data, lyrics: event.target.value })} /></section>;
   }
   if (doc.placement.kind === "gallery") {
     if (position === "after") return null;
     const data = doc.placement.data;
-    return <section className="canvas-fields"><h2>作品画像</h2><MediaField label="メイン画像" value={data.image} onChange={(value) => update({ ...data, image: value })} onPick={() => pickMedia("image")} /></section>;
+    return <section className="canvas-fields"><h2>作品画像</h2><MediaField label="メイン画像" value={data.image} onChange={(value) => update({ ...data, image: value })} onPick={() => pickMedia("image")} />{data.image && <img className="canvas-media-preview" src={mediaUrl(data.image, "image")} alt={doc.common.title || "作品画像"} />}</section>;
   }
   const data = doc.placement.data;
-  return position === "before" ? <section className="canvas-fields"><h2>プロジェクト</h2><label>状態<select value={data.status} onChange={(event) => update({ ...data, status: event.target.value as ProjectStatus })}><option value="active">進行中</option><option value="paused">休止中</option><option value="completed">完了</option><option value="archived">アーカイブ</option></select></label><MediaField label="ヒーロー画像" value={data.hero} onChange={(value) => update({ ...data, hero: value })} onPick={() => pickMedia("hero")} /></section> : <section className="canvas-fields"><h2>リンク</h2><textarea value={data.links.map((link) => `${link.label} | ${link.url}`).join("\n")} onChange={(event) => update({ ...data, links: event.target.value.split("\n").flatMap((line) => { const [label, ...parts] = line.split("|"); const url = parts.join("|").trim(); return label.trim() && url ? [{ label: label.trim(), url }] : []; }) })} /></section>;
+  return position === "before" ? <section className="canvas-fields"><h2>プロジェクト</h2><label>状態<select value={data.status} onChange={(event) => update({ ...data, status: event.target.value as ProjectStatus })}><option value="active">進行中</option><option value="paused">休止中</option><option value="completed">完了</option><option value="archived">アーカイブ</option></select></label><MediaField label="ヒーロー画像" value={data.hero} onChange={(value) => update({ ...data, hero: value })} onPick={() => pickMedia("hero")} />{data.hero && <img className="canvas-media-preview" src={mediaUrl(data.hero, "image")} alt={`${doc.common.title || "Project"} ヒーロー画像`} />}</section> : <section className="canvas-fields"><h2>リンク</h2><textarea value={data.links.map((link) => `${link.label} | ${link.url}`).join("\n")} onChange={(event) => update({ ...data, links: event.target.value.split("\n").flatMap((line) => { const [label, ...parts] = line.split("|"); const url = parts.join("|").trim(); return label.trim() && url ? [{ label: label.trim(), url }] : []; }) })} /></section>;
 }
 function MediaField({ label, value, onChange, onPick }: { label: string; value: string; onChange: (value: string) => void; onPick: () => void }) { return <label>{label}<span className="input-with-action"><input value={value} onChange={(event) => onChange(event.target.value)} /><button type="button" onClick={onPick}>選択</button></span></label>; }
