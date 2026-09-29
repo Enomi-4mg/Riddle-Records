@@ -1,9 +1,19 @@
 name: Deploy Astro site to GitHub Pages
+run-name: Deploy site (${{ github.event.client_payload.deployment_id || inputs.deployment_id || 'manual' }})
 
 on:
-  push:
-    branches: ["main"]
+  repository_dispatch:
+    types: [cms_site_deploy]
   workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Commit to deploy (leave empty for current main)
+        required: false
+        type: string
+      deployment_id:
+        description: CMS deployment identifier
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -20,6 +30,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.client_payload.commit_sha || inputs.commit_sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -34,8 +46,10 @@ jobs:
         run: npm ci
 
       - name: Set site update date
+        env:
+          DEPLOY_SHA: ${{ github.event.client_payload.commit_sha || inputs.commit_sha || github.sha }}
         run: |
-          git show -s --format='PUBLIC_SITE_UPDATED_AT=%cI' "$GITHUB_SHA" >> "$GITHUB_ENV"
+          git show -s --format='PUBLIC_SITE_UPDATED_AT=%cI' "$DEPLOY_SHA" >> "$GITHUB_ENV"
 
       - name: Build Astro site
         run: npm run build

@@ -87,6 +87,12 @@ async function githubRequest(fetcher: typeof fetch, env: Env, path: string, init
   return response;
 }
 
+async function githubRepositoryRequest(fetcher: typeof fetch, env: Env, path: string, init: RequestInit = {}) {
+  const response = await fetcher(`https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/${path}`, { ...init, headers: { ...githubHeaders(env), ...init.headers } });
+  if (!response.ok) throw new GitHubApiError(response.status, response.status === 403 && response.headers.get("x-ratelimit-remaining") === "0");
+  return response;
+}
+
 function decodeBase64Utf8(value: string) {
   const binary = atob(value.replace(/\s/g, ""));
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
@@ -147,6 +153,30 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     return json(403, { error: "Forbidden origin" });
   }
 
+  if (url.pathname === "/api/site-deploy" && request.method === "POST") {
+    const payload = await readPayload(request);
+    const deploymentId = payload?.deploymentId;
+    if (typeof deploymentId !== "string" || !/^[a-f0-9-]{36}$/i.test(deploymentId)) return json(400, { error: "Invalid deployment ID" });
+    const ref = await githubRepositoryRequest(fetcher, env, `git/ref/heads/${encodeURIComponent(env.GITHUB_BRANCH)}`);
+    const headSha = (await ref.json() as { object?: { sha?: string } }).object?.sha;
+    if (!headSha) return json(502, { error: "GitHub did not return the branch head" });
+    const requestedSha = payload?.commitSha;
+    if (requestedSha !== undefined && (typeof requestedSha !== "string" || !/^[a-f0-9]{40}$/.test(requestedSha))) return json(400, { error: "Invalid commit SHA" });
+    const sha = typeof requestedSha === "string" ? requestedSha : headSha;
+    await githubRepositoryRequest(fetcher, env, "dispatches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event_type: "cms_site_deploy", client_payload: { commit_sha: sha, deployment_id: deploymentId } }) });
+    return json(200, { deploymentId, sha, status: "queued" });
+  }
+
+  if (url.pathname === "/api/site-deploy" && request.method === "GET") {
+    const deploymentId = url.searchParams.get("deploymentId");
+    if (!deploymentId || !/^[a-f0-9-]{36}$/i.test(deploymentId)) return json(400, { error: "Invalid deployment ID" });
+    const response = await fetcher(`https://api.github.com/repos/${encodeURIComponent(env.GITHUB_OWNER)}/${encodeURIComponent(env.GITHUB_REPO)}/actions/workflows/astro-pages.yml/runs?event=repository_dispatch&per_page=30`, { headers: { Accept: "application/vnd.github+json", "User-Agent": "Riddle-Records-Content-Editor", "X-GitHub-Api-Version": "2022-11-28" } });
+    if (!response.ok) throw new GitHubApiError(response.status, response.status === 403 && response.headers.get("x-ratelimit-remaining") === "0");
+    const runs = (await response.json() as { workflow_runs?: Array<{ display_title: string; head_sha: string; status: "queued" | "in_progress" | "completed"; conclusion?: string | null; html_url?: string }> }).workflow_runs ?? [];
+    const run = runs.find((item) => item.display_title.includes(deploymentId));
+    return json(200, run ? { deploymentId, sha: run.head_sha, status: run.status, conclusion: run.conclusion, url: run.html_url } : { deploymentId, sha: "", status: "queued" });
+  }
+
   if (request.method === "GET" && url.pathname === "/api/content-list") {
     const kind = url.searchParams.get("kind");
     if (kind && !isContentKind(kind)) return json(400, { error: "Invalid content kind" });
@@ -173,7 +203,7 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     const expected = typeof payload.expectedRevision === "string" ? payload.expectedRevision : undefined;
     if (payload.force !== true && expected !== current.sha) return json(409, { error: "Media Registry has changed", currentRevision: current.sha });
     const update = await githubRequest(fetcher, env, mediaRegistryPath.split("/").map(encodeURIComponent).join("/"), { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "Update media registry via CMS", content: encodeBase64Utf8(`${JSON.stringify(payload.registry, null, 2)}\n`), branch: env.GITHUB_BRANCH, sha: current.sha }) });
-    const result = await update.json() as { content?: { sha?: string } }; return json(200, { registry: payload.registry, revision: result.content?.sha });
+    const result = await update.json() as { content?: { sha?: string }; commit?: { sha?: string } }; return json(200, { registry: payload.registry, revision: result.content?.sha, commitSha: result.commit?.sha });
   }
 
   if (request.method === "GET" && url.pathname === "/api/content-item") {
@@ -218,10 +248,10 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
-      const result = await response.json() as { content?: { sha?: string } };
+      const result = await response.json() as { content?: { sha?: string }; commit?: { sha?: string } };
       const revision = result.content?.sha;
       if (!revision) return json(502, { error: "GitHub did not return the saved revision" });
-      return json(200, { kind, path, saved: true, revision });
+      return json(200, { kind, path, saved: true, revision, commitSha: result.commit?.sha });
     } catch (error) {
       if (error instanceof GitHubApiError && (error.status === 409 || error.status === 422)) {
         const latest = await getGitHubFile(fetcher, env, kind, path);
@@ -246,7 +276,7 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
       return conflict(kind, path, expected, current.sha);
     }
     try {
-      await githubRequest(fetcher, env, githubPath(kind, path), {
+      const deleted = await githubRequest(fetcher, env, githubPath(kind, path), {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -255,7 +285,8 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
           branch: env.GITHUB_BRANCH
         })
       });
-      return json(200, { kind, path, deleted: true });
+      const result = await deleted.json() as { commit?: { sha?: string } };
+      return json(200, { kind, path, deleted: true, commitSha: result.commit?.sha });
     } catch (error) {
       if (error instanceof GitHubApiError && (error.status === 409 || error.status === 422)) {
         const latest = await getGitHubFile(fetcher, env, kind, path);

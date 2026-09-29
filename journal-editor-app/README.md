@@ -27,9 +27,9 @@ Astro本体側の旧Editor `src/pages/tools/journal-editor.astro` は、現在�
 
 ### ローカルCMSモード
 
-dev server 上では、Editor から `src/content/<kind>/*.md` を直接開いて編集できます。左側の Content kind 切り替えから `Journal` / `Songs` / `Gallery` / `Projects` を選び、一覧からファイルを選ぶと実ファイルの Markdown を読み込み、Editor画面の `Markdown保存` で同じ `.md` ファイルへ書き戻します。
+dev server 上では、Editor から `src/content/<kind>/*.md` を開いて編集できます。`Journal` / `Songs` / `Gallery` / `Projects` の変更はまずブラウザ内に保留され、「サイトをデプロイ」でローカルの `.md` ファイルへ反映します。
 
-この直接保存はローカルの Vite dev server API に依存します。build後の公開環境ではローカルファイル書き込みはできないため、従来通り `出力` からコピーするか `.md` ボタンでMarkdownを書き出してください。
+ローカルでの反映はVite dev server APIを使います。本番CMSでは同じ操作がGitHubへのコミットとGitHub Pagesの起動になります。
 
 API は kind ごとに固定された `src/content/<kind>/` 配下のサブディレクトリなし `.md` ファイルだけを対象にします。絶対パス、path traversal、`.md` 以外の拡張子、対象ディレクトリ外への書き込みは拒否します。
 
@@ -41,6 +41,8 @@ API は kind ごとに固定された `src/content/<kind>/` 配下のサブデ�
 - `GET /api/content-item?kind=journal&path=2026-04-01.md`
 - `POST /api/content-item`
 - `DELETE /api/content-item`
+- `POST /api/site-deploy`（CMSからサイト公開を起動）
+- `GET /api/site-deploy?deploymentId=...`（公開状況を確認）
 
 保存リクエストは `{ kind, path, markdown, expectedRevision?, force? }`、削除リクエストは `{ kind, path, expectedRevision, force? }` をJSONで送ります。既存ファイルが読み込み後に更新されていた場合は `409 Conflict` になり、現在の内容を再読み込みするか明示的に強制保存します。削除にも同じ競合検査を適用します。
 
@@ -96,21 +98,23 @@ npm run build
 npm run deploy
 ```
 
-CMSから保存するとGitHub `main` へ1操作1commitで反映され、既存のGitHub Pages workflowが公開サイトを再構築します。
+CMSの編集・公開切替・削除・メディア情報変更は、そのブラウザのlocalStorageに保留されます。別端末には同期されず、ブラウザデータを消すと失われます。CMS全体の「サイトをデプロイ」を押すと、保留した各ファイルをGitHub `main`へ1ファイル1commitで反映し、最後にGitHub Pages workflowを手動起動します。GitHub側で競合があれば反映を止めます。途中で失敗した場合は、未完了の操作を保持して再試行できます。
+
+ローカルCMSでは同じボタンで保留内容をローカルファイルに書き込みます。GitHub Pagesは起動しません。CMSアプリ自身は`main`へのコード変更時に従来どおり自動デプロイされます。
 
 ### 削除操作の注意
 
 Editor の削除操作は dev server 上の実ファイルを削除します。削除前には確認UIで `kind`、`path`、`title` を確認してください。API 側では kind ごとに保存先ディレクトリを固定し、絶対パス、`..`、サブディレクトリ、`.md` 以外のファイル名を拒否します。
 
-localStorage は正本として使いません。Editor画面は note 的な入力UIを維持しつつ、読み込み・保存対象はMarkdownファイルです。編集中の内容は未保存変更の一時退避として localStorage に保存され、同じファイルを開いたときに復元できます。保存時は既存のfrontmatter生成処理でMarkdownへ戻し、保存成功後に一時退避データを消します。
+デプロイ前の変更はlocalStorageに保存します。デプロイ後の正本はMarkdownファイルです。ブラウザを閉じても未反映の変更を再表示し、デプロイが成功した後に保留データを消します。
 
 ### 新規記事作成
 
 1. DraftList で `新規作成` を押します。
 2. Editor 画面で `title` と本文 Markdown を書きます。
-3. `記事設定` から date / type / slug / description / tags / media fields を設定します。
+3. 説明・タグ・画像などの表示内容は記事キャンバスで、日付・種別・slugなどの管理情報は`記事設定`で入力します。
 4. `チェック` で公開前チェックを確認します。
-5. `Markdown保存` で選択中 kind の `src/content/<kind>/` に保存します。build/公開環境では `出力` からコピー、または `.md` ボタンでMarkdownを書き出します。
+5. ブラウザに保留した変更を「サイトをデプロイ」で反映します。公開状態の切替だけではサイトは更新されません。
 
 ### 画像カード / Gallery支援
 

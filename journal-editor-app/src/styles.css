@@ -1106,3 +1106,7 @@ code {
 .canvas-fields input, .canvas-fields select, .canvas-fields textarea, .canvas-tags input { width: 100%; padding: .6rem; border: 1px solid #cadbd1; border-radius: .35rem; background: white; font: inherit; }
 .canvas-fields textarea { min-height: 5rem; }
 .canvas-tags { margin-top: 2rem; }
+.cms-deploy-dock { position: sticky; bottom: 0; z-index: 10; display: flex; align-items: center; gap: 1rem; padding: .75rem 1rem; border-top: 1px solid #cadbd1; background: #f4fffa; }
+.cms-deploy-dock span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pending-summary { margin: 1rem; padding: 1rem; border: 1px solid #cadbd1; border-radius: .5rem; background: #f8fffb; }
+.pending-summary ul { margin: .5rem 0 0; padding-left: 1.25rem; }

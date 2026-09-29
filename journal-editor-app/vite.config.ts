@@ -82,7 +82,7 @@ export function contentApiPlugin() {
     name: "riddle-content-api",
     configureServer(server: import("vite").ViteDevServer) {
       server.middlewares.use(async (request, response, next) => {
-        if (!request.url?.startsWith("/api/content-") && !request.url?.startsWith("/api/media-registry")) {
+        if (!request.url?.startsWith("/api/content-") && !request.url?.startsWith("/api/media-registry") && !request.url?.startsWith("/api/site-deploy")) {
           next();
           return;
         }
@@ -90,6 +90,17 @@ export function contentApiPlugin() {
         const url = new URL(request.url, "http://localhost");
 
         try {
+          if (url.pathname === "/api/site-deploy" && request.method === "POST") {
+            if (!isTrustedWriteOrigin(request)) { sendJson(response, 403, { error: "Forbidden origin" }); return; }
+            const payload = JSON.parse(await readRequestBody(request)) as { deploymentId?: string };
+            if (!payload.deploymentId || !/^[a-f0-9-]{36}$/i.test(payload.deploymentId)) { sendJson(response, 400, { error: "Invalid deployment ID" }); return; }
+            sendJson(response, 200, { deploymentId: payload.deploymentId, sha: "local", status: "completed", conclusion: "success", local: true });
+            return;
+          }
+          if (url.pathname === "/api/site-deploy" && request.method === "GET") {
+            sendJson(response, 200, { deploymentId: url.searchParams.get("deploymentId"), sha: "local", status: "completed", conclusion: "success", local: true });
+            return;
+          }
           if ((request.method === "POST" || request.method === "DELETE") && !isTrustedWriteOrigin(request)) {
             sendJson(response, 403, { error: "Forbidden origin" });
             return;
@@ -138,6 +149,8 @@ export function contentApiPlugin() {
               return;
             }
             const filePath = path.join(contentDir, filename);
+            const exists = await fs.stat(filePath).catch(() => null);
+            if (!exists) { sendJson(response, 404, { error: "Content file not found" }); return; }
             const [markdown, stat] = await Promise.all([
               fs.readFile(filePath, "utf8"),
               fs.stat(filePath)

@@ -141,6 +141,7 @@ npm run build
 ## デプロイ
 
 GitHub Pages へのデプロイは `.github/workflows/astro-pages.yml` で行います。
+サイトは `main` へのpushだけでは更新されません。CMSの「サイトをデプロイ」かGitHub Actionsの手動実行で公開します。
 
 このリポジトリでは Cloudflare Pages を使いません。
 Cloudflare Pages のプロジェクトがリポジトリに接続されたままの場合は、ビルドを無視するコマンドに次を設定します。

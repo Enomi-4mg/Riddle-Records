@@ -34,6 +34,8 @@ import {
 } from "../src/lib/yamlFrontmatter.ts";
 import { isContentKind } from "../src/types/content.ts";
 import { buildContentMarkdown, createContentDocument, normalizeYouTubeId, parseContentMarkdown, publicationChecks } from "../src/lib/cmsMarkdown.ts";
+import { emptyPending, readPending, upsertPending, writePending } from "../src/lib/pendingChanges.ts";
+import { applyPendingChanges } from "../src/lib/deployPending.ts";
 import { markdownToEditorHtml } from "../src/lib/editorMarkdown.ts";
 import { validateMediaRegistry } from "../src/types/media.ts";
 import { defaultFrontmatter } from "../src/types/journal.ts";
@@ -487,6 +489,34 @@ describe("Cloudflare Worker content API", () => {
     GITHUB_BRANCH: "main"
   };
 
+  test("dispatches the Pages workflow only for an explicit deploy request", async () => {
+    const calls = [];
+    const id = "123e4567-e89b-42d3-a456-426614174000";
+    const handler = createWorkerHandler(async (url, options = {}) => {
+      calls.push([String(url), options]);
+      if (String(url).includes("git/ref/heads")) return Response.json({ object: { sha: "site-sha" } });
+      return new Response(null, { status: 204 });
+    });
+    const invalid = await handler(new Request("https://cms.4mg.dev/api/site-deploy", { method: "POST", body: JSON.stringify({ deploymentId: "bad" }) }), env);
+    assert.equal(invalid.status, 400);
+    assert.equal(calls.length, 0);
+    const response = await handler(new Request("https://cms.4mg.dev/api/site-deploy", { method: "POST", body: JSON.stringify({ deploymentId: id }) }), env);
+    assert.equal((await response.json()).sha, "site-sha");
+    assert.equal(calls.length, 2);
+    assert.match(calls[1][0], /repos\/Enomi-4mg\/Riddle-Records\/dispatches/);
+    assert.deepEqual(JSON.parse(calls[1][1].body), { event_type: "cms_site_deploy", client_payload: { commit_sha: "site-sha", deployment_id: id } });
+  });
+
+  test("reports only the matching site deployment run", async () => {
+    const id = "123e4567-e89b-42d3-a456-426614174000";
+    const handler = createWorkerHandler(async () => Response.json({ workflow_runs: [
+      { display_title: "Deploy site (another-run)", head_sha: "other", status: "completed", conclusion: "success" },
+      { display_title: `Deploy site (${id})`, head_sha: "selected", status: "completed", conclusion: "success", html_url: "https://github.com/run/1" }
+    ] }));
+    const response = await handler(new Request(`https://cms.4mg.dev/api/site-deploy?deploymentId=${id}`), env);
+    assert.deepEqual(await response.json(), { deploymentId: id, sha: "selected", status: "completed", conclusion: "success", url: "https://github.com/run/1" });
+  });
+
   test("serves assets outside API routes and validates paths before GitHub access", async () => {
     const requests = [];
     const handler = createWorkerHandler(async (...args) => {
@@ -724,6 +754,51 @@ describe("CMS content model", () => {
     const gallery = createContentDocument("gallery");
     assert.equal(gallery.common.publication, "draft");
     assert.equal(publicationChecks(gallery).every((check) => check.ok), false);
+  });
+});
+
+describe("pending deployment storage", () => {
+  test("keeps independent article changes in localStorage", () => withLocalStorage(() => {
+    const first = createContentDocument("journal");
+    const second = createContentDocument("gallery");
+    const pending = upsertPending(upsertPending(emptyPending(), { document: first, operation: "save" }), { document: second, operation: "delete" });
+    writePending(pending);
+    assert.deepEqual(readPending().contents.map((item) => item.document.id), [first.id, second.id]);
+    assert.equal(upsertPending(pending, { document: first, operation: "save" }).contents.length, 2);
+  }));
+
+  test("stops before writing on a revision conflict", async () => {
+    const document = createContentDocument("journal");
+    document.common.title = "Conflict";
+    document.file = { path: "conflict.md", revision: "original" };
+    let writes = 0;
+    const dependencies = {
+      readRevision: async () => "newer", saveContent: async () => { writes += 1; throw new Error("unexpected write"); },
+      deleteContent: async () => { throw new Error("unexpected delete"); }, loadMedia: async () => { throw new Error("unexpected media read"); }, saveMedia: async () => { throw new Error("unexpected media write"); }
+    };
+    await assert.rejects(() => applyPendingChanges(upsertPending(emptyPending(), { document, operation: "save" }), () => {}, dependencies), /競合/);
+    assert.equal(writes, 0);
+  });
+
+  test("keeps completed file commits when a later write fails and resumes without repeating them", async () => {
+    const first = createContentDocument("journal"); first.common.title = "First";
+    const second = createContentDocument("gallery"); second.common.title = "Second"; second.placement.data.slug = "second";
+    let queue = upsertPending(upsertPending(emptyPending(), { document: first, operation: "save" }), { document: second, operation: "save" });
+    const writes = []; let failSecond = true;
+    const dependencies = {
+      readRevision: async () => undefined,
+      saveContent: async (kind, path) => {
+        writes.push(kind);
+        if (kind === "gallery" && failSecond) { failSecond = false; throw new Error("second write failed"); }
+        return { kind, path, saved: true, revision: `revision-${kind}`, commitSha: "a".repeat(40) };
+      },
+      deleteContent: async () => { throw new Error("unexpected delete"); }, loadMedia: async () => { throw new Error("unexpected media read"); }, saveMedia: async () => { throw new Error("unexpected media write"); }
+    };
+    await assert.rejects(() => applyPendingChanges(queue, (next) => { queue = next; }, dependencies), /second write failed/);
+    assert.deepEqual(queue.contents.map((item) => item.applied || false), [true, false]);
+    queue = await applyPendingChanges(queue, (next) => { queue = next; }, dependencies);
+    assert.deepEqual(writes, ["journal", "gallery", "gallery"]);
+    assert.deepEqual(queue.contents.map((item) => item.applied), [true, true]);
   });
 });
 

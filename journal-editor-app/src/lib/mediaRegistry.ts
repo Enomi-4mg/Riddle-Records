@@ -5,7 +5,7 @@ async function readError(response: Response) { try { return ((await response.jso
 export async function loadMediaRegistry(): Promise<MediaRegistryResult> {
   const response = await fetch("/api/media-registry"); if (!response.ok) throw new Error(await readError(response)); return response.json();
 }
-export async function saveMediaRegistry(registry: MediaRegistry, expectedRevision?: string, force = false): Promise<MediaRegistryResult> {
+export async function saveMediaRegistry(registry: MediaRegistry, expectedRevision?: string, force = false): Promise<MediaRegistryResult & { commitSha?: string }> {
   const response = await fetch("/api/media-registry", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ registry, expectedRevision, force }) });
   if (response.status === 409) { const value = await response.json() as { currentRevision?: string }; throw new MediaRegistryConflictError(value.currentRevision); }
   if (!response.ok) throw new Error(await readError(response)); return response.json();
