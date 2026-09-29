@@ -71,16 +71,16 @@ const allTags = [...new Set(works.flatMap((work) => work.tags))].sort((left, rig
     </div>
   </div>
 
-  <div class="works-grid works-grid-list" id="gallery-container">
+  <div class="journal-list works-list" id="gallery-container">
     {works.map((work) => (
-      <article class="gallery-item work-card work-card-unified journal-entry-animate" data-work-kind={work.kind} data-date={work.date} data-categories={work.tags.join(",")}>
-        <a href={work.href} class="work-thumb" target={work.external ? "_blank" : undefined} rel={work.external ? "noopener noreferrer" : undefined}>
+      <article class="gallery-item journal-row works-row journal-entry-animate" data-work-kind={work.kind} data-date={work.date} data-categories={work.tags.join(",")}>
+        <a href={work.href} class="journal-thumb" target={work.external ? "_blank" : undefined} rel={work.external ? "noopener noreferrer" : undefined}>
           <img src={work.image} alt={work.imageAlt} loading="lazy" />
         </a>
-        <div class="work-copy">
-          <h2 class="work-title"><a href={work.href} target={work.external ? "_blank" : undefined} rel={work.external ? "noopener noreferrer" : undefined}>{work.title}</a></h2>
-          <time datetime={work.date} class="work-date">{formatDate(work.date)}</time>
-          <p class="work-desc">{work.description}</p>
+        <div class="journal-copy">
+          <time datetime={work.date} class="journal-date">{formatDate(work.date)}</time>
+          <h2 class="journal-title"><a href={work.href} target={work.external ? "_blank" : undefined} rel={work.external ? "noopener noreferrer" : undefined}>{work.title}</a></h2>
+          <p class="journal-desc">{work.description}</p>
           <div class="work-tags" aria-label={`${work.title} tags`}>
             {work.tags.map((tag) => <span class="work-tag">{tag}</span>)}
           </div>

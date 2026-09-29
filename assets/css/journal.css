@@ -515,3 +515,115 @@
     gap: 1rem;
   }
 }
+
+/* Works / Project share the Journal list rhythm. */
+.works-controls {
+  max-width: var(--container-page);
+  margin: 0 auto var(--space-lg);
+}
+
+.works-row,
+.project-row {
+  margin-bottom: var(--space-lg);
+}
+
+.works-row .journal-thumb,
+.project-row .journal-thumb {
+  aspect-ratio: 4 / 3;
+}
+
+.works-row .journal-thumb img,
+.project-row .journal-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.works-row .journal-title,
+.project-row .journal-title {
+  min-height: 0;
+}
+
+.works-row .journal-title a:hover,
+.project-row .journal-title a:hover {
+  color: var(--color-mint-deep);
+}
+
+.works-row .work-tags,
+.project-row .project-tags {
+  margin-top: 0.35rem;
+}
+
+.project-thumb-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm);
+  background: #e6f7f1;
+  color: var(--color-ink);
+  font-weight: 700;
+  text-align: center;
+}
+
+.project-detail .project-kicker {
+  margin-top: 0.5rem;
+  color: var(--color-mint-deep);
+}
+
+.project-detail .project-hero {
+  margin: 0 0 1.5rem;
+}
+
+.project-content {
+  gap: 1.5rem;
+}
+
+.project-content .project-section {
+  margin: 0;
+}
+
+.project-content .project-section h2 {
+  margin: 0 0 0.75rem;
+}
+
+.project-content .project-feature-list {
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.project-content .project-feature-list li {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+@media screen and (max-width: 600px) {
+  .works-list,
+  .project-list {
+    margin-inline: calc(var(--layout-pad) * -1);
+  }
+
+  .works-row,
+  .project-row {
+    margin-bottom: 0.9rem;
+  }
+
+  .works-row .journal-thumb,
+  .project-row .journal-thumb {
+    width: 92px;
+    height: 92px;
+    aspect-ratio: 1;
+  }
+
+  .works-row .work-tags,
+  .project-row .project-tags {
+    gap: 0.3rem;
+  }
+
+  .works-row .work-tag,
+  .project-row .project-tag {
+    padding: 0.1rem 0.45rem;
+    font-size: 0.7rem;
+  }
+}

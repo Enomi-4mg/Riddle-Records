@@ -12,14 +12,10 @@ const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
 <BaseLayout title="Project" description="制作したアプリ・Web作品などのプロジェクト一覧。" wideContainer={true}>
   <h1 class="web_title">Project</h1>
 
-  <section class="project-intro journal-entry-animate">
-    <p>制作したアプリ、Web作品、実験的なプロジェクトをまとめています。</p>
-  </section>
-
-  <div class="project-grid">
+  <div class="journal-list project-list">
     {sortedProjects.map((project) => (
-      <article class="project-card journal-entry-animate">
-        <a href={href(`/project/${project.slug}/`)} class={`project-card-visual${project.hero ? "" : " project-card-visual-fallback"}`}>
+      <article class="journal-row project-row journal-entry-animate">
+        <a href={href(`/project/${project.slug}/`)} class={`journal-thumb project-thumb${project.hero ? "" : " project-thumb-fallback"}`}>
           {project.hero ? (
             <img src={project.hero} alt={`${project.title} preview`} loading="lazy" />
           ) : (
@@ -27,17 +23,16 @@ const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
           )}
         </a>
 
-        <div class="project-card-copy">
-          {project.status && <p class="project-kicker">{project.status}</p>}
-          <h2 class="project-card-title">
+        <div class="journal-copy">
+          {project.date && <time class="journal-date" datetime={project.date}>{formatDate(project.date)}</time>}
+          <h2 class="journal-title">
             <a href={href(`/project/${project.slug}/`)}>{project.title}</a>
           </h2>
-          {project.date && <time class="project-date" datetime={project.date}>{formatDate(project.date)}</time>}
-          <p class="project-description">{project.description}</p>
+          <p class="journal-desc">{project.description}</p>
           <div class="project-tags" aria-label={`${project.title} tags`}>
+            {project.status && <span class="project-tag">{project.status}</span>}
             {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}
           </div>
-          <a class="project-detail-link" href={href(`/project/${project.slug}/`)}>詳細を見る</a>
         </div>
       </article>
     ))}

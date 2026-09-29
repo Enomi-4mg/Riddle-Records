@@ -31,14 +31,16 @@ const { project } = Astro.props;
   ogImage={project.hero || undefined}
   ogImageAlt={project.title}
 >
-  <article class="project-detail journal-entry-animate">
-    <a class="project-back-link" href={href("/project/")}>Project一覧へ戻る</a>
+  <article class="project-detail journal-article journal-entry-animate">
+    <div class="journal-back-link journal-back-link-top">
+      <a href={href("/project/")}>Project一覧へ戻る</a>
+    </div>
 
-    <header class="project-detail-header">
+    <header class="journal-hero project-detail-header">
+      {project.date && <p class="journal-date"><time datetime={project.date}>{formatDate(project.date)}</time></p>}
+      <h1 class="page_title">{project.title}</h1>
       {project.status && <p class="project-kicker">{project.status}</p>}
-      <h1 class="web_title">{project.title}</h1>
-      {project.date && <time class="project-date" datetime={project.date}>{formatDate(project.date)}</time>}
-      <p class="project-lead">{project.description}</p>
+      <p class="journal-summary">{project.description}</p>
     </header>
 
     <div class={`project-hero${project.hero ? "" : " project-hero-fallback"}`}>
@@ -49,28 +51,34 @@ const { project } = Astro.props;
       )}
     </div>
 
-    <section class="project-section">
-      <h2 class="page_title">概要</h2>
-      <p>{project.body || project.description}</p>
-    </section>
+    <div class="journal-content project-content">
+      <section class="project-section">
+        <h2>概要</h2>
+        <p>{project.body || project.description}</p>
+      </section>
 
-    <section class="project-section">
-      <h2 class="page_title">主な機能</h2>
-      <ul class="project-feature-list">
-        {project.features.map((feature) => <li>{feature}</li>)}
-      </ul>
-    </section>
+      <section class="project-section">
+        <h2>主な機能</h2>
+        <ul class="project-feature-list">
+          {project.features.map((feature) => <li>{feature}</li>)}
+        </ul>
+      </section>
 
-    <section class="project-section">
-      <h2 class="page_title">リンク</h2>
-      <div class="project-tags" aria-label={`${project.title} tags`}>
-        {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}
-      </div>
-      <div class="project-actions">
-        {project.links.map((link, index) => (
-          <a href={link.url} class={`project-action${index === 0 ? " project-action-primary" : ""}`} target="_blank" rel="noopener noreferrer">{link.label}</a>
-        ))}
-      </div>
-    </section>
+      <section class="project-section">
+        <h2>リンク</h2>
+        <div class="project-tags" aria-label={`${project.title} tags`}>
+          {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}
+        </div>
+        <div class="project-actions">
+          {project.links.map((link, index) => (
+            <a href={link.url} class={`project-action${index === 0 ? " project-action-primary" : ""}`} target="_blank" rel="noopener noreferrer">{link.label}</a>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <div class="journal-back-link">
+      <a href={href("/project/")}>Project一覧へ戻る</a>
+    </div>
   </article>
 </BaseLayout>
