@@ -1,8 +1,9 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getGalleryDetailItems } from "../../utils/gallery";
+import { resolveImageUrl } from "../../utils/images";
+import { renderContentMarkdown } from "../../utils/renderMarkdown";
 
-const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
@@ -20,10 +21,10 @@ export async function getStaticPaths() {
 }
 
 const { item } = Astro.props;
-const imageUrl = `${cloudinaryBase}/w_1400,q_auto,f_auto/v1/${item.image}`;
-const ogImage = `${cloudinaryBase}/w_1200,h_630,c_fill,q_auto,f_jpg/v1/${item.image}`;
-const twitterImage = `${cloudinaryBase}/w_1200,h_628,c_fill,q_85,f_jpg/v1/${item.image}`;
-const bodyParagraphs = item.body.split(/\n{2,}/).filter(Boolean);
+const imageUrl = resolveImageUrl(item.image, "w_1400,q_auto,f_auto");
+const ogImage = resolveImageUrl(item.image, "w_1200,h_630,c_fill,q_auto,f_jpg");
+const twitterImage = resolveImageUrl(item.image, "w_1200,h_628,c_fill,q_85,f_jpg");
+const bodyHtml = await renderContentMarkdown(item.body);
 ---
 
 <BaseLayout
@@ -51,7 +52,7 @@ const bodyParagraphs = item.body.split(/\n{2,}/).filter(Boolean);
     <div class="journal-content work-detail-content">
       <a
         class="work-detail-image"
-        href={`${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.image}`}
+        href={resolveImageUrl(item.image, "w_1920,q_auto,f_auto")}
         data-lightbox={`gallery-detail-${item.slug}`}
         data-title={`${item.title} - ${item.description}`}
       >
@@ -62,7 +63,7 @@ const bodyParagraphs = item.body.split(/\n{2,}/).filter(Boolean);
         {item.tags.map((category) => <span class="work-tag">{category}</span>)}
       </div>
 
-      {bodyParagraphs.map((paragraph) => <p>{paragraph}</p>)}
+      <div class="rendered-markdown" set:html={bodyHtml} />
 
       {(item.article_url || item.making_article_url) && (
         <section class="work-detail-links">

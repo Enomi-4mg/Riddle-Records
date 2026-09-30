@@ -13,6 +13,7 @@
     "test:coverage": "npm --prefix journal-editor-app run test:coverage"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "6.3.11",
     "astro": "^5.0.0"
   }
 }

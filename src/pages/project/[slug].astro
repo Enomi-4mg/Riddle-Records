@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getProjectItems } from "../../utils/projects";
+import { resolveImageUrl } from "../../utils/images";
+import { renderContentMarkdown } from "../../utils/renderMarkdown";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
@@ -20,6 +22,8 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
+const heroUrl = resolveImageUrl(project.hero);
+const bodyHtml = await renderContentMarkdown(project.body || project.description || "");
 ---
 
 <BaseLayout
@@ -28,7 +32,7 @@ const { project } = Astro.props;
   ogTitle={project.title}
   ogDescription={project.description}
   ogType="article"
-  ogImage={project.hero || undefined}
+  ogImage={heroUrl}
   ogImageAlt={project.title}
 >
   <article class="project-detail journal-article journal-entry-animate">
@@ -44,9 +48,9 @@ const { project } = Astro.props;
     </header>
 
     <div class="journal-content project-content">
-      <div class={`project-hero${project.hero ? "" : " project-hero-fallback"}`}>
-        {project.hero ? (
-          <img src={project.hero} alt={`${project.title} preview`} />
+      <div class={`project-hero${heroUrl ? "" : " project-hero-fallback"}`}>
+        {heroUrl ? (
+          <img src={heroUrl} alt={`${project.title} preview`} />
         ) : (
           <span>{project.title}</span>
         )}
@@ -54,7 +58,7 @@ const { project } = Astro.props;
 
       <section class="project-section">
         <h2>概要</h2>
-        <p>{project.body || project.description}</p>
+        <div class="rendered-markdown" set:html={bodyHtml} />
       </section>
 
       <section class="project-section">

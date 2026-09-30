@@ -7,14 +7,14 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { editorHtmlToMarkdown, markdownToEditorHtml } from "../lib/editorMarkdown";
+import { decodeRawHtml, editorHtmlToMarkdown, encodeRawHtml, markdownToEditorHtml } from "../lib/editorMarkdown";
 
 export type EditorImage = { src: string; alt: string; title?: string };
 
 const RawHtml = Node.create({
   name: "rawHtml", group: "block", atom: true, selectable: true,
-  addAttributes: () => ({ raw: { default: "", parseHTML: (element) => element.getAttribute("data-raw-html"), renderHTML: (attributes) => ({ "data-raw-html": attributes.raw }) } }),
-  parseHTML: () => [{ tag: "div[data-raw-html]", getAttrs: (element) => ({ raw: (element as HTMLElement).getAttribute("data-raw-html") }) }],
+  addAttributes: () => ({ raw: { default: "", parseHTML: (element) => decodeRawHtml(element.getAttribute("data-raw-html") || ""), renderHTML: (attributes) => ({ "data-raw-html": encodeRawHtml(attributes.raw) }) } }),
+  parseHTML: () => [{ tag: "div[data-raw-html]", getAttrs: (element) => ({ raw: decodeRawHtml((element as HTMLElement).getAttribute("data-raw-html") || "") }) }],
   renderHTML: ({ HTMLAttributes }) => ["div", { ...HTMLAttributes, class: "raw-html-block" }, ["span", {}, "HTML互換ブロック"], ["small", {}, "クリックして選択・メニューから編集"]]
 });
 

@@ -1,7 +1,6 @@
 import type { GalleryItemView } from "./gallery";
 import { resolveImageUrl } from "./images";
 
-const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 
 const normalizeJournalPath = (path: string) => path.replace(/^\/+/, "").replace(/\/+$/, "").replace(/^journal\//, "");
 
@@ -79,7 +78,7 @@ export const getJournalThumbnail = (
 
   if (galleryThumbnail) {
     return {
-      src: `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${galleryThumbnail.image}`,
+      src: resolveImageUrl(galleryThumbnail.image, "w_400,h_400,c_fill,q_auto,f_auto")!,
       alt: galleryThumbnail.imageAlt
     };
   }

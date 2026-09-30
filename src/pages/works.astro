@@ -2,9 +2,9 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getGalleryDetailPath, getGalleryItems, hasGalleryDetail } from "../utils/gallery";
+import { resolveImageUrl } from "../utils/images";
 
 const base = import.meta.env.BASE_URL;
-const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const showDrafts = !import.meta.env.PROD;
@@ -20,13 +20,13 @@ const galleryWorks = galleryItems.map((item) => ({
   date: item.date,
   description: item.description,
   tags: item.tags,
-  image: `${cloudinaryBase}/w_600,h_400,c_fill,q_auto,f_auto/v1/${item.image}`,
+  image: resolveImageUrl(item.image, "w_600,h_400,c_fill,q_auto,f_auto"),
   imageAlt: item.imageAlt,
   href: hasGalleryDetail(item)
     ? href(getGalleryDetailPath(item))
     : item.article_url
       ? href(item.article_url)
-      : `${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${item.image}`,
+      : resolveImageUrl(item.image, "w_1920,q_auto,f_auto"),
   external: !hasGalleryDetail(item) && !item.article_url
 }));
 

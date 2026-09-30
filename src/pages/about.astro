@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getLatestGalleryItems } from "../utils/gallery";
+import { resolveImageUrl } from "../utils/images";
 import profileIconUrl from "../../favicon/icon.jpg?url";
 
 const base = import.meta.env.BASE_URL;
@@ -101,7 +102,7 @@ const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() +
       {latestGallery.map((item) => (
         <div class="work-card">
           <a href={href("/works/")} class="work-thumb">
-            <img src={`https://res.cloudinary.com/dzq8y9qes/image/upload/w_400,h_400,c_fill,q_auto,f_auto/v1/${item.image}`} alt={item.imageAlt} />
+            <img src={resolveImageUrl(item.image, "w_400,h_400,c_fill,q_auto,f_auto")} alt={item.imageAlt} />
           </a>
           <div class="work-info">
             <p class="work_title">{item.title}</p>

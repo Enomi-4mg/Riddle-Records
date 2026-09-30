@@ -1,14 +1,14 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getGalleryDetailPath, getSortedGalleryItems, hasGalleryDetail } from "../utils/gallery";
+import { resolveImageUrl } from "../utils/images";
 
 const base = import.meta.env.BASE_URL;
-const cloudinaryBase = "https://res.cloudinary.com/dzq8y9qes/image/upload";
 const sortedGallery = await getSortedGalleryItems();
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
-const getFullImageUrl = (cloudinaryId) => `${cloudinaryBase}/w_1920,q_auto,f_auto/v1/${cloudinaryId}`;
-const getThumbUrl = (cloudinaryId) => `${cloudinaryBase}/w_400,h_400,c_fill,q_auto,f_auto/v1/${cloudinaryId}`;
+const getFullImageUrl = (image) => resolveImageUrl(image, "w_1920,q_auto,f_auto");
+const getThumbUrl = (image) => resolveImageUrl(image, "w_400,h_400,c_fill,q_auto,f_auto");
 ---
 
 <BaseLayout title="Gallery" description="イラスト・3DCG・写真などの作品ギャラリー。" wideContainer={true}>

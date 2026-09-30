@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getSortedProjectItems } from "../../utils/projects";
+import { resolveImageUrl } from "../../utils/images";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
@@ -17,7 +18,7 @@ const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
       <article class="journal-row project-row journal-entry-animate">
         <a href={href(`/project/${project.slug}/`)} class={`journal-thumb project-thumb${project.hero ? "" : " project-thumb-fallback"}`}>
           {project.hero ? (
-            <img src={project.hero} alt={`${project.title} preview`} loading="lazy" />
+            <img src={resolveImageUrl(project.hero)} alt={`${project.title} preview`} loading="lazy" />
           ) : (
             <span>{project.title}</span>
           )}

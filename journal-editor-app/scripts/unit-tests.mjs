@@ -33,10 +33,11 @@ import {
   yamlString
 } from "../src/lib/yamlFrontmatter.ts";
 import { isContentKind } from "../src/types/content.ts";
-import { buildContentMarkdown, createContentDocument, normalizeYouTubeId, parseContentMarkdown, publicationChecks } from "../src/lib/cmsMarkdown.ts";
+import { buildContentMarkdown, createContentDocument, normalizeYouTubeId, parseContentMarkdown, parseTagInput, publicationChecks } from "../src/lib/cmsMarkdown.ts";
 import { emptyPending, readPending, upsertPending, writePending } from "../src/lib/pendingChanges.ts";
 import { applyPendingChanges } from "../src/lib/deployPending.ts";
-import { markdownToEditorHtml } from "../src/lib/editorMarkdown.ts";
+import { decodeRawHtml, encodeRawHtml, markdownToEditorHtml } from "../src/lib/editorMarkdown.ts";
+import { renderContentMarkdown } from "../../src/utils/renderMarkdown.ts";
 import { validateMediaRegistry } from "../src/types/media.ts";
 import { defaultFrontmatter } from "../src/types/journal.ts";
 import { contentApiPlugin, isAllowedContentFilename, isTrustedWriteOrigin } from "../vite.config.ts";
@@ -158,6 +159,41 @@ describe("permalink and article state", () => {
 });
 
 describe("YAML and Markdown conversion", () => {
+  test("keeps tag typing separate from normalization until commit", () => {
+    const buffer = "art,";
+    assert.equal(buffer, "art,");
+    assert.deepEqual(parseTagInput(buffer), ["art"]);
+    assert.deepEqual(parseTagInput(`${buffer} music`), ["art", "music"]);
+  });
+
+  test("round-trips literal percent signs in raw HTML attributes", () => {
+    const raw = '<div style="width:100%">Hello</div>';
+    assert.equal(decodeRawHtml(encodeRawHtml(raw)), raw);
+    assert.equal(decodeRawHtml(raw), raw);
+    assert.match(markdownToEditorHtml(raw), /data-raw-html="uri:/);
+  });
+
+  test("marks strikethrough for editor conversion", () => {
+    assert.match(markdownToEditorHtml("~~struck~~"), /<del>struck<\/del>/);
+  });
+
+  test("keeps gallery boolean thumbnails through CMS serialization", () => {
+    const original = "---\ntitle: Test\ndate: 2026-02-03\nslug: test\nimage: gallery/test.jpg\nthumbnail: false\n---\n\nBody\n";
+    const parsed = parseContentMarkdown(original, "gallery");
+    assert.equal(parsed.placement.data.thumbnail, "false");
+    const saved = buildContentMarkdown(parsed);
+    assert.match(saved, /thumbnail: false\n/);
+    assert.equal(parseContentMarkdown(saved, "gallery").placement.data.thumbnail, "false");
+  });
+
+  test("renders gallery and project body Markdown with Astro's processor", async () => {
+    const html = await renderContentMarkdown("## Heading\n\n[link](https://example.com) and ~~struck~~\n\n- item");
+    assert.match(html, /<h2[^>]*>Heading<\/h2>/);
+    assert.match(html, /href="https:\/\/example.com"/);
+    assert.match(html, /<del>struck<\/del>/);
+    assert.match(html, /<li>item<\/li>/);
+  });
+
   test("prepares task lists and raw image HTML for structured editing", () => {
     const tasks = markdownToEditorHtml("- [ ] todo\n- [x] done");
     assert.match(tasks, /<ul data-type="taskList">/);
