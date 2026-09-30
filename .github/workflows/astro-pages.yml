@@ -2,6 +2,8 @@ name: Deploy Astro site to GitHub Pages
 run-name: Deploy site (${{ github.event.client_payload.deployment_id || inputs.deployment_id || 'manual' }})
 
 on:
+  push:
+    branches: [main]
   repository_dispatch:
     types: [cms_site_deploy]
   workflow_dispatch:
