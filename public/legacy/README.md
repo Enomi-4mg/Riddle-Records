@@ -29,4 +29,4 @@ title: 旧コンテンツ
 
 ## 移行手順
 
-新しいシステムで Markdown を追加する場合の手順は [README.md](../README.md) の「コンテンツ追加方法」セクションを参照してください。
+新しいシステムで Markdown を追加する場合の手順は [リポジトリの README](https://github.com/Enomi-4mg/Riddle-Records/blob/main/README.md) の「コンテンツ追加方法」セクションを参照してください。
