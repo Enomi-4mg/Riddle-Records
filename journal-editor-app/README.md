@@ -49,6 +49,8 @@ API は kind ごとに固定された `src/content/<kind>/` 配下のサブデ�
 
 CMSは1タブでの利用を想定しています。別タブが開いている間は後から開いたタブの編集とデプロイを停止します。デプロイのworkflowが見つからない場合は5分後に失敗として扱い、画面の「デプロイ追跡を解除」から保留変更を残したまま再試行できます。公開workflowは実行時点の`main`をビルドします。
 
+ヘッダーの「デフォルト設定」では、新規Journal記事に入れるサムネイル、代替テキスト、OG画像を設定できます。画像URLまたはCloudinary public IDを直接入力するか、メディアから選択します。設定はこのブラウザのlocalStorageに保存され、既存記事には適用されません。
+
 ## Cloudflare Workerへのデプロイ
 
 本番Editorは `https://cms.4mg.dev/` でReact SPAと `/api/*` を同じWorkerから配信します。`workers.dev` とpreview URLは無効で、custom domain以外からWorkerへ到達させない設定です。

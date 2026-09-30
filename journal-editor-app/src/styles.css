@@ -235,7 +235,17 @@ textarea {
   font-weight: 700;
 }
 
-.deploy-action { margin-left: auto; flex: none; }
+.deploy-action { display: flex; align-items: center; gap: .5rem; margin-left: auto; flex: none; }
+.dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.dialog-heading h2, .dialog-heading p { margin: 0; }
+.dialog-heading p { color: var(--cms-mint-dark); font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.dialog-help { color: var(--cms-muted); font-size: .86rem; line-height: 1.6; }
+.article-defaults-dialog { width: min(580px, 100%); }
+.defaults-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.defaults-previews figure { margin: 0; overflow: hidden; border: 1px solid var(--cms-border); border-radius: 8px; background: #fff; }
+.defaults-previews img { display: block; width: 100%; aspect-ratio: 1.7; object-fit: cover; }
+.defaults-previews figcaption { padding: .5rem .65rem; color: var(--cms-muted); font-size: .75rem; }
+.dialog-actions { justify-content: flex-end; margin-top: 1.5rem; }
 .global-notice { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .status-pill-unsaved {
