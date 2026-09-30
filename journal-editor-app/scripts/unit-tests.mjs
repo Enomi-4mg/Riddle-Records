@@ -777,6 +777,31 @@ describe("CMS content model", () => {
     assert.equal(parsed.placement.data.status, "archived");
   });
 
+  test("publishes existing projects using their filename when the slug field is blank", () => {
+    const document = parseContentMarkdown("---\ntitle: Wordfall\ndate: '2026-09-29'\nslug: ''\ndraft: true\n---\n", "projects", { path: "2026-09-29.md", revision: "rev" });
+    assert.equal(document.placement.data.slug, "2026-09-29");
+    assert.equal(publicationChecks(document).every((check) => check.ok), true);
+    document.common.publication = "published";
+    const saved = parseContentMarkdown(buildContentMarkdown(document), "projects", document.file);
+    assert.equal(saved.common.publication, "published");
+    assert.equal(saved.placement.data.slug, "2026-09-29");
+  });
+
+  test("preserves unquoted YAML dates across all content kinds", () => {
+    for (const kind of ["journal", "songs", "gallery", "projects"]) {
+      const document = parseContentMarkdown("---\ntitle: Demo\ndate: 2024-03-14\n---\n", kind);
+      assert.equal(document.common.date, "2024-03-14");
+    }
+  });
+
+  test("uses gallery filenames as slugs and rejects slugs that normalize to empty", () => {
+    const gallery = parseContentMarkdown("---\ntitle: Art\ndate: '2026-09-29'\nimage: gallery/art\n---\n", "gallery", { path: "art.md" });
+    assert.equal(gallery.placement.data.slug, "art");
+    assert.equal(publicationChecks(gallery).every((check) => check.ok), true);
+    gallery.placement.data.slug = "作品";
+    assert.equal(publicationChecks(gallery).find((check) => check.label === "slug")?.ok, false);
+  });
+
   test("preserves unknown frontmatter fields", () => {
     const source = `---\ntitle: Demo\ndate: 2026-09-28\ndraft: true\ncustom_meta:\n  color: mint\n---\n\nBody\n`;
     const document = parseContentMarkdown(source, "journal");

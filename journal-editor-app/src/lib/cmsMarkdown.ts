@@ -5,6 +5,7 @@ import { slugify } from "./permalink";
 const knownKeys = new Set(["title", "date", "description", "tags", "draft", "type", "slug", "thumbnail", "thumbnail_alt", "thumbnail_fit", "thumbnail_position", "og_image", "og_description", "featured_related", "use_math", "permalink", "image", "thumbnail_class", "youtube_id", "credits", "lyrics", "detail", "article_url", "making_article_url", "hero", "heroImage", "status", "links", "features", "externalUrl", "sourceUrl", "cloudinary_id", "categories", "subtitle"]);
 const list = (value: unknown) => Array.isArray(value) ? value.map(String) : typeof value === "string" ? value.split(",").map((part) => part.trim()).filter(Boolean) : [];
 const text = (value: unknown) => typeof value === "string" ? value : "";
+const dateText = (value: unknown) => value instanceof Date ? value.toISOString().slice(0, 10) : text(value).slice(0, 10);
 export function normalizeYouTubeId(value: string) {
   const candidate = value.trim();
   if (/^[\w-]{11}$/.test(candidate)) return candidate;
@@ -31,7 +32,7 @@ export function parseContentMarkdown(markdown: string, kind: ContentKind, file?:
   const raw = (match ? load(match[1]) : {}) as Record<string, unknown> || {};
   const doc = createContentDocument(kind);
   doc.id = file ? `file:${kind}:${file.path}` : doc.id; doc.source = file ? "imported" : "uploaded"; doc.file = file;
-  doc.common = { title: text(raw.title), date: text(raw.date).slice(0, 10) || doc.common.date, description: text(raw.description), tags: list(raw.tags), publication: raw.draft === true ? "draft" : "published" };
+  doc.common = { title: text(raw.title), date: dateText(raw.date) || doc.common.date, description: text(raw.description), tags: list(raw.tags), publication: raw.draft === true ? "draft" : "published" };
   doc.body = match ? match[2] : normalized;
   doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => !knownKeys.has(key)));
   if (kind === "journal") doc.placement = { kind, data: { articleType: ["making", "report"].includes(text(raw.type)) ? text(raw.type) as "making" | "report" : "journal", slug: text(raw.slug), thumbnail: typeof raw.thumbnail === "boolean" ? String(raw.thumbnail) : text(raw.thumbnail), thumbnailAlt: text(raw.thumbnail_alt), thumbnailFit: text(raw.thumbnail_fit), thumbnailPosition: text(raw.thumbnail_position), ogImage: text(raw.og_image), ogDescription: text(raw.og_description), relatedContent: list(raw.featured_related), useMath: raw.use_math === true, permalink: text(raw.permalink), image: text(raw.image), thumbnailClass: text(raw.thumbnail_class) } };
@@ -39,12 +40,12 @@ export function parseContentMarkdown(markdown: string, kind: ContentKind, file?:
   if (kind === "gallery") {
     const articleUrl = text(raw.article_url), makingArticleUrl = text(raw.making_article_url);
     if ((articleUrl || makingArticleUrl) && !/^## 関連記事\s*$/m.test(doc.body)) doc.body = `${doc.body.trimEnd()}\n\n## 関連記事\n${articleUrl ? `\n- [作品記事](${articleUrl})` : ""}${makingArticleUrl ? `\n- [メイキング](${makingArticleUrl})` : ""}\n`;
-    doc.placement = { kind, data: { slug: text(raw.slug), detail: raw.detail === true, image: text(raw.image) || text(raw.cloudinary_id), thumbnail: typeof raw.thumbnail === "boolean" ? String(raw.thumbnail) : text(raw.thumbnail), thumbnailAlt: text(raw.thumbnail_alt), articleUrl: "", makingArticleUrl: "" } };
+    doc.placement = { kind, data: { slug: text(raw.slug) || (file?.path.replace(/\.md$/, "") ?? ""), detail: raw.detail === true, image: text(raw.image) || text(raw.cloudinary_id), thumbnail: typeof raw.thumbnail === "boolean" ? String(raw.thumbnail) : text(raw.thumbnail), thumbnailAlt: text(raw.thumbnail_alt), articleUrl: "", makingArticleUrl: "" } };
   }
   if (kind === "projects") {
     const features = list(raw.features);
     if (features.length && !/^## 主な機能\s*$/m.test(doc.body)) doc.body = `${doc.body.trimEnd()}\n\n## 主な機能\n\n${features.map((feature) => `- ${feature}`).join("\n")}\n`;
-    doc.placement = { kind, data: { slug: text(raw.slug), hero: text(raw.hero) || text(raw.heroImage), status: ["paused", "completed", "archived"].includes(text(raw.status)) ? text(raw.status) as "paused" | "completed" | "archived" : "active", links: Array.isArray(raw.links) ? raw.links.flatMap((item) => item && typeof item === "object" && "label" in item && "url" in item ? [{ label: String(item.label), url: String(item.url) }] : []) : [], features: [] } };
+    doc.placement = { kind, data: { slug: text(raw.slug) || (file?.path.replace(/\.md$/, "") ?? ""), hero: text(raw.hero) || text(raw.heroImage), status: ["paused", "completed", "archived"].includes(text(raw.status)) ? text(raw.status) as "paused" | "completed" | "archived" : "active", links: Array.isArray(raw.links) ? raw.links.flatMap((item) => item && typeof item === "object" && "label" in item && "url" in item ? [{ label: String(item.label), url: String(item.url) }] : []) : [], features: [] } };
   }
   return doc;
 }
@@ -71,10 +72,10 @@ export function generatedContentFilename(doc: ContentDocument) {
 }
 
 export function publicationChecks(doc: ContentDocument) {
-  const checks = [{ ok: Boolean(doc.common.title.trim()), label: "タイトル" }, { ok: Boolean(doc.common.date), label: "日付" }, { ok: Boolean(doc.common.description.trim()), label: "説明" }];
+  const checks = [{ ok: Boolean(doc.common.title.trim()), label: "タイトル" }, { ok: Boolean(doc.common.date), label: "日付" }];
   if (doc.placement.kind === "songs") checks.push({ ok: Boolean(normalizeYouTubeId(doc.placement.data.youtubeId)), label: "YouTube URL または ID" });
-  if (doc.placement.kind === "gallery") checks.push({ ok: Boolean(doc.placement.data.slug.trim()), label: "slug" }, { ok: Boolean(doc.placement.data.image.trim()), label: "メイン画像" });
-  if (doc.placement.kind === "projects") checks.push({ ok: Boolean(doc.placement.data.slug.trim()), label: "slug" });
-  if (doc.placement.kind === "journal" && doc.placement.data.articleType === "making") checks.push({ ok: Boolean(doc.placement.data.slug.trim()), label: "making記事のslug" });
+  if (doc.placement.kind === "gallery") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "slug" }, { ok: Boolean(doc.placement.data.image.trim()), label: "メイン画像" });
+  if (doc.placement.kind === "projects") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "slug" });
+  if (doc.placement.kind === "journal" && doc.placement.data.articleType === "making") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "making記事のslug" });
   return checks;
 }
