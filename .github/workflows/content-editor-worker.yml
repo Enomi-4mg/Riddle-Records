@@ -5,6 +5,10 @@ on:
     branches: ["main"]
     paths:
       - "journal-editor-app/**"
+      - "src/utils/**"
+      - "src/data/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/content-editor-worker.yml"
   workflow_dispatch:
 
@@ -30,9 +34,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: journal-editor-app/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            journal-editor-app/package-lock.json
 
-      - name: Install dependencies
+      - name: Install root dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Install editor dependencies
         run: npm ci
 
       - name: Check Worker types
