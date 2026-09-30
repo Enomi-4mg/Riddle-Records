@@ -96,3 +96,14 @@ export const getJournalThumbnail = (
     alt: entry.data.title
   };
 };
+
+/** Reject collisions before Astro can overwrite a generated article. */
+export function assertUniqueJournalRoutes(entries: readonly { id: string; data: { date: Date; permalink?: string; type?: string; slug?: string } }[]) {
+  const routes = new Map<string, string>();
+  for (const entry of entries) {
+    const route = getJournalRoutePath(entry);
+    const previous = routes.get(route);
+    if (previous !== undefined) throw new Error(`Journal URL collision: /journal/${route}/ (${previous}, ${entry.id}). Use one report per month or set a unique permalink.`);
+    routes.set(route, entry.id);
+  }
+}

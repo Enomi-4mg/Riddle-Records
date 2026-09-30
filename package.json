@@ -8,9 +8,10 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "test": "npm --prefix journal-editor-app test && npm run test:build",
+    "test": "npm run test:routes && npm --prefix journal-editor-app test && npm run test:build",
     "test:build": "npm run build && npm --prefix journal-editor-app run build",
-    "test:coverage": "npm --prefix journal-editor-app run test:coverage"
+    "test:coverage": "npm --prefix journal-editor-app run test:coverage",
+    "test:routes": "node --experimental-loader ./journal-editor-app/scripts/typescript-loader.mjs --test journal-editor-app/scripts/journal-routes-tests.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "6.3.11",
