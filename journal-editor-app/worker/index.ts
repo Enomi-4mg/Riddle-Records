@@ -1,4 +1,4 @@
-import { validateMediaRegistry, type MediaRegistry } from "../src/types/media";
+import { isMediaRegistry, validateMediaRegistry, type MediaRegistry } from "../src/types/media";
 
 const contentDirectories = {
   journal: "src/content/journal",
@@ -42,12 +42,6 @@ function json(status: number, data: unknown) {
 
 function isContentKind(value: unknown): value is ContentKind {
   return typeof value === "string" && Object.hasOwn(contentDirectories, value);
-}
-
-function isMediaRegistry(value: unknown): value is MediaRegistry {
-  if (!value || typeof value !== "object") return false;
-  const registry = value as Record<string, unknown>;
-  return registry.version === 1 && Array.isArray(registry.assets) && registry.assets.every((asset) => asset && typeof asset === "object" && typeof asset.id === "string" && typeof asset.publicId === "string" && typeof asset.displayName === "string" && ["image", "video", "audio"].includes(asset.type) && Array.isArray(asset.tags) && asset.tags.every((tag: unknown) => typeof tag === "string") && typeof asset.alt === "string");
 }
 
 export function isAllowedContentFilename(value: unknown): value is string {
@@ -279,7 +273,7 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
   }
 
   if (request.method === "PUT" && url.pathname === "/api/media-registry") {
-    const payload = await readPayload(request); if (!payload || !isMediaRegistry(payload.registry)) return json(400, { error: "Invalid registry" });
+    const payload = await readPayload(request); if (!payload || !isMediaRegistry(payload.registry) || payload.expectedRevision !== undefined && typeof payload.expectedRevision !== "string" || payload.force !== undefined && typeof payload.force !== "boolean") return json(400, { error: "Invalid registry" });
     const registryError = validateMediaRegistry(payload.registry);
     if (registryError) return json(400, { error: registryError });
     const response = await githubRequest(fetcher, env, `${mediaRegistryPath.split("/").map(encodeURIComponent).join("/")}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);

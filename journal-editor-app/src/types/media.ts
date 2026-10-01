@@ -13,3 +13,9 @@ export function validateMediaRegistry(value: MediaRegistry) {
   }
   return null;
 }
+
+export function isMediaRegistry(value: unknown): value is MediaRegistry {
+  if (!value || typeof value !== "object") return false;
+  const registry = value as Record<string, unknown>;
+  return registry.version === 1 && Array.isArray(registry.assets) && registry.assets.every((asset) => asset && typeof asset === "object" && typeof asset.id === "string" && typeof asset.publicId === "string" && typeof asset.displayName === "string" && ["image", "video", "audio"].includes(asset.type) && Array.isArray(asset.tags) && asset.tags.every((tag: unknown) => typeof tag === "string") && typeof asset.alt === "string");
+}

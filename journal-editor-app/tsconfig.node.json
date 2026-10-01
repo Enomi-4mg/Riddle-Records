@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "composite": true,
+    "outDir": "./.cache/types",
     "skipLibCheck": true,
     "target": "ES2020",
     "lib": ["ES2020"],
@@ -8,5 +9,5 @@
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "src/types/media.ts"]
 }

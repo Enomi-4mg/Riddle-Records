@@ -1,3 +1,4 @@
+import { isMediaRegistry, validateMediaRegistry } from "./src/types/media";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs/promises";
@@ -6,33 +7,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
-const contentDirs = {
-  journal: path.resolve(repositoryRoot, "src/content/journal"),
-  songs: path.resolve(repositoryRoot, "src/content/songs"),
-  gallery: path.resolve(repositoryRoot, "src/content/gallery"),
-  projects: path.resolve(repositoryRoot, "src/content/projects")
-} as const;
-const mediaRegistryPath = path.resolve(repositoryRoot, "src/data/media-registry.json");
-
-type ContentKind = keyof typeof contentDirs;
-
-function isContentKind(value: string | null): value is ContentKind {
-  return Boolean(value && Object.prototype.hasOwnProperty.call(contentDirs, value));
+const contentKinds = ["journal", "songs", "gallery", "projects"] as const;
+type ContentKind = typeof contentKinds[number];
+function createContentDirs(root: string) {
+  return Object.fromEntries(contentKinds.map((kind) => [kind, path.resolve(root, "src/content", kind)])) as Record<ContentKind, string>;
 }
-
-export function isAllowedContentFilename(value: string) {
-  return Boolean(
-    value &&
-    !path.isAbsolute(value) &&
-    path.basename(value) === value &&
-    path.extname(value) === ".md" &&
-    !value.includes("..")
-  );
+function isContentKind(value: unknown): value is ContentKind {
+  return typeof value === "string" && (contentKinds as readonly string[]).includes(value);
 }
-
-function getContentDir(kind: string | null) {
-  if (!isContentKind(kind)) return null;
-  return contentDirs[kind];
+export function isAllowedContentFilename(value: unknown): value is string {
+  return typeof value === "string" && value.length > 3 && !path.isAbsolute(value) && path.basename(value) === value && path.extname(value) === ".md" && !value.includes("..") && !value.includes("\\");
 }
 
 function readRequestBody(request: IncomingMessage) {
@@ -61,8 +45,8 @@ export function isTrustedWriteOrigin(request: IncomingMessage) {
   return origin === new URL(`http://${host}`).origin;
 }
 
-async function listContentFiles(kind: ContentKind) {
-  const contentDir = contentDirs[kind];
+async function listContentFiles(kind: ContentKind, directories: Record<ContentKind, string>) {
+  const contentDir = directories[kind];
   const entries = await fs.readdir(contentDir, { withFileTypes: true }).catch((error: NodeJS.ErrnoException) => {
     if (error.code === "ENOENT") return [];
     throw error;
@@ -77,7 +61,10 @@ async function listContentFiles(kind: ContentKind) {
   }));
 }
 
-export function contentApiPlugin() {
+export function contentApiPlugin(root = repositoryRoot) {
+  const contentDirs = createContentDirs(root);
+  const mediaRegistryPath = path.resolve(root, "src/data/media-registry.json");
+  const getContentDir = (kind: string | null) => isContentKind(kind) ? contentDirs[kind] : null;
   return {
     name: "riddle-content-api",
     configureServer(server: import("vite").ViteDevServer) {
@@ -109,13 +96,21 @@ export function contentApiPlugin() {
           if (request.method === "POST" && url.pathname === "/api/pending-batch") {
             const payload = JSON.parse(await readRequestBody(request)) as { contents?: Array<{ id: string; kind: string; path: string; operation: "save" | "delete"; markdown?: string; expectedRevision?: string; force?: boolean }>; media?: { registry: unknown; expectedRevision?: string; force?: boolean } };
             if (!Array.isArray(payload.contents) || !payload.contents.length && !payload.media) { sendJson(response, 400, { error: "Invalid batch" }); return; }
+            const batchPaths = new Set<string>();
             const checked: Array<{ id: string; path: string; filePath: string; operation: "save" | "delete"; markdown?: string }> = [];
             for (const entry of payload.contents) {
-              if (!entry || typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || !["save", "delete"].includes(entry.operation) || entry.operation === "save" && typeof entry.markdown !== "string") { sendJson(response, 400, { error: "Invalid batch content" }); return; }
+              if (!entry || typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || !["save", "delete"].includes(entry.operation) || entry.operation === "save" && typeof entry.markdown !== "string" || entry.expectedRevision !== undefined && typeof entry.expectedRevision !== "string" || entry.force !== undefined && typeof entry.force !== "boolean") { sendJson(response, 400, { error: "Invalid batch content" }); return; }
               const filePath = path.join(contentDirs[entry.kind], entry.path);
+              if (batchPaths.has(filePath)) { sendJson(response, 400, { error: "Duplicate batch path" }); return; }
+              batchPaths.add(filePath);
+            }
+            if (payload.media && (!isMediaRegistry(payload.media.registry) || validateMediaRegistry(payload.media.registry) || payload.media.expectedRevision !== undefined && typeof payload.media.expectedRevision !== "string" || payload.media.force !== undefined && typeof payload.media.force !== "boolean")) { sendJson(response, 400, { error: "Invalid media" }); return; }
+            for (const entry of payload.contents) {
+              const filePath = path.join(contentDirs[entry.kind as ContentKind], entry.path);
               const stat = await fs.stat(filePath).catch(() => null);
               const currentRevision = stat ? `mtime:${stat.mtimeMs}` : undefined;
-              if (!entry.force && currentRevision !== entry.expectedRevision) { sendJson(response, 409, { target: "content", documentId: entry.id, operation: entry.operation, expectedRevision: entry.expectedRevision, currentRevision }); return; }
+              if (entry.operation === "delete" && !stat) { sendJson(response, 409, { target: "content", documentId: entry.id, operation: "delete", expectedRevision: entry.expectedRevision }); return; }
+              if (entry.force !== true && currentRevision !== entry.expectedRevision) { sendJson(response, 409, { target: "content", documentId: entry.id, operation: entry.operation, expectedRevision: entry.expectedRevision, currentRevision }); return; }
               checked.push({ id: entry.id, path: entry.path, filePath, operation: entry.operation, markdown: entry.markdown });
             }
             if (payload.media) {
@@ -140,8 +135,8 @@ export function contentApiPlugin() {
               sendJson(response, 400, { error: "Invalid content kind" });
               return;
             }
-            const kinds = kind ? [kind] : Object.keys(contentDirs) as ContentKind[];
-            sendJson(response, 200, { files: (await Promise.all(kinds.map(listContentFiles))).flat() });
+            const kinds = (kind ? [kind] : Object.keys(contentDirs)) as ContentKind[];
+            sendJson(response, 200, { files: (await Promise.all(kinds.map((kind) => listContentFiles(kind, contentDirs)))).flat() });
             return;
           }
 
@@ -154,7 +149,7 @@ export function contentApiPlugin() {
           if (request.method === "PUT" && url.pathname === "/api/media-registry") {
             if (!isTrustedWriteOrigin(request)) { sendJson(response, 403, { error: "Forbidden origin" }); return; }
             const payload = JSON.parse(await readRequestBody(request)) as { registry?: unknown; expectedRevision?: string; force?: boolean };
-            if (!payload.registry || typeof payload.registry !== "object") { sendJson(response, 400, { error: "Invalid registry" }); return; }
+            if (!isMediaRegistry(payload.registry) || validateMediaRegistry(payload.registry) || payload.expectedRevision !== undefined && typeof payload.expectedRevision !== "string" || payload.force !== undefined && typeof payload.force !== "boolean") { sendJson(response, 400, { error: "Invalid registry" }); return; }
             const stat = await fs.stat(mediaRegistryPath).catch(() => null);
             const currentRevision = stat ? `mtime:${stat.mtimeMs}` : undefined;
             if (payload.force !== true && payload.expectedRevision !== currentRevision) { sendJson(response, 409, { error: "Media Registry has changed", currentRevision }); return; }

@@ -1,3 +1,7 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { after } from "node:test";
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { describe, test } from "node:test";
@@ -51,6 +55,14 @@ import {
   toJournalRoutePath
 } from "../../src/utils/journal.ts";
 
+// Every local API mutation is isolated from repository content.
+const fixtureRoot = await fs.mkdtemp(path.join(os.tmpdir(), "riddle-cms-tests-"));
+for (const kind of ["journal", "songs", "gallery", "projects"]) await fs.mkdir(path.join(fixtureRoot, "src/content", kind), { recursive: true });
+await fs.mkdir(path.join(fixtureRoot, "src/data"), { recursive: true });
+await fs.writeFile(path.join(fixtureRoot, "src/content/journal/2026-04-01.md"), "Fixture article");
+await fs.writeFile(path.join(fixtureRoot, "src/data/media-registry.json"), JSON.stringify({ version: 1, assets: [] }));
+after(() => fs.rm(fixtureRoot, { recursive: true, force: true }));
+
 const makeFrontmatter = (overrides = {}) => ({
   ...defaultFrontmatter,
   title: "Test title",
@@ -97,7 +109,7 @@ function withLocalStorage(callback) {
 
 function requestContentApi({ method = "GET", url, headers = {}, body = "" }) {
   let middleware;
-  contentApiPlugin().configureServer({
+  contentApiPlugin(fixtureRoot).configureServer({
     middlewares: { use: (handler) => { middleware = handler; } }
   });
 
