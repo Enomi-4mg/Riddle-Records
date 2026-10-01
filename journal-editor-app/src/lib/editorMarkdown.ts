@@ -1,3 +1,4 @@
+import { embedMarkdown, parseEmbed } from "../../../shared/embeds";
 import { marked } from "marked";
 import TurndownService from "turndown";
 
@@ -6,7 +7,14 @@ export const decodeRawHtml = (value: string) => value.startsWith("uri:") ? decod
 
 function protectRawBlocks(markdown: string) {
   const lines = markdown.split("\n"); const output: string[] = [];
+  let fence: { char: string; length: number } | undefined;
   for (let index = 0; index < lines.length; index += 1) {
+    const fenced = lines[index].match(/^\s{0,3}(`{3,}|~{3,})(.*)$/);
+    if (fenced && !fence) { fence = { char: fenced[1][0], length: fenced[1].length }; output.push(lines[index]); continue; }
+    if (fence) {
+      if (fenced && fenced[1][0] === fence.char && fenced[1].length >= fence.length && !fenced[2].trim()) fence = undefined;
+      output.push(lines[index]); continue;
+    }
     const start = lines[index].trimStart().match(/^<(div|figure|iframe|video|audio|img)\b/i);
     if (!start) { output.push(lines[index]); continue; }
     const tag = start[1].toLowerCase(); const block = [lines[index]]; let depth = 0;
@@ -21,7 +29,13 @@ function protectRawBlocks(markdown: string) {
 
 export function markdownToEditorHtml(markdown: string) {
   const protectedMarkdown = protectRawBlocks(markdown);
-  let html = marked.parse(protectedMarkdown, { gfm: true }) as string;
+  const renderer = new marked.Renderer();
+  renderer.code = (token) => {
+    const { text, lang } = token;
+    const embed = lang === "riddle-embed" ? parseEmbed(text) : undefined;
+    return embed ? `<div data-riddle-embed="${encodeURIComponent(JSON.stringify(embed))}"></div>` : new marked.Renderer().code(token);
+  };
+  let html = marked.parse(protectedMarkdown, { gfm: true, renderer }) as string;
   html = html.replace(/<li><input([^>]*)type=\"checkbox\"([^>]*)>\s*([\s\S]*?)<\/li>/g, (_match, before, after, content) => {
     const checked = `${before}${after}`.includes("checked");
     return `<li data-checked=\"${checked ? "true" : "false"}\"><label><input type=\"checkbox\" ${checked ? "checked" : ""}><span></span></label><div><p>${content}</p></div></li>`;
@@ -33,8 +47,17 @@ export function markdownToEditorHtml(markdown: string) {
 export function editorHtmlToMarkdown(html: string) {
   const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced", blankReplacement: (_content, node) => {
     const element = node as HTMLElement;
+    if (node.nodeType === 1 && element.hasAttribute("data-riddle-embed")) {
+      try { const embed = parseEmbed(decodeURIComponent(element.getAttribute("data-riddle-embed") || "")); if (embed) return `\n\n${embedMarkdown(embed)}\n\n`; } catch { /* Keep invalid input out of generated embeds. */ }
+    }
     return node.nodeType === 1 && element.hasAttribute("data-raw-html") ? `\n\n${decodeRawHtml(element.getAttribute("data-raw-html") || "")}\n\n` : (node as HTMLElement & { isBlock?: boolean }).isBlock ? "\n\n" : "";
   } });
+  turndown.addRule("embed", {
+    filter: (node) => node.nodeType === 1 && (node as HTMLElement).hasAttribute("data-riddle-embed"),
+    replacement: (_content, node) => {
+      try { const raw = decodeURIComponent((node as HTMLElement).getAttribute("data-riddle-embed") || ""); const embed = parseEmbed(raw); return embed ? `\n\n${embedMarkdown(embed)}\n\n` : ""; } catch { return ""; }
+    }
+  });
   turndown.addRule("strike", { filter: (node) => ["S", "STRIKE", "DEL"].includes(node.nodeName), replacement: (content) => `~~${content}~~` });
   turndown.addRule("rawHtml", {
     filter: (node) => node.nodeType === 1 && (node as HTMLElement).hasAttribute("data-raw-html"),

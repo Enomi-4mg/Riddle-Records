@@ -1,3 +1,7 @@
+import { EmbedNode, EmbedDocumentsContext } from "./EmbedNode";
+import { EmbedDialog } from "./EmbedDialog";
+import { detectEmbedKind, safeLink, type Embed } from "../../../shared/embeds";
+import type { ContentDocument } from "../types/content";
 import { Node } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -19,22 +23,25 @@ const RawHtml = Node.create({
 });
 
 type BlockInfo = { pos: number; top: number; nodeType: string };
-type BlockKind = "paragraph" | "heading1" | "heading2" | "heading3" | "heading4" | "heading5" | "heading6" | "bulletList" | "orderedList" | "taskList" | "blockquote" | "codeBlock" | "image" | "table" | "horizontalRule" | "rawHtml";
+type BlockKind = "paragraph" | "heading1" | "heading2" | "heading3" | "heading4" | "heading5" | "heading6" | "bulletList" | "orderedList" | "taskList" | "blockquote" | "codeBlock" | "image" | "table" | "horizontalRule" | "rawHtml" | "embed";
 
 const blockLabels: Record<BlockKind, string> = {
   paragraph: "テキスト", heading1: "見出し H1", heading2: "見出し H2", heading3: "見出し H3", heading4: "見出し H4", heading5: "見出し H5", heading6: "見出し H6",
-  bulletList: "箇条書き", orderedList: "番号付きリスト", taskList: "タスクリスト", blockquote: "引用", codeBlock: "コード", image: "画像", table: "表", horizontalRule: "区切り線", rawHtml: "HTML"
+  bulletList: "箇条書き", orderedList: "番号付きリスト", taskList: "タスクリスト", blockquote: "引用", codeBlock: "コード", image: "画像", table: "表", horizontalRule: "区切り線", rawHtml: "HTML", embed: "リンク・埋め込み"
 };
 const basicKinds: BlockKind[] = ["paragraph", "heading1", "heading2", "heading3", "heading4", "heading5", "heading6", "bulletList", "orderedList", "taskList", "blockquote"];
-const otherKinds: BlockKind[] = ["codeBlock", "table", "horizontalRule", "rawHtml"];
+const otherKinds: BlockKind[] = ["embed", "codeBlock", "table", "horizontalRule", "rawHtml"];
 
 function blockElement(target: EventTarget | null, root: HTMLElement) {
   if (!(target instanceof HTMLElement)) return null;
-  const candidate = target.closest("li, table, pre, blockquote, img, hr, .raw-html-block, h1, h2, h3, h4, h5, h6, p") as HTMLElement | null;
+  const embed = target.closest("[data-editor-embed]") as HTMLElement | null;
+  if (embed && root.contains(embed)) return embed;
+  const candidate = target.closest("li, table, pre, blockquote, img, hr, .raw-html-block, [data-editor-embed], h1, h2, h3, h4, h5, h6, p") as HTMLElement | null;
   return candidate && root.contains(candidate) ? candidate : null;
 }
 
 function nodeKind(element: HTMLElement): string {
+  if (element.matches("[data-editor-embed]")) return "embed";
   if (element.matches("li[data-checked]")) return "taskItem";
   if (element.tagName === "LI") return "listItem";
   if (element.tagName === "IMG") return "image";
@@ -46,14 +53,16 @@ function nodeKind(element: HTMLElement): string {
   return element.tagName.toLowerCase();
 }
 
-export function VisualEditor({ value, onChange, onOpenMedia }: { value: string; onChange: (markdown: string) => void; onOpenMedia: (insert: (image: EditorImage) => void) => void }) {
+export function VisualEditor({ value, onChange, onOpenMedia, documents = [] }: { documents?: ContentDocument[]; value: string; onChange: (markdown: string) => void; onOpenMedia: (insert: (image: EditorImage) => void) => void }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const draggingPos = useRef<number | null>(null);
   const [active, setActive] = useState<BlockInfo | null>(null);
   const [menu, setMenu] = useState<"add" | "actions" | null>(null);
   const [slash, setSlash] = useState<{ query: string; left: number; top: number } | null>(null);
+  const [embedEdit, setEmbedEdit] = useState<{ data: Embed; from?: number; to?: number; expected?: string } | null>(null);
+  const [pasted, setPasted] = useState<{ url: string; pos: number } | null>(null);
   const editor = useEditor({
-    extensions: [StarterKit.configure({ link: false }), Link.configure({ openOnClick: false }), Image.configure({ allowBase64: false }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: true } }), RawHtml],
+    extensions: [StarterKit.configure({ link: false }), Link.configure({ openOnClick: false }), Image.configure({ allowBase64: false }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: true } }), RawHtml, EmbedNode.configure({ onEdit: (pos, data) => { if (typeof pos === "number") setEmbedEdit({ data, from: pos, expected: JSON.stringify(data) }); } })],
     content: markdownToEditorHtml(value),
     onUpdate: ({ editor }) => {
       onChange(editorHtmlToMarkdown(editor.getHTML()));
@@ -64,7 +73,17 @@ export function VisualEditor({ value, onChange, onOpenMedia }: { value: string; 
         if (root) setSlash({ query: text.slice(1).toLowerCase(), left: coords.left - root.left, top: coords.bottom - root.top + 6 });
       } else setSlash(null);
     },
-    editorProps: { attributes: { "aria-label": "本文エディター" }, handleKeyDown: (_view, event) => { if (event.key === "Escape") { setMenu(null); setSlash(null); } return false; } }
+    editorProps: { handlePaste: (view, event) => {
+      const url = event.clipboardData?.getData("text/plain").trim() || "";
+      const { $from, empty } = view.state.selection;
+      if (!empty || $from.parent.type.name !== "paragraph" || $from.parent.content.size || !safeLink(url)) return false;
+      event.preventDefault();
+      const pos = $from.before();
+      const from = view.state.selection.from;
+      view.dispatch(view.state.tr.insertText(url).addMark(from, from + url.length, view.state.schema.marks.link.create({ href: url })));
+      setPasted({ url, pos });
+      return true;
+    }, attributes: { "aria-label": "本文エディター" }, handleKeyDown: (_view, event) => { if (event.key === "Escape") { setMenu(null); setSlash(null); setPasted(null); } return false; } }
   });
 
   useEffect(() => { if (editor && editorHtmlToMarkdown(editor.getHTML()) !== value.trim()) editor.commands.setContent(markdownToEditorHtml(value), { emitUpdate: false }); }, [editor, value]);
@@ -81,7 +100,12 @@ export function VisualEditor({ value, onChange, onOpenMedia }: { value: string; 
 
   if (!editor) return <div className="visual-editor-loading">エディターを準備中…</div>;
 
-  const focusBlock = () => active ? editor.chain().focus().setTextSelection(Math.min(active.pos + 1, editor.state.doc.content.size)) : editor.chain().focus();
+  const focusBlock = () => {
+    const chain = editor.chain().focus();
+    if (!active) return chain;
+    const node = editor.state.doc.nodeAt(active.pos);
+    return node?.isAtom ? chain.setNodeSelection(active.pos) : chain.setTextSelection(Math.min(active.pos + 1, editor.state.doc.content.size));
+  };
 
   function insertBlock(kind: BlockKind, replaceSlash = false) {
     let chain = editor.chain().focus();
@@ -96,6 +120,7 @@ export function VisualEditor({ value, onChange, onOpenMedia }: { value: string; 
     else if (kind === "horizontalRule") chain.setHorizontalRule().run();
     else if (kind === "table") chooseTableSize();
     else if (kind === "image") requestImage();
+    else if (kind === "embed") { if (replaceSlash) chain.run(); const url = ""; setEmbedEdit({ data: { kind: "card", url } }); }
     else if (kind === "rawHtml") { const raw = window.prompt("HTMLを入力", "<div>\n\n</div>"); if (raw) editor.chain().focus().insertContent({ type: "rawHtml", attrs: { raw } }).run(); }
     setMenu(null); setSlash(null);
   }
@@ -120,7 +145,8 @@ export function VisualEditor({ value, onChange, onOpenMedia }: { value: string; 
   function deleteBlock() { if (!active) return; const node = editor.state.doc.nodeAt(active.pos); if (node) editor.view.dispatch(editor.state.tr.delete(active.pos, active.pos + node.nodeSize)); setMenu(null); }
   function editSpecificBlock() {
     if (!active) return; const node = editor.state.doc.nodeAt(active.pos); if (!node) return;
-    if (node.type.name === "image") { const alt = window.prompt("altテキスト", node.attrs.alt || ""); if (alt === null) return; const title = window.prompt("キャプション", node.attrs.title || ""); if (title === null) return; editor.view.dispatch(editor.state.tr.setNodeMarkup(active.pos, undefined, { ...node.attrs, alt, title })); }
+    if (node.type.name === "embed") setEmbedEdit({ data: node.attrs.data, from: active.pos, expected: JSON.stringify(node.attrs.data) });
+    else if (node.type.name === "image") { const alt = window.prompt("altテキスト", node.attrs.alt || ""); if (alt === null) return; const title = window.prompt("キャプション", node.attrs.title || ""); if (title === null) return; editor.view.dispatch(editor.state.tr.setNodeMarkup(active.pos, undefined, { ...node.attrs, alt, title })); }
     else if (node.type.name === "codeBlock") { const language = window.prompt("言語識別子（例: cpp, shader.frag）", node.attrs.language || ""); if (language !== null) editor.view.dispatch(editor.state.tr.setNodeMarkup(active.pos, undefined, { ...node.attrs, language: language.trim() || null })); }
     else if (node.type.name === "rawHtml") { const raw = window.prompt("HTMLを編集", node.attrs.raw || ""); if (raw !== null) editor.view.dispatch(editor.state.tr.setNodeMarkup(active.pos, undefined, { raw })); }
     setMenu(null);
@@ -146,21 +172,33 @@ export function VisualEditor({ value, onChange, onOpenMedia }: { value: string; 
 
   const slashItems = ([...basicKinds, "image", ...otherKinds] as BlockKind[]).filter((kind) => {
     if (!slash?.query) return true;
-    const aliases: Partial<Record<BlockKind, string>> = { heading1: "heading h1 見出し", heading2: "heading h2 見出し", heading3: "heading h3 見出し", image: "image 画像", codeBlock: "code コード", table: "table 表", rawHtml: "html" };
+    const aliases: Partial<Record<BlockKind, string>> = { heading1: "heading h1 見出し", heading2: "heading h2 見出し", heading3: "heading h3 見出し", image: "image 画像", codeBlock: "code コード", table: "table 表", rawHtml: "html", embed: "link embed card youtube spotify x リンク 埋め込み" };
     return `${blockLabels[kind]} ${aliases[kind] || kind}`.toLowerCase().includes(slash.query);
   });
 
-  return <div className="visual-editor" ref={rootRef} onMouseMove={(event) => { if (!menu) updateActive(event.target); }} onFocusCapture={(event) => updateActive(event.target)} onDragOver={(event) => event.preventDefault()} onDrop={dropBlock}>
+  return <EmbedDocumentsContext.Provider value={documents}><div className="visual-editor" ref={rootRef} onMouseMove={(event) => { if (!menu) updateActive(event.target); }} onFocusCapture={(event) => updateActive(event.target)} onDragOver={(event) => event.preventDefault()} onDrop={dropBlock}>
     <BubbleMenu editor={editor} options={{ placement: "top" }} shouldShow={({ editor, from, to }) => from !== to && editor.isEditable}>
       <div className="bubble-menu" aria-label="文字装飾"><button className={editor.isActive("bold") ? "active" : ""} onClick={() => editor.chain().focus().toggleBold().run()} title="太字"><strong>B</strong></button><button className={editor.isActive("italic") ? "active" : ""} onClick={() => editor.chain().focus().toggleItalic().run()} title="斜体"><em>I</em></button><button className={editor.isActive("strike") ? "active" : ""} onClick={() => editor.chain().focus().toggleStrike().run()} title="打ち消し線"><s>S</s></button><button className={editor.isActive("code") ? "active" : ""} onClick={() => editor.chain().focus().toggleCode().run()} title="インラインコード">&lt;/&gt;</button><button className={editor.isActive("link") ? "active" : ""} onClick={() => { const href = window.prompt("リンク先URL", editor.getAttributes("link").href || "https://"); if (href === "") editor.chain().focus().unsetLink().run(); else if (href) editor.chain().focus().setLink({ href }).run(); }} title="リンク">🔗</button></div>
     </BubbleMenu>
     {active && <div className="block-controls" style={{ top: active.top }} onMouseDown={(event) => event.preventDefault()}><button className="block-control" aria-label="下にブロックを追加" title="下に追加" onClick={() => { focusBlock(); setMenu(menu === "add" ? null : "add"); }}>＋</button><button className="block-control drag-handle" draggable aria-label="ブロック操作" title="クリックで操作、ドラッグで移動" onDragStart={(event) => { draggingPos.current = active.pos; event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", "riddle-editor-block"); }} onClick={() => { focusBlock(); setMenu(menu === "actions" ? null : "actions"); }}>⋮⋮</button>
       {menu === "add" && <BlockPicker className="block-popover add-popover" onPick={(kind) => addRelative(kind)} />}
-      {menu === "actions" && <div className="block-popover action-popover">{active.nodeType === "image" && <button onClick={editSpecificBlock}>画像を編集</button>}{active.nodeType === "codeBlock" && <button onClick={editSpecificBlock}>言語を設定</button>}{active.nodeType === "table" && <TableActions editor={editor} />}{active.nodeType === "rawHtml" && <button onClick={editSpecificBlock}>HTMLを表示 / 編集</button>}{!(["image", "table", "horizontalRule", "rawHtml"].includes(active.nodeType)) && <details><summary>種類を変更</summary><BlockPicker compact onPick={(kind) => { focusBlock(); insertBlock(kind); }} includeDedicated={false} /></details>}<button onClick={() => addRelative("paragraph", true)}>上に追加</button><button onClick={() => addRelative("paragraph")}>下に追加</button><button onClick={duplicateBlock}>複製</button><button className="danger" onClick={deleteBlock}>削除</button>{["listItem", "taskItem"].includes(active.nodeType) && <><button onClick={() => focusBlock().sinkListItem(active.nodeType as "listItem" | "taskItem").run()}>インデント</button><button onClick={() => focusBlock().liftListItem(active.nodeType as "listItem" | "taskItem").run()}>アウトデント</button></>}</div>}
+      {menu === "actions" && <div className="block-popover action-popover">{active.nodeType === "embed" && <button onClick={editSpecificBlock}>埋め込みを編集</button>}{active.nodeType === "image" && <button onClick={editSpecificBlock}>画像を編集</button>}{active.nodeType === "codeBlock" && <button onClick={editSpecificBlock}>言語を設定</button>}{active.nodeType === "table" && <TableActions editor={editor} />}{active.nodeType === "rawHtml" && <button onClick={editSpecificBlock}>HTMLを表示 / 編集</button>}{!(["image", "table", "horizontalRule", "rawHtml", "embed"].includes(active.nodeType)) && <details><summary>種類を変更</summary><BlockPicker compact onPick={(kind) => { focusBlock(); insertBlock(kind); }} includeDedicated={false} /></details>}<button onClick={() => addRelative("paragraph", true)}>上に追加</button><button onClick={() => addRelative("paragraph")}>下に追加</button><button onClick={duplicateBlock}>複製</button><button className="danger" onClick={deleteBlock}>削除</button>{["listItem", "taskItem"].includes(active.nodeType) && <><button onClick={() => focusBlock().sinkListItem(active.nodeType as "listItem" | "taskItem").run()}>インデント</button><button onClick={() => focusBlock().liftListItem(active.nodeType as "listItem" | "taskItem").run()}>アウトデント</button></>}</div>}
     </div>}
     {slash && <div className="slash-menu" style={{ left: Math.min(slash.left, 360), top: slash.top }}><p>ブロックを追加</p>{slashItems.length ? slashItems.map((kind) => <button key={kind} onClick={() => insertBlock(kind, true)}>{blockLabels[kind]}</button>) : <span>一致するブロックがありません</span>}</div>}
+    {pasted && <div className="paste-embed-menu" role="group" aria-label="貼り付けたURLの表示方法"><span>URLの表示方法</span><button type="button" onClick={() => setPasted(null)}>通常リンク</button>{["card", ...(detectEmbedKind(pasted.url) !== "card" ? [detectEmbedKind(pasted.url)] : [])].map((kind) => <button type="button" key={kind} onClick={() => {
+      const node = editor.state.doc.nodeAt(pasted.pos);
+      if (node?.type.name === "paragraph" && node.textContent === pasted.url) setEmbedEdit({ data: { kind: kind as Embed["kind"], url: pasted.url }, from: pasted.pos, to: pasted.pos + node.nodeSize, expected: pasted.url });
+      setPasted(null);
+    }}>{kind === "card" ? "リンクカード" : `${kind}を埋め込む`}</button>)}</div>}
+    {embedEdit && <EmbedDialog initial={embedEdit.data} documents={documents} onClose={() => setEmbedEdit(null)} onSave={(data) => {
+      if (embedEdit.from !== undefined) {
+        const node = editor.state.doc.nodeAt(embedEdit.from);
+        if (node && (JSON.stringify(node.attrs.data) === embedEdit.expected || node.type.name === "paragraph" && node.textContent === embedEdit.expected)) editor.chain().focus().insertContentAt({ from: embedEdit.from, to: embedEdit.to ?? embedEdit.from + node.nodeSize }, { type: "embed", attrs: { data } }).run();
+      } else editor.chain().focus().insertContent({ type: "embed", attrs: { data } }).run();
+      setEmbedEdit(null);
+    }} />}
     <EditorContent editor={editor} />
-  </div>;
+  </div></EmbedDocumentsContext.Provider>;
 }
 
 function BlockPicker({ onPick, compact, className = "", includeDedicated = true }: { onPick: (kind: BlockKind) => void; compact?: boolean; className?: string; includeDedicated?: boolean }) {
