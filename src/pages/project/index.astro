@@ -1,4 +1,6 @@
 ---
+import SortSwitch from "../../components/SortSwitch.astro";
+import ListViewSwitch from "../../components/ListViewSwitch.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getSortedProjectItems } from "../../utils/projects";
 import { resolveImageUrl } from "../../utils/images";
@@ -13,9 +15,11 @@ const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
 <BaseLayout title="Project" description="制作したアプリ・Web作品などのプロジェクト一覧。" wideContainer={true}>
   <h1 class="web_title">Project</h1>
 
-  <div class="journal-list project-list">
+  <div class="index-toolbar"><div class="index-view-controls"><SortSwitch target="project-index" /><ListViewSwitch target="project-index" page="project" defaultView="grid" /></div></div>
+
+  <div class="content-index project-list" id="project-index" data-view="grid">
     {sortedProjects.map((project) => (
-      <article class="journal-row project-row journal-entry-animate">
+      <article class="content-item journal-row project-row journal-entry-animate" data-date={project.date}>
         <a href={href(`/project/${project.slug}/`)} class={`journal-thumb project-thumb${project.hero ? "" : " project-thumb-fallback"}`}>
           {project.hero ? (
             <img src={resolveImageUrl(project.hero)} alt={`${project.title} preview`} loading="lazy" />

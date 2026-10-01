@@ -1,0 +1,7 @@
+---
+const { target } = Astro.props;
+---
+<div class="sort-switch" data-sort-switch data-target={target} role="group" aria-label="日付順">
+  <button type="button" class="sort-option active" data-sort="newest" aria-pressed="true" aria-controls={target}>新しい順 ↓</button>
+  <button type="button" class="sort-option" data-sort="oldest" aria-pressed="false" aria-controls={target}>古い順 ↑</button>
+</div>

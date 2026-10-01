@@ -1,33 +1,17 @@
 ---
-const { target, page } = Astro.props;
+interface Props { target: string; page: string; defaultView?: "grid" | "list" }
+const { target, page, defaultView = "grid" } = Astro.props;
 ---
-<div class="list-view-switch" data-list-switch data-target={target} data-page={page} role="group" aria-label="一覧の表示方法">
-  <button type="button" class="control-btn active" data-view="grid" aria-pressed="true" aria-controls={target}>グリッド</button>
-  <button type="button" class="control-btn" data-view="list" aria-pressed="false" aria-controls={target}>リスト</button>
+<div class="list-view-switch" data-list-switch data-target={target} data-page={page} data-default-view={defaultView} role="group" aria-label="一覧の表示方法">
+  <button type="button" class:list={["control-btn", { active: defaultView === "list" }]} data-view="list" aria-pressed={defaultView === "list"} aria-controls={target} aria-label="リスト表示" title="リスト表示">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h1M4 12h1M4 18h1" /></svg>
+  </button>
+  <button type="button" class:list={["control-btn", { active: defaultView === "grid" }]} data-view="grid" aria-pressed={defaultView === "grid"} aria-controls={target} aria-label="グリッド表示" title="グリッド表示">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2" /><rect x="14" y="3" width="7" height="7" rx="2" /><rect x="3" y="14" width="7" height="7" rx="2" /><rect x="14" y="14" width="7" height="7" rx="2" /></svg>
+  </button>
 </div>
 <script>
-  function initializeListViews() {
-    document.querySelectorAll<HTMLElement>("[data-list-switch]").forEach((control) => {
-      if (control.dataset.initialized) return;
-      const container = document.getElementById(control.dataset.target!);
-      if (!container) return;
-      control.dataset.initialized = "true";
-      const key = `riddle-list-view:${control.dataset.page}`;
-      const apply = (view: string) => {
-        container.dataset.view = view === "list" ? "list" : "grid";
-        control.querySelectorAll<HTMLButtonElement>("button[data-view]").forEach((button) => {
-          const selected = button.dataset.view === container.dataset.view;
-          button.classList.toggle("active", selected);
-          button.setAttribute("aria-pressed", String(selected));
-        });
-      };
-      try { apply(localStorage.getItem(key) || "grid"); } catch { apply("grid"); }
-      control.querySelectorAll<HTMLButtonElement>("button[data-view]").forEach((button) => button.addEventListener("click", () => {
-        apply(button.dataset.view!);
-        try { localStorage.setItem(key, container.dataset.view!); } catch { /* Storage is optional. */ }
-      }));
-    });
-  }
-  initializeListViews();
-  document.addEventListener("astro:page-load", initializeListViews);
+  import { initializeListControls } from "../../assets/js/listControls.js";
+  initializeListControls();
+  document.addEventListener("astro:page-load", () => initializeListControls());
 </script>

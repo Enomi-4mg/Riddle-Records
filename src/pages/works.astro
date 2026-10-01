@@ -1,4 +1,5 @@
 ---
+import SortSwitch from "../components/SortSwitch.astro";
 import ListViewSwitch from "../components/ListViewSwitch.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
@@ -58,21 +59,15 @@ const allTags = [...new Set(works.flatMap((work) => work.tags))].sort((left, rig
 <BaseLayout title="Works" description="イラスト・映像作品・楽曲をまとめた作品一覧。" wideContainer={true}>
   <h1 class="web_title">Works</h1>
 
-  <div class="gallery-controls works-controls journal-entry-animate">
-    <div class="sort-controls">
-      <button id="sort-newest" class="control-btn active">新しい順</button>
-      <button id="sort-oldest" class="control-btn">古い順</button>
-    </div>
-
+  <div class="index-toolbar works-controls journal-entry-animate">
     <div class="filter-controls">
       <button class="filter-btn active" data-filter="all">すべて</button>
       {allTags.map((tag) => (
         <button class="filter-btn" data-filter={tag}>{tag}</button>
       ))}
     </div>
+    <div class="index-view-controls"><SortSwitch target="gallery-container" /><ListViewSwitch target="gallery-container" page="works" /></div>
   </div>
-
-  <ListViewSwitch target="gallery-container" page="works" />
 
   <div class="content-index" id="gallery-container" data-view="grid">
     {works.map((work) => (

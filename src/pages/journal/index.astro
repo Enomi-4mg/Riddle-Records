@@ -1,5 +1,6 @@
 ---
 import ListViewSwitch from "../../components/ListViewSwitch.astro";
+import SortSwitch from "../../components/SortSwitch.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { getGalleryItems } from "../../utils/gallery";
@@ -23,14 +24,14 @@ const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_des
 <BaseLayout title="Journal" description="日記・活動報告の一覧。" wideContainer={true}>
   <h1 class="web_title">Journal</h1>
 
-  <ListViewSwitch target="journal-index" page="journal" />
+  <div class="index-toolbar"><div class="index-view-controls"><SortSwitch target="journal-index" /><ListViewSwitch target="journal-index" page="journal" defaultView="list" /></div></div>
 
-  <div class="content-index" id="journal-index" data-view="grid">
+  <div class="content-index" id="journal-index" data-view="list">
     {journalEntries.map((entry) => {
       const thumbnail = getJournalThumbnail(entry, galleryItems, fallbackIconUrl);
       const articleUrl = getJournalUrl(entry);
       return (
-        <article class="content-item journal-row journal-entry-animate">
+        <article class="content-item journal-row journal-entry-animate" data-date={entry.data.date.toISOString()}>
           <a href={articleUrl} class="journal-thumb">
             <img
               src={thumbnail.src}

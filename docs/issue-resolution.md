@@ -19,3 +19,9 @@
 - `npm test`、`npm --prefix journal-editor-app run check:worker`、`npm --prefix journal-editor-app run test:coverage` が成功した。
 
 coverage は現行経路のみを対象とし、行 90.20%、分岐 78.39%、関数 87.84%。この数値は追加実装前の確認結果。
+
+## #9: 一覧表示
+
+Journal はリスト、Works / Project はグリッドを初期表示にする。保存された表示設定がある場合はユーザーの選択を優先し、無効な設定や storage が使えない環境ではページの初期値へ戻る。切替はラベル付きの丸い SVG アイコンに統一した。日付順は「新しい順 ↓ / 古い順 ↑」に揃え、Works ではタグを左、表示操作を右に配置した。既存タグの複数選択・OR絞り込みは維持する。
+
+`list-ui-tests.mjs` が初期値・保存設定・storage 例外・日付順・タグとの併用を検証する。

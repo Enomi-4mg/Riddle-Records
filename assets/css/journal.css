@@ -678,3 +678,15 @@
   .content-index[data-view="list"] .journal-title { font-size: 1rem; }
   .content-index .work-tags { flex-wrap: wrap; }
 }
+
+/* Quiet, shared index controls: filters left, viewing options right. */
+.index-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-lg); flex-wrap: wrap; max-width: var(--container-page); margin: 0 auto var(--space-lg); }
+.index-view-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-md); margin-left: auto; }
+.index-toolbar .list-view-switch { margin: 0; gap: .25rem; }
+.list-view-switch .control-btn { display: inline-flex; align-items: center; justify-content: center; padding: .5rem; border-radius: var(--radius-md); }
+.sort-switch { display: flex; gap: var(--space-sm); }
+.sort-option { font: inherit; font-size: .9rem; color: var(--color-muted); padding: .45rem .2rem; border: 0; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; }
+.sort-option.active { color: var(--color-ink); border-bottom-color: var(--color-mint-deep); }
+.sort-option:hover { color: var(--color-mint-deep); }
+.sort-option:focus-visible, .list-view-switch button:focus-visible { outline: 2px solid var(--color-mint-deep); outline-offset: 3px; }
+@media (max-width: 600px) { .index-toolbar .filter-controls { justify-content: flex-start; } }
