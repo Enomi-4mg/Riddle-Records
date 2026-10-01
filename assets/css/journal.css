@@ -690,3 +690,5 @@
 .sort-option:hover { color: var(--color-mint-deep); }
 .sort-option:focus-visible, .list-view-switch button:focus-visible { outline: 2px solid var(--color-mint-deep); outline-offset: 3px; }
 @media (max-width: 600px) { .index-toolbar .filter-controls { justify-content: flex-start; } }
+.profile-bio { white-space: pre-wrap; }
+.profile-featured-empty { color: var(--color-muted); text-align: center; }

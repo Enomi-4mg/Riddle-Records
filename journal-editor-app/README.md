@@ -240,3 +240,15 @@ npm run test:roundtrip:write
 一方で、このエディタは新規記事作成時に `journal / making / report` の種類を明示して扱う設計です。運用上は出力Markdownにも type を明示した方が、後から見たときに記事種別が分かりやすくなります。
 
 現時点では **明示性を優先して `type: "journal"` を出力する方針** にしています。roundtrip検証では許容差分として扱います。
+
+### About の固定プロフィール
+
+上部ナビの **About** から `src/content/about/profile.md` の1件だけを編集します。記事一覧・新規作成には表示されず、追加プロフィールの作成や削除はAPIでも拒否します。アイコン、名前、複数行の自己紹介、誕生日（月日、`MM-DD`）、座右の銘、趣味・特技・好きなもの、SNSを編集できます。タグ、SNS、Featured Worksの ↑ / ↓ ボタンで表示順を変更できます。アイコンは既存画像ピッカー、http(s) URL、Cloudinary ID、サイト内パスに対応し、空欄なら既定の画像を使います。
+
+Featured Works は公開された Gallery / Songs から任意に選び、サムネイルとタイトルを確認できます。同じ作品は重複選択できません。未選択ならサイトに「紹介する作品は準備中です。」と表示し、最新作品で自動補完しません。作品は共通ID（例: `gallery:cry`、`songs:2026-09-29-summer-song`）で保存し、Galleryの該当作品へリンクします。
+
+**変更を保存 → 記事をデプロイ** の既存フローを利用します。編集中の値は同じ保留変更に保存され、再読込で復元されます。revisionによる競合検出・再読込・対象別の強制上書きも共通です。CMS、Worker、ローカルAPI、Astroビルドでプロフィールを検証します。選択された作品を削除・非公開化・slug変更する場合、先にFeatured Worksから外すか、同じbatchで参照も更新してください。
+
+`about-tests.mjs` は全項目のroundtripとvalidation、`about-editor-tests.mjs` は実際のAppで編集・復元・保存・再読込、`api-tests.mjs` は両APIでsingleton制約・競合・参照・batch保存を検証します。`test:coverage` にも現行About経路を含めています。
+
+Viteコマンドは `--config vite.config.ts` を明示します。過去に生成された、Git管理外の `vite.config.js` が残っていても古いAPI設定を読み込みません。

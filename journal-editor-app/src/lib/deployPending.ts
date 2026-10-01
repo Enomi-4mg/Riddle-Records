@@ -35,6 +35,7 @@ export async function applyPendingChanges(initial: PendingChanges, onProgress: (
     const doc = item.document;
     const filename = generatedContentFilename(doc);
     if (!filename) throw new Error(`${doc.common.title || "タイトル未設定"}: ファイル名が未設定です`);
+    if (doc.placement.kind === "about" && (item.operation === "delete" || publicationChecks(doc).some((check) => !check.ok))) throw new Error("Aboutの設定を確認してください。固定プロフィールは削除できません");
     if (item.operation === "save" && doc.placement.kind === "projects" && doc.placement.data.links.some((link) => !link.label.trim() || !link.url.trim())) throw new Error(`${doc.common.title || "Project"}: リンクのラベルとURLを入力するか、空の行を削除してください`);
     if (item.operation === "save" && doc.common.publication === "published" && publicationChecks(doc).some((check) => !check.ok)) throw new Error(`${doc.common.title}: 公開に必要な項目がありません`);
     const actual = await dependencies.readRevision(doc.placement.kind, filename);

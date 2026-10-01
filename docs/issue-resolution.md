@@ -33,3 +33,11 @@ Gallery は Visual / Music の単一作品ビュー。Visual は contain 表示�
 作品 URL は `/gallery/?work=gallery%3Acry`、`/gallery/?work=songs%3A2026-09-29-summer-song` のように collection と slug を組み合わせる。`filter=visual` / `filter=music` を指定できる。不存在の指定は該当種別の先頭へ戻り、指定作品とフィルターが矛盾する場合は All で指定作品を開く。旧画像IDの hash も読み取る。
 
 `/disco/` は `/gallery/?filter=music` へ移動する。`/disco/[slug]/` と `/gallery/[slug]/` の詳細記事は維持し、Works の一覧・タグ・ソート・表示切替も維持する。
+
+## #11: About の CMS 管理
+
+保存先は `src/content/about/profile.md` の単一Markdown / frontmatter。既存ContentDocumentの配置先にsingletonを追加し、共通Contents APIとpending batchを使う。CMSには専用About画面を設け、記事一覧・新規作成・削除から分離した。サイトは型付きAstro collectionから読み込む。従来のプロフィールをデータへ移し、本文の複数行、空の任意項目、未知のメタデータも保存時に保持する。
+
+Featured Worksの初期値は空配列。自動取得を廃止し、「紹介する作品は準備中です。」を表示する。選択は公開Visual / Musicの混在・手動順序に対応し、共通作品IDでGalleryへ直接つなぐ。URL、月日、画像参照、重複、不存在・非公開参照を検査する。参照された作品の削除や非公開化もAPIが拒否し、About側の参照削除を同一batchに含める場合は許可する。空文字タグは除き、全配列の順序は保持する。
+
+既存のGitHub revision競合検出とデプロイ処理を再利用する。実ファイルを書かないDOMテストでAppの編集→ブラウザ再起動→保存→デプロイ→再読込を検証し、APIは一時ディレクトリ／GitHub mockで検証する。ローカル確認で既存の未追跡 `vite.config.js` が古い設定を読み込む問題を見つけ、ViteコマンドにTS設定ファイルを明示した。

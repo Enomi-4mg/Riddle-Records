@@ -1,7 +1,7 @@
-import type { ContentKind } from "../types/content";
+import type { ManagedContentKind } from "../types/content";
 import type { MediaRegistry } from "../types/media";
 
-export type BatchContent = { id: string; kind: ContentKind; path: string; operation: "save" | "delete"; markdown?: string; expectedRevision?: string; force?: boolean };
+export type BatchContent = { id: string; kind: ManagedContentKind; path: string; operation: "save" | "delete"; markdown?: string; expectedRevision?: string; force?: boolean };
 export type BatchPayload = { contents: BatchContent[]; media?: { registry: MediaRegistry; expectedRevision?: string; force?: boolean } };
 export type BatchResult = { commitSha: string; contents: Array<{ id: string; path: string; revision?: string }>; mediaRevision?: string };
 

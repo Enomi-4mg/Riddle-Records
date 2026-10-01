@@ -1,12 +1,8 @@
 import { fetchLinkMetadata } from "../../shared/linkMetadata";
 import { isMediaRegistry, validateMediaRegistry, type MediaRegistry } from "../src/types/media";
 
-const contentDirectories = {
-  journal: "src/content/journal",
-  songs: "src/content/songs",
-  gallery: "src/content/gallery",
-  projects: "src/content/projects"
-} as const;
+import { managedContentDirectories as contentDirectories, isAllowedSingletonOperation, aboutFilename } from "../../shared/contentStorage";
+import { managedContentErrors, type ManagedChange, type ManagedSource } from "../src/lib/managedValidation";
 const mediaRegistryPath = "src/data/media-registry.json";
 
 type ContentKind = keyof typeof contentDirectories;
@@ -125,6 +121,24 @@ async function getGitHubFile(fetcher: typeof fetch, env: Env, kind: ContentKind,
   }
 }
 
+async function validateManagedWrites(fetcher: typeof fetch, env: Env, changes: ManagedChange[]) {
+  return managedContentErrors(changes, async () => {
+    const file = await getGitHubFile(fetcher, env, "about", aboutFilename);
+    return file?.content ? decodeBase64Utf8(file.content) : undefined;
+  }, async () => {
+    const sources: ManagedSource[] = [];
+    for (const kind of ["gallery", "songs"] as const) {
+      const response = await githubRequest(fetcher, env, `${githubPath(kind)}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
+      const files = await response.json() as GitHubFile[];
+      for (const item of files.filter((file) => file.type === "file" && isAllowedContentFilename(file.name))) {
+        const file = await getGitHubFile(fetcher, env, kind, item.name);
+        if (file?.content) sources.push({ kind, path: item.name, markdown: decodeBase64Utf8(file.content) });
+      }
+    }
+    return sources;
+  });
+}
+
 function conflict(kind: ContentKind, path: string, expectedRevision: string | undefined, currentRevision: string | undefined) {
   return json(409, {
     error: "Content file has changed",
@@ -171,7 +185,7 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     for (const raw of rawContents) {
       if (!raw || typeof raw !== "object") return json(400, { error: "Invalid batch content" });
       const entry = raw as Record<string, unknown>;
-      if (typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || (entry.operation !== "save" && entry.operation !== "delete") || (entry.operation === "save" && typeof entry.markdown !== "string") || (entry.expectedRevision !== undefined && typeof entry.expectedRevision !== "string") || (entry.force !== undefined && typeof entry.force !== "boolean")) return json(400, { error: "Invalid batch content" });
+      if (typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || !isAllowedSingletonOperation(entry.kind, entry.path, entry.operation === "delete" ? "delete" : "save") || (entry.operation !== "save" && entry.operation !== "delete") || (entry.operation === "save" && typeof entry.markdown !== "string") || (entry.expectedRevision !== undefined && typeof entry.expectedRevision !== "string") || (entry.force !== undefined && typeof entry.force !== "boolean")) return json(400, { error: "Invalid batch content" });
       const path = `${contentDirectories[entry.kind]}/${entry.path}`;
       if (paths.has(path)) return json(400, { error: "Duplicate batch path" });
       paths.add(path);
@@ -189,6 +203,8 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
       media = { registry, expectedRevision: value.expectedRevision as string | undefined, force: value.force as boolean | undefined };
     }
     const ref = await githubRepositoryRequest(fetcher, env, `git/ref/heads/${encodeURIComponent(env.GITHUB_BRANCH)}`);
+    const aboutErrors = await validateManagedWrites(fetcher, env, contents);
+    if (aboutErrors.length) return json(400, { error: aboutErrors.join("\n") });
     const headSha = (await ref.json() as { object?: { sha?: string } }).object?.sha;
     if (!headSha) return json(502, { error: "GitHub did not return the branch head" });
     const commit = await githubRepositoryRequest(fetcher, env, `git/commits/${headSha}`);
@@ -267,7 +283,7 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     const files = (await Promise.all(kinds.map(async (entryKind) => {
       const response = await githubRequest(fetcher, env, `${githubPath(entryKind)}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`);
       const entries = await response.json() as GitHubFile[];
-      return entries.filter((entry) => entry.type === "file" && isAllowedContentFilename(entry.name)).map((entry) => ({ kind: entryKind, path: entry.name, revision: entry.sha }));
+      return entries.filter((entry) => entry.type === "file" && isAllowedContentFilename(entry.name) && isAllowedSingletonOperation(entryKind, entry.name)).map((entry) => ({ kind: entryKind, path: entry.name, revision: entry.sha }));
     }))).flat().sort((a, b) => b.path.localeCompare(a.path));
     return json(200, { files });
   }
@@ -303,7 +319,7 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     const kind = url.searchParams.get("kind");
     const path = url.searchParams.get("path");
     if (!isContentKind(kind)) return json(400, { error: "Invalid content kind" });
-    if (!isAllowedContentFilename(path)) return json(400, { error: "Invalid content filename" });
+    if (!isAllowedContentFilename(path) || !isAllowedSingletonOperation(kind, path, "read")) return json(400, { error: "Invalid content filename" });
     const file = await getGitHubFile(fetcher, env, kind, path);
     if (!file) return json(404, { error: "Content file not found" });
     if (file.type !== "file" || file.encoding !== "base64" || typeof file.content !== "string") {
@@ -317,11 +333,13 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     if (!payload) return json(400, { error: "Invalid payload" });
     const { kind, path, markdown, expectedRevision, force } = payload;
     if (!isContentKind(kind)) return json(400, { error: "Invalid content kind" });
-    if (!isAllowedContentFilename(path)) return json(400, { error: "Invalid content filename" });
+    if (!isAllowedContentFilename(path) || !isAllowedSingletonOperation(kind, path, "save")) return json(400, { error: "Invalid content filename" });
     if (typeof markdown !== "string") return json(400, { error: "Invalid payload" });
     if (expectedRevision !== undefined && typeof expectedRevision !== "string") return json(400, { error: "Invalid expected revision" });
     const expected = typeof expectedRevision === "string" ? expectedRevision : undefined;
 
+    const aboutErrors = await validateManagedWrites(fetcher, env, [{ kind, path, operation: "save", markdown }]);
+    if (aboutErrors.length) return json(400, { error: aboutErrors.join("\n") });
     const current = await getGitHubFile(fetcher, env, kind, path);
     const currentRevision = current?.sha;
     if (force !== true && ((currentRevision && expected !== currentRevision) || (!currentRevision && expected))) {
@@ -359,10 +377,12 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     if (!payload) return json(400, { error: "Invalid payload" });
     const { kind, path, expectedRevision, force } = payload;
     if (!isContentKind(kind)) return json(400, { error: "Invalid content kind" });
-    if (!isAllowedContentFilename(path)) return json(400, { error: "Invalid content filename" });
+    if (!isAllowedContentFilename(path) || !isAllowedSingletonOperation(kind, path, "delete")) return json(400, { error: "Invalid content filename" });
     if (expectedRevision !== undefined && typeof expectedRevision !== "string") return json(400, { error: "Invalid expected revision" });
     const expected = typeof expectedRevision === "string" ? expectedRevision : undefined;
 
+    const aboutErrors = await validateManagedWrites(fetcher, env, [{ kind, path, operation: "delete" }]);
+    if (aboutErrors.length) return json(400, { error: aboutErrors.join("\n") });
     const current = await getGitHubFile(fetcher, env, kind, path);
     if (!current) return json(404, { error: "Content file not found" });
     if (force !== true && expected !== current.sha) {

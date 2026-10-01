@@ -32,12 +32,14 @@ export function CmsEditor({ documents = [], document: doc, status, notice, deplo
 }
 
 function PlacementSettings({ doc, update, pickMedia }: { doc: ContentDocument; update: (data: ContentDocument["placement"]["data"]) => void; pickMedia: (target: string) => void }) {
+  if (doc.placement.kind === "about") return null;
   if (doc.placement.kind === "journal") { const data = doc.placement.data; return <section><h3>Journal設定</h3><label>記事種別<select value={data.articleType} onChange={(event) => update({ ...data, articleType: event.target.value as typeof data.articleType })}><option value="journal">Journal</option><option value="making">Making</option><option value="report">Report</option></select></label><label>slug<input value={data.slug} onChange={(event) => update({ ...data, slug: event.target.value })} /></label><MediaField label="サムネイル" value={data.thumbnail} onChange={(value) => update({ ...data, thumbnail: value })} onPick={() => pickMedia("thumbnail")} /><label>サムネイルalt<input value={data.thumbnailAlt} onChange={(event) => update({ ...data, thumbnailAlt: event.target.value })} /></label><MediaField label="OG画像" value={data.ogImage} onChange={(value) => update({ ...data, ogImage: value })} onPick={() => pickMedia("ogImage")} /></section>; }
   if (doc.placement.kind === "songs") return null;
   if (doc.placement.kind === "gallery") { const data = doc.placement.data; return <section><h3>Gallery設定</h3><label>slug<input value={data.slug} onChange={(event) => update({ ...data, slug: event.target.value })} /></label><label className="check-row"><input type="checkbox" checked={data.detail} onChange={(event) => update({ ...data, detail: event.target.checked })} />詳細ページを作る</label><MediaField label="サムネイル" value={data.thumbnail} onChange={(value) => update({ ...data, thumbnail: value })} onPick={() => pickMedia("thumbnail")} /></section>; }
   const data = doc.placement.data; return <section><h3>Projects設定</h3><label>slug<input value={data.slug} onChange={(event) => update({ ...data, slug: event.target.value })} /></label></section>;
 }
 function CanvasFields({ doc, position, update, pickMedia }: { doc: ContentDocument; position: "before" | "after"; update: (data: ContentDocument["placement"]["data"]) => void; pickMedia: (target: string) => void }) {
+  if (doc.placement.kind === "about") return null;
   if (doc.placement.kind === "journal") return null;
   if (doc.placement.kind === "songs") {
     const data = doc.placement.data;

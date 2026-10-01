@@ -1,4 +1,4 @@
-import type { ContentFileInfo, ContentFileListResult, ContentKind } from "../types/content";
+import type { ContentFileInfo, ContentFileListResult, ManagedContentKind } from "../types/content";
 
 export class ContentFileConflictError extends Error {
   currentRevision?: string;
@@ -21,7 +21,7 @@ async function readError(response: Response) {
   }
 }
 
-export async function loadContentFiles(kind?: ContentKind): Promise<ContentFileListResult> {
+export async function loadContentFiles(kind?: ManagedContentKind): Promise<ContentFileListResult> {
   try {
     const response = await fetch(kind ? `/api/content-list?kind=${encodeURIComponent(kind)}` : "/api/content-list");
     if (!response.ok) {
@@ -48,13 +48,13 @@ export async function loadContentFiles(kind?: ContentKind): Promise<ContentFileL
   }
 }
 
-export async function loadContentFile(kind: ContentKind, filename: string) {
+export async function loadContentFile(kind: ManagedContentKind, filename: string) {
   const response = await fetch(`/api/content-item?kind=${encodeURIComponent(kind)}&path=${encodeURIComponent(filename)}`);
   if (!response.ok) throw new Error(await readError(response));
-  return await response.json() as { kind: ContentKind; path: string; markdown: string; revision: string };
+  return await response.json() as { kind: ManagedContentKind; path: string; markdown: string; revision: string };
 }
 
-export async function readContentRevision(kind: ContentKind, filename: string): Promise<string | undefined> {
+export async function readContentRevision(kind: ManagedContentKind, filename: string): Promise<string | undefined> {
   const response = await fetch(`/api/content-item?kind=${encodeURIComponent(kind)}&path=${encodeURIComponent(filename)}`);
   if (response.status === 404) return undefined;
   if (!response.ok) throw new Error(await readError(response));
@@ -62,7 +62,7 @@ export async function readContentRevision(kind: ContentKind, filename: string): 
   return payload.revision;
 }
 
-export async function saveContentFile(kind: ContentKind, filename: string, markdown: string, options: { expectedRevision?: string; force?: boolean } = {}) {
+export async function saveContentFile(kind: ManagedContentKind, filename: string, markdown: string, options: { expectedRevision?: string; force?: boolean } = {}) {
   const response = await fetch("/api/content-item", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -76,10 +76,10 @@ export async function saveContentFile(kind: ContentKind, filename: string, markd
     });
   }
   if (!response.ok) throw new Error(await readError(response));
-  return await response.json() as { kind: ContentKind; path: string; saved: boolean; revision: string; commitSha?: string };
+  return await response.json() as { kind: ManagedContentKind; path: string; saved: boolean; revision: string; commitSha?: string };
 }
 
-export async function deleteContentFile(kind: ContentKind, filename: string, options: { expectedRevision?: string; force?: boolean } = {}) {
+export async function deleteContentFile(kind: ManagedContentKind, filename: string, options: { expectedRevision?: string; force?: boolean } = {}) {
   const response = await fetch("/api/content-item", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
@@ -93,5 +93,5 @@ export async function deleteContentFile(kind: ContentKind, filename: string, opt
     });
   }
   if (!response.ok) throw new Error(await readError(response));
-  return await response.json() as { kind: ContentKind; path: string; deleted: boolean; commitSha?: string };
+  return await response.json() as { kind: ManagedContentKind; path: string; deleted: boolean; commitSha?: string };
 }

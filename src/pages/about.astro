@@ -1,116 +1,33 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
-import { getLatestGalleryItems } from "../utils/gallery";
+import { getAboutPageData } from "../utils/about";
+import { galleryWorkPath } from "../utils/works";
 import { resolveImageUrl } from "../utils/images";
 import profileIconUrl from "../../favicon/icon.jpg?url";
-
+const { profile, featuredWorks } = await getAboutPageData();
 const base = import.meta.env.BASE_URL;
-const basePath = base.endsWith("/") ? base : `${base}/`;
-const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
-const showDrafts = !import.meta.env.PROD;
-
-const songs = (await getCollection("songs"))
-  .filter((entry) => showDrafts || !entry.data.draft)
-  .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
-const latestSongs = songs.slice(0, 2);
-const latestGallery = await getLatestGalleryItems(2);
-const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
+const href = (path: string) => `${base}${path.replace(/^\/+/, "")}`;
+const icon = profile.icon.startsWith("/") ? href(profile.icon) : resolveImageUrl(profile.icon) || profileIconUrl;
+const birthday = profile.birthday ? `${profile.birthday.slice(0, 2)}月${profile.birthday.slice(3)}日` : "";
+const groups = [{ label: "趣味", values: profile.hobbies }, { label: "特技", values: profile.skills }, { label: "好きなもの", values: profile.likes }];
 ---
-
-<BaseLayout title="About" description="4mgのプロフィールとリンク集。">
+<BaseLayout title="About" description={`${profile.name}のプロフィールとリンク集。`}>
   <h1 class="web_title">About</h1>
-
   <section class="profile-card journal-entry-animate">
-    <div class="profile-avatar-wrap">
-      <img class="profile-avatar" alt="プロフィール画像" src={profileIconUrl} />
-    </div>
+    <div class="profile-avatar-wrap"><img class="profile-avatar" alt={`${profile.name}のプロフィール画像`} src={icon} /></div>
     <div class="profile-content">
-      <h2 class="profile-name">4mg</h2>
-      <p class="profile-bio">ボカロ曲・イラスト・ゲーム制作をしています。</p>
-
+      <h2 class="profile-name">{profile.name}</h2><p class="profile-bio">{profile.bio}</p>
       <dl class="profile-meta">
-        <div class="meta-row">
-          <dt>誕生日</dt>
-          <dd>09月26日</dd>
-        </div>
-        <div class="meta-row">
-          <dt>座右の銘</dt>
-          <dd>初心忘るべからず（仮）</dd>
-        </div>
+        {birthday && <div class="meta-row"><dt>誕生日</dt><dd>{birthday}</dd></div>}
+        {profile.motto && <div class="meta-row"><dt>座右の銘</dt><dd>{profile.motto}</dd></div>}
       </dl>
-
-      <div class="profile-tags">
-        <div class="tag-group">
-          <span class="tag-label">趣味</span>
-          <div class="tag-items">
-            <span class="tag">漫画</span>
-            <span class="tag">散歩</span>
-            <span class="tag">ゲーム</span>
-            <span class="tag">ギター</span>
-          </div>
-        </div>
-        <div class="tag-group">
-          <span class="tag-label">特技</span>
-          <div class="tag-items">
-            <span class="tag">作詞・作曲</span>
-            <span class="tag">イラスト制作</span>
-            <span class="tag">コーディング</span>
-          </div>
-        </div>
-        <div class="tag-group">
-          <span class="tag-label">好きなもの</span>
-          <div class="tag-items">
-            <span class="tag">ボーカロイド</span>
-            <span class="tag">月ノ美兎</span>
-            <span class="tag">米津玄師</span>
-            <span class="tag">星野源</span>
-            <span class="tag">いよわ</span>
-            <span class="tag">かぐ告</span>
-          </div>
-        </div>
-      </div>
+      <div class="profile-tags">{groups.filter((group) => group.values.length).map((group) => <div class="tag-group"><span class="tag-label">{group.label}</span><div class="tag-items">{group.values.map((tag) => <span class="tag">{tag}</span>)}</div></div>)}</div>
     </div>
   </section>
-
-  <section class="profile-links journal-entry-animate">
-    <h3 class="page_title profile-section-title">リンク集</h3>
-    <ul class="link-list">
-      <li class="platform-icons" aria-label="プラットフォーム">
-        <a href="https://x.com/4mgEnomi" target="_blank" rel="noopener noreferrer" aria-label="X (旧Twitter)"><i class="fab fa-x-twitter"></i></a>
-        <a href="https://www.youtube.com/@enomi2514" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-        <a href="https://www.nicovideo.jp/user/77764856" target="_blank" rel="noopener noreferrer" aria-label="ニコニコ動画">ニコニコ動画</a>
-      </li>
-    </ul>
-  </section>
-
+  {profile.sns.length > 0 && <section class="profile-links journal-entry-animate"><h3 class="page_title profile-section-title">リンク集</h3><ul class="link-list"><li class="platform-icons" aria-label="プラットフォーム">{profile.sns.map((item) => <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label={item.label || item.service}>{item.label || item.service}</a>)}</li></ul></section>}
   <section class="works-preview journal-entry-animate">
-    <h3 class="page_title profile-section-title">作品紹介</h3>
-    <div class="works-grid">
-      {latestSongs.map((song) => (
-        <div class="work-card">
-          <a href={href(`/disco/${song.slug}/`)} class="work-thumb">
-            <img src={`https://img.youtube.com/vi/${song.data.youtube_id}/sddefault.jpg`} alt={`${song.data.title} thumbnail`} />
-          </a>
-          <div class="work-info">
-            <p class="work_title">{song.data.title}</p>
-            <time datetime={song.data.date.toISOString().slice(0, 10)} class="work_date">{formatDate(song.data.date)}</time>
-          </div>
-        </div>
-      ))}
-
-      {latestGallery.map((item) => (
-        <div class="work-card">
-          <a href={href("/works/")} class="work-thumb">
-            <img src={resolveImageUrl(item.image, "w_400,h_400,c_fill,q_auto,f_auto")} alt={item.imageAlt} />
-          </a>
-          <div class="work-info">
-            <p class="work_title">{item.title}</p>
-            <time datetime={item.date} class="work_date">{formatDate(new Date(item.date))}</time>
-          </div>
-        </div>
-      ))}
-    </div>
+    <h3 class="page_title profile-section-title">最近の作品・おすすめ作品</h3>
+    {featuredWorks.length > 0 ? <div class="works-grid">{featuredWorks.map((work) => <div class="work-card"><a href={href(galleryWorkPath(work.id))} class="work-thumb"><img src={work.thumbnail} alt={work.imageAlt} loading="lazy" /></a><div class="work-info"><p class="work_title">{work.title}</p><time datetime={work.date} class="work_date">{new Date(work.date).toLocaleDateString("ja-JP")}</time></div></div>)}</div> : <p class="profile-featured-empty">紹介する作品は準備中です。</p>}
     <p class="works-preview-link"><a href={href("/works/")}>Works一覧を見る</a></p>
   </section>
 </BaseLayout>

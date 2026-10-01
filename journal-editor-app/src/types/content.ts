@@ -1,3 +1,6 @@
+import { emptyAboutProfile, type AboutProfile } from "../../../shared/aboutProfile";
+import type { ManagedContentKind } from "../../../shared/contentStorage";
+export type { ManagedContentKind } from "../../../shared/contentStorage";
 export const contentKinds = ["journal", "songs", "gallery", "projects"] as const;
 export type ContentKind = (typeof contentKinds)[number];
 export type PublicationStatus = "draft" | "published";
@@ -14,7 +17,8 @@ export type PlacementFields =
   | { kind: "journal"; data: JournalFields }
   | { kind: "songs"; data: SongFields }
   | { kind: "gallery"; data: GalleryFields }
-  | { kind: "projects"; data: ProjectFields };
+  | { kind: "projects"; data: ProjectFields }
+  | { kind: "about"; data: AboutProfile };
 
 export type ContentDocument = {
   id: string;
@@ -29,7 +33,7 @@ export type ContentDocument = {
   file?: { path: string; revision?: string };
 };
 
-export type ContentFileInfo = { kind: ContentKind; path: string; revision: string };
+export type ContentFileInfo = { kind: ManagedContentKind; path: string; revision: string };
 export type ContentFileListResult = { available: boolean; files: ContentFileInfo[]; error?: string };
 export const contentKindLabels: Array<{ kind: ContentKind; label: string }> = [
   { kind: "journal", label: "Journal" }, { kind: "songs", label: "Songs" },
@@ -49,7 +53,8 @@ export const contentKindSchemas = Object.fromEntries(contentKinds.map((kind) => 
   directory: contentDirectories[kind], routeBase: routeBases[kind], fields: legacyRequired[kind]
 }])) as unknown as Record<ContentKind, { kind: ContentKind; label: string; directory: string; routeBase: string; fields: readonly LegacyField[] }>;
 export function isContentKind(value: string | null | undefined): value is ContentKind { return Boolean(value && (contentKinds as readonly string[]).includes(value)); }
-export function createPlacement(kind: ContentKind): PlacementFields {
+export function createPlacement(kind: ManagedContentKind): PlacementFields {
+  if (kind === "about") return { kind, data: emptyAboutProfile() };
   if (kind === "journal") return { kind, data: { articleType: "journal", slug: "", thumbnail: "", thumbnailAlt: "", thumbnailFit: "", thumbnailPosition: "", ogImage: "", ogDescription: "", relatedContent: [], useMath: false, permalink: "", image: "", thumbnailClass: "" } };
   if (kind === "songs") return { kind, data: { youtubeId: "", credits: "", lyrics: "" } };
   if (kind === "gallery") return { kind, data: { slug: "", detail: false, image: "", thumbnail: "", thumbnailAlt: "", articleUrl: "", makingArticleUrl: "" } };

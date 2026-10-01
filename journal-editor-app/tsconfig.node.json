@@ -16,6 +16,14 @@
   "include": [
     "vite.config.ts",
     "src/types/media.ts",
+    "src/types/content.ts",
+    "src/types/journal.ts",
+    "src/lib/cmsMarkdown.ts",
+    "src/lib/permalink.ts",
+    "src/lib/managedValidation.ts",
+    "../shared/aboutProfile.ts",
+    "../shared/contentStorage.ts",
+    "../shared/workIdentity.ts",
     "../shared/linkMetadata.ts",
     "../shared/embeds.ts"
   ]

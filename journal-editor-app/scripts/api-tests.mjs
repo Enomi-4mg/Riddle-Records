@@ -1,3 +1,4 @@
+import { buildContentMarkdown, createContentDocument, parseContentMarkdown } from "../src/lib/cmsMarkdown.ts";
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import { describe, test } from "node:test";
@@ -18,6 +19,10 @@ function remote(options = {}) {
     if (address.includes("git/commits/") && init.method !== "POST") return Response.json({ tree: { sha: "base-tree" } });
     if (address.includes("/contents/")) {
       if (init.method === "PUT") return options.race ? Response.json({ message: "conflict" }, { status: 409 }) : Response.json({ content: { sha: "saved-media" }, commit: { sha: "commit" } });
+      const sourcePath = decodeURIComponent(new URL(address).pathname.split("/contents/")[1]);
+      if (sourcePath === "src/content/about/profile.md" && options.profile) return Response.json({ type: "file", sha: "profile-rev", encoding: "base64", content: Buffer.from(options.profile).toString("base64") });
+      if (options.works && ["src/content/gallery", "src/content/songs"].includes(sourcePath)) return Response.json(Object.keys(options.works).filter((file) => file.startsWith(`${sourcePath}/`)).map((file) => ({ type: "file", name: file.split("/").pop() })));
+      if (options.works?.[sourcePath]) return Response.json({ type: "file", sha: "work-rev", encoding: "base64", content: Buffer.from(options.works[sourcePath]).toString("base64") });
       if (address.includes("media-registry")) return Response.json({ sha: "media-rev", encoding: "base64", content: Buffer.from(JSON.stringify(registry)).toString("base64") });
       if (options.content) return Response.json({ sha: "content-rev", type: "file", encoding: "base64", content: Buffer.from("Original").toString("base64") });
       return new Response(null, { status: 404 });
@@ -35,7 +40,7 @@ function remote(options = {}) {
 async function local(callback) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "riddle-api-"));
   try {
-    for (const kind of ["journal", "songs", "gallery", "projects"]) await fs.mkdir(path.join(root, "src/content", kind), { recursive: true });
+    for (const kind of ["journal", "songs", "gallery", "projects", "about"]) await fs.mkdir(path.join(root, "src/content", kind), { recursive: true });
     await fs.mkdir(path.join(root, "src/data"), { recursive: true });
     await fs.writeFile(path.join(root, "src/data/media-registry.json"), JSON.stringify(registry));
     await fs.writeFile(path.join(root, "src/content/journal/one.md"), "Original");
@@ -103,4 +108,55 @@ describe("Worker and local API batch semantics", () => {
   test("Worker reports a concurrent media PUT conflict", async () => {
     const api = remote({ race: true }); const result = await api.request("/api/media-registry", "PUT", { registry, expectedRevision: "media-rev" }); assert.equal(result.status, 409); assert.equal(result.body.currentRevision, "media-rev");
   });
+});
+
+const profileSource = (refs = []) => {
+  const doc = createContentDocument("about"); doc.placement.data.name = "Test profile"; doc.placement.data.featuredWorks = refs;
+  return buildContentMarkdown(doc);
+};
+const visualSource = "---\ntitle: Visual\ndate: 2026-01-01\nslug: one\nimage: one.png\ndraft: false\n---\n\nBody\n";
+describe("singleton About uses existing Worker/local content APIs", () => {
+  for (const backend of ["worker", "local"]) {
+    const run = (callback) => backend === "local" ? local(async (api) => {
+      await fs.writeFile(path.join(api.root, "src/content/about/profile.md"), profileSource());
+      await fs.writeFile(path.join(api.root, "src/content/gallery/one.md"), visualSource);
+      await callback(api);
+    }) : callback(remote({ profile: profileSource(), works: { "src/content/gallery/one.md": visualSource } }));
+    test(`${backend} reads, saves and checks profile revision`, () => run(async ({ request, root, calls }) => {
+      const current = await request("/api/content-item?kind=about&path=profile.md"); assert.equal(current.status, 200); assert.equal(parseContentMarkdown(current.body.markdown, "about").placement.data.name, "Test profile");
+      assert.equal((await request("/api/content-item", "POST", { kind: "about", path: "profile.md", markdown: profileSource(), expectedRevision: "stale" })).status, 409);
+      const markdown = profileSource(["gallery:one"]);
+      const saved = await request("/api/content-item", "POST", { kind: "about", path: "profile.md", markdown, expectedRevision: current.body.revision }); assert.equal(saved.status, 200);
+      if (root) { const read = await request("/api/content-item?kind=about&path=profile.md"); assert.deepEqual(parseContentMarkdown(read.body.markdown, "about").placement.data.featuredWorks, ["gallery:one"]); }
+      if (calls) { const write = calls.find(([url, options]) => url.endsWith("/about/profile.md") && options.method === "PUT"); assert.equal(Buffer.from(JSON.parse(write[1].body).content, "base64").toString("utf8"), markdown); }
+    }));
+    test(`${backend} rejects extra profiles, deletion, invalid URLs and missing or duplicate works`, () => run(async ({ request, root, calls }) => {
+      for (const method of ["POST", "DELETE"]) assert.equal((await request("/api/content-item", method, { kind: "about", path: method === "DELETE" ? "profile.md" : "other.md", markdown: profileSource(), force: true })).status, 400);
+      assert.equal((await request("/api/content-item?kind=about&path=other.md")).status, 400);
+      const invalid = [profileSource(["gallery:missing"]), profileSource(["gallery:one", "gallery:one"]), profileSource().replace("sns: []", "sns:\n  - service: Bad\n    url: javascript:alert(1)")];
+      for (const markdown of invalid) assert.equal((await request("/api/pending-batch", "POST", { contents: [content({ kind: "about", path: "profile.md", markdown, force: true })] })).status, 400);
+      if (root) assert.equal(await fs.readFile(path.join(root, "src/content/about/profile.md"), "utf8"), profileSource());
+      if (calls) assert.equal(calls.filter(([, options]) => ["PUT", "PATCH"].includes(options.method)).length, 0);
+    }));
+    test(`${backend} batches About and new works, and prevents removing a featured work`, () => run(async ({ request, root, calls }) => {
+      const result = await request("/api/pending-batch", "POST", { contents: [content({ id: "about", kind: "about", path: "profile.md", markdown: profileSource(["gallery:new"]), force: true }), content({ id: "new", kind: "gallery", path: "new.md", markdown: visualSource.replace("slug: one", "slug: new") })] });
+      assert.equal(result.status, 200); assert.equal(result.body.contents.length, 2);
+      if (root) {
+        const file = await request("/api/content-item?kind=gallery&path=new.md");
+        assert.equal((await request("/api/content-item", "DELETE", { kind: "gallery", path: "new.md", expectedRevision: file.body.revision, force: true })).status, 400);
+        assert.equal((await request("/api/content-item", "POST", { kind: "gallery", path: "new.md", markdown: visualSource.replace("slug: one", "slug: new").replace("draft: false", "draft: true"), expectedRevision: file.body.revision })).status, 400);
+        assert.equal((await request("/api/pending-batch", "POST", { contents: [content({ id: "about", kind: "about", path: "profile.md", markdown: profileSource(), force: true }), content({ id: "new", kind: "gallery", path: "new.md", operation: "delete", expectedRevision: file.body.revision })] })).status, 200);
+      }
+      if (calls) { const trees = calls.filter(([url]) => url.endsWith("git/trees")); assert.equal(trees.length, 1); assert.deepEqual(JSON.parse(trees[0][1].body).tree.map((item) => item.path), ["src/content/about/profile.md", "src/content/gallery/new.md"]); }
+    }));
+  }
+});
+
+test("Worker refuses deletion/unpublishing of selected works until the same batch removes the reference", async () => {
+  const api = remote({ profile: profileSource(["gallery:one"]), works: { "src/content/gallery/one.md": visualSource } });
+  assert.equal((await api.request("/api/content-item", "DELETE", { kind: "gallery", path: "one.md", force: true })).status, 400);
+  assert.equal((await api.request("/api/content-item", "POST", { kind: "gallery", path: "one.md", markdown: visualSource.replace("draft: false", "draft: true"), force: true })).status, 400);
+  assert.equal(api.calls.filter(([, options]) => ["PUT", "PATCH", "DELETE"].includes(options.method)).length, 0);
+  const result = await api.request("/api/pending-batch", "POST", { contents: [content({ id: "about", kind: "about", path: "profile.md", markdown: profileSource(), force: true }), content({ id: "art", kind: "gallery", path: "one.md", operation: "delete", force: true })] });
+  assert.equal(result.status, 200);
 });

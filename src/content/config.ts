@@ -1,3 +1,4 @@
+import { aboutProfileErrors, readAboutProfile } from "../../shared/aboutProfile";
 import { defineCollection, z } from "astro:content";
 
 const journalCollection = defineCollection({
@@ -84,7 +85,21 @@ const projectsCollection = defineCollection({
   })
 });
 
+const aboutCollection = defineCollection({
+  type: "content",
+  schema: z.object({
+    icon: z.string().default(""), name: z.string(), bio: z.string().default(""),
+    birthday: z.string().default(""), motto: z.string().default(""),
+    hobbies: z.array(z.string()).default([]), skills: z.array(z.string()).default([]), likes: z.array(z.string()).default([]),
+    sns: z.array(z.object({ service: z.string(), url: z.string(), label: z.string().optional() })).default([]),
+    featured_works: z.array(z.string()).default([])
+  }).transform(readAboutProfile).superRefine((profile, context) => {
+    for (const message of aboutProfileErrors(profile)) context.addIssue({ code: "custom", message });
+  })
+});
+
 export const collections = {
+  about: aboutCollection,
   journal: journalCollection,
   songs: songsCollection,
   gallery: galleryCollection,

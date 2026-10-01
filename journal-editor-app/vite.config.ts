@@ -1,3 +1,5 @@
+import { managedContentDirectories, isAllowedSingletonOperation, aboutFilename } from "../shared/contentStorage";
+import { managedContentErrors, type ManagedChange, type ManagedSource } from "./src/lib/managedValidation";
 import { fetchLinkMetadata } from "../shared/linkMetadata";
 import { request as httpsRequest } from "node:https";
 import { isIP } from "node:net";
@@ -10,10 +12,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repositoryRoot = fileURLToPath(new URL("..", import.meta.url));
-const contentKinds = ["journal", "songs", "gallery", "projects"] as const;
+const contentKinds = ["journal", "songs", "gallery", "projects", "about"] as const;
 type ContentKind = typeof contentKinds[number];
 function createContentDirs(root: string) {
-  return Object.fromEntries(contentKinds.map((kind) => [kind, path.resolve(root, "src/content", kind)])) as Record<ContentKind, string>;
+  return Object.fromEntries(contentKinds.map((kind) => [kind, path.resolve(root, managedContentDirectories[kind])])) as Record<ContentKind, string>;
 }
 function isContentKind(value: unknown): value is ContentKind {
   return typeof value === "string" && (contentKinds as readonly string[]).includes(value);
@@ -55,7 +57,7 @@ async function listContentFiles(kind: ContentKind, directories: Record<ContentKi
     throw error;
   });
   const filenames = entries
-    .filter((entry) => entry.isFile() && isAllowedContentFilename(entry.name))
+    .filter((entry) => entry.isFile() && isAllowedContentFilename(entry.name) && isAllowedSingletonOperation(kind, entry.name))
     .map((entry) => entry.name)
     .sort((a, b) => b.localeCompare(a));
   return await Promise.all(filenames.map(async (filename) => {
@@ -68,6 +70,15 @@ export function contentApiPlugin(root = repositoryRoot) {
   const contentDirs = createContentDirs(root);
   const mediaRegistryPath = path.resolve(root, "src/data/media-registry.json");
   const getContentDir = (kind: string | null) => isContentKind(kind) ? contentDirs[kind] : null;
+  const validateWrites = (changes: ManagedChange[]) => managedContentErrors(changes,
+    () => fs.readFile(path.join(contentDirs.about, aboutFilename), "utf8").catch((error: NodeJS.ErrnoException) => { if (error.code === "ENOENT") return undefined; throw error; }),
+    async () => {
+      const sources: ManagedSource[] = [];
+      for (const kind of ["gallery", "songs"] as const) {
+        for (const file of await listContentFiles(kind, contentDirs)) sources.push({ kind, path: file.path, markdown: await fs.readFile(path.join(contentDirs[kind], file.path), "utf8") });
+      }
+      return sources;
+    });
   return {
     name: "riddle-content-api",
     configureServer(server: import("vite").ViteDevServer) {
@@ -120,12 +131,14 @@ export function contentApiPlugin(root = repositoryRoot) {
             const batchPaths = new Set<string>();
             const checked: Array<{ id: string; path: string; filePath: string; operation: "save" | "delete"; markdown?: string }> = [];
             for (const entry of payload.contents) {
-              if (!entry || typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || !["save", "delete"].includes(entry.operation) || entry.operation === "save" && typeof entry.markdown !== "string" || entry.expectedRevision !== undefined && typeof entry.expectedRevision !== "string" || entry.force !== undefined && typeof entry.force !== "boolean") { sendJson(response, 400, { error: "Invalid batch content" }); return; }
+              if (!entry || typeof entry.id !== "string" || !isContentKind(entry.kind) || !isAllowedContentFilename(entry.path) || !isAllowedSingletonOperation(entry.kind, entry.path, entry.operation === "delete" ? "delete" : "save") || !["save", "delete"].includes(entry.operation) || entry.operation === "save" && typeof entry.markdown !== "string" || entry.expectedRevision !== undefined && typeof entry.expectedRevision !== "string" || entry.force !== undefined && typeof entry.force !== "boolean") { sendJson(response, 400, { error: "Invalid batch content" }); return; }
               const filePath = path.join(contentDirs[entry.kind], entry.path);
               if (batchPaths.has(filePath)) { sendJson(response, 400, { error: "Duplicate batch path" }); return; }
               batchPaths.add(filePath);
             }
             if (payload.media && (!isMediaRegistry(payload.media.registry) || validateMediaRegistry(payload.media.registry) || payload.media.expectedRevision !== undefined && typeof payload.media.expectedRevision !== "string" || payload.media.force !== undefined && typeof payload.media.force !== "boolean")) { sendJson(response, 400, { error: "Invalid media" }); return; }
+            const aboutErrors = await validateWrites(payload.contents as ManagedChange[]);
+            if (aboutErrors.length) { sendJson(response, 400, { error: aboutErrors.join("\n") }); return; }
             for (const entry of payload.contents) {
               const filePath = path.join(contentDirs[entry.kind as ContentKind], entry.path);
               const stat = await fs.stat(filePath).catch(() => null);
@@ -188,7 +201,7 @@ export function contentApiPlugin(root = repositoryRoot) {
               sendJson(response, 400, { error: "Invalid content kind" });
               return;
             }
-            if (!isAllowedContentFilename(filename)) {
+            if (!isAllowedContentFilename(filename) || !isAllowedSingletonOperation(kind, filename, "read")) {
               sendJson(response, 400, { error: "Invalid content filename" });
               return;
             }
@@ -219,10 +232,12 @@ export function contentApiPlugin(root = repositoryRoot) {
               sendJson(response, 400, { error: "Invalid content kind" });
               return;
             }
-            if (!isAllowedContentFilename(filename)) {
+            if (!isAllowedContentFilename(filename) || !isAllowedSingletonOperation(kind, filename, "save")) {
               sendJson(response, 400, { error: "Invalid content filename" });
               return;
             }
+            const aboutErrors = await validateWrites([{ kind, path: filename, operation: "save", markdown }]);
+            if (aboutErrors.length) { sendJson(response, 400, { error: aboutErrors.join("\n") }); return; }
             await fs.mkdir(contentDir, { recursive: true });
             const filePath = path.join(contentDir, filename);
             const currentStat = await fs.stat(filePath).catch(() => null);
@@ -258,10 +273,12 @@ export function contentApiPlugin(root = repositoryRoot) {
               sendJson(response, 400, { error: "Invalid content kind" });
               return;
             }
-            if (!isAllowedContentFilename(filename)) {
+            if (!isAllowedContentFilename(filename) || !isAllowedSingletonOperation(kind, filename, "delete")) {
               sendJson(response, 400, { error: "Invalid content filename" });
               return;
             }
+            const aboutErrors = await validateWrites([{ kind, path: filename, operation: "delete" }]);
+            if (aboutErrors.length) { sendJson(response, 400, { error: aboutErrors.join("\n") }); return; }
             const filePath = path.join(contentDir, filename);
             const currentStat = await fs.stat(filePath).catch(() => null);
             if (!currentStat) {

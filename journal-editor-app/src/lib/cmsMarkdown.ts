@@ -1,5 +1,7 @@
+import { aboutKeys, aboutFrontmatter, readAboutProfile, aboutProfileErrors } from "../../../shared/aboutProfile";
+import { aboutFilename } from "../../../shared/contentStorage";
 import { dump, load } from "js-yaml";
-import { createPlacement, type ContentDocument, type ContentKind } from "../types/content";
+import { createPlacement, type ContentDocument, type ManagedContentKind } from "../types/content";
 import { slugify } from "./permalink";
 
 const commonKeys = ["title", "date", "description", "tags", "draft"];
@@ -7,6 +9,7 @@ const placementKeys = {
   journal: ["type", "slug", "thumbnail", "thumbnail_alt", "thumbnail_fit", "thumbnail_position", "og_image", "og_description", "featured_related", "use_math", "permalink", "image", "thumbnail_class"],
   songs: ["youtube_id", "credits", "lyrics"],
   gallery: ["slug", "detail", "image", "cloudinary_id", "categories", "thumbnail", "thumbnail_alt", "article_url", "making_article_url"],
+  about: aboutKeys,
   projects: ["slug", "hero", "heroImage", "status", "links", "features"]
 };
 const list = (value: unknown) => Array.isArray(value) ? value.map(String) : typeof value === "string" ? value.split(",").map((part) => part.trim()).filter(Boolean) : [];
@@ -28,17 +31,24 @@ export function normalizeYouTubeId(value: string) {
   return "";
 }
 
-export function createContentDocument(kind: ContentKind): ContentDocument {
+export function createContentDocument(kind: ManagedContentKind): ContentDocument {
   const timestamp = new Date().toISOString();
   return { id: crypto.randomUUID(), common: { title: "", date: timestamp.slice(0, 10), description: "", tags: [], publication: "draft" }, placement: createPlacement(kind), body: "", unknownFrontmatter: {}, createdAt: timestamp, updatedAt: timestamp, source: "manual" };
 }
 
-export function parseContentMarkdown(markdown: string, kind: ContentKind, file?: { path: string; revision?: string }): ContentDocument {
+export function parseContentMarkdown(markdown: string, kind: ManagedContentKind, file?: { path: string; revision?: string }): ContentDocument {
   const normalized = markdown.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
   const match = normalized.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   const raw = (match ? load(match[1]) : {}) as Record<string, unknown> || {};
   const doc = createContentDocument(kind);
   doc.id = file ? `file:${kind}:${file.path}` : doc.id; doc.source = file ? "imported" : "uploaded"; doc.file = file;
+  if (kind === "about") {
+    const data = readAboutProfile(raw);
+    doc.placement = { kind, data }; doc.common = { title: data.name, description: data.bio, date: "", tags: [], publication: "published" };
+    doc.body = match ? match[2].replace(/^\n/, "") : "";
+    doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => !aboutKeys.includes(key)));
+    return doc;
+  }
   doc.common = { title: text(raw.title), date: dateText(raw.date) || doc.common.date, description: text(raw.description), tags: list(raw.tags ?? (kind === "gallery" ? raw.categories : undefined)), publication: raw.draft === true ? "draft" : "published" };
   doc.body = match ? match[2].replace(/^\n/, "") : normalized;
   doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => ![...commonKeys, ...placementKeys[kind]].includes(key)));
@@ -58,6 +68,7 @@ export function parseContentMarkdown(markdown: string, kind: ContentKind, file?:
 }
 
 export function contentFrontmatter(doc: ContentDocument) {
+  if (doc.placement.kind === "about") return { ...doc.unknownFrontmatter, ...aboutFrontmatter(doc.placement.data) };
   const value: Record<string, unknown> = { ...doc.unknownFrontmatter, title: doc.common.title || "Untitled", date: doc.common.date };
   if (doc.placement.kind === "journal") Object.assign(value, { type: doc.placement.data.articleType, ...(doc.placement.data.slug && { slug: slugify(doc.placement.data.slug) }), ...(doc.placement.data.thumbnail && { thumbnail: doc.placement.data.thumbnail }), ...(doc.placement.data.thumbnailAlt && { thumbnail_alt: doc.placement.data.thumbnailAlt }), ...(doc.placement.data.thumbnailFit && { thumbnail_fit: doc.placement.data.thumbnailFit }), ...(doc.placement.data.thumbnailPosition && { thumbnail_position: doc.placement.data.thumbnailPosition }), ...(doc.placement.data.ogImage && { og_image: doc.placement.data.ogImage }), ...(doc.placement.data.ogDescription && { og_description: doc.placement.data.ogDescription }), ...(doc.placement.data.relatedContent.length && { featured_related: doc.placement.data.relatedContent }), ...(doc.placement.data.useMath && { use_math: true }), ...(doc.placement.data.permalink && { permalink: doc.placement.data.permalink }), ...(doc.placement.data.image && { image: doc.placement.data.image }), ...(doc.placement.data.thumbnailClass && { thumbnail_class: doc.placement.data.thumbnailClass }) });
   if (doc.placement.kind === "songs") Object.assign(value, { youtube_id: normalizeYouTubeId(doc.placement.data.youtubeId), ...(doc.placement.data.credits && { credits: doc.placement.data.credits }), ...(doc.placement.data.lyrics && { lyrics: doc.placement.data.lyrics }) });
@@ -71,6 +82,7 @@ export function contentFrontmatter(doc: ContentDocument) {
 
 export function buildContentMarkdown(doc: ContentDocument) { return `---\n${dump(contentFrontmatter(doc), { noRefs: true, lineWidth: -1 }).trimEnd()}\n---\n\n${doc.body.trimEnd()}\n`; }
 export function generatedContentFilename(doc: ContentDocument) {
+  if (doc.placement.kind === "about") return aboutFilename;
   if (doc.file?.path) return doc.file.path;
   if (doc.placement.kind === "songs") return doc.common.date ? `${doc.common.date}.md` : "";
   const slug = "slug" in doc.placement.data ? slugify(doc.placement.data.slug) : "";
@@ -79,6 +91,7 @@ export function generatedContentFilename(doc: ContentDocument) {
 }
 
 export function publicationChecks(doc: ContentDocument) {
+  if (doc.placement.kind === "about") return aboutProfileErrors(doc.placement.data).map((label) => ({ ok: false, label }));
   const checks = [{ ok: Boolean(doc.common.title.trim()), label: "タイトル" }, { ok: Boolean(doc.common.date), label: "日付" }];
   if (doc.placement.kind === "songs") checks.push({ ok: Boolean(normalizeYouTubeId(doc.placement.data.youtubeId)), label: "YouTube URL または ID" });
   if (doc.placement.kind === "gallery") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "slug" }, { ok: Boolean(doc.placement.data.image.trim()), label: "メイン画像" });
