@@ -34,6 +34,8 @@ Gallery は Visual / Music の単一作品ビュー。Visual は contain 表示�
 
 `/disco/` は `/gallery/?filter=music` へ移動する。`/disco/[slug]/` と `/gallery/[slug]/` の詳細記事は維持し、Works の一覧・タグ・ソート・表示切替も維持する。
 
+不正なエンコードの旧hashでも先頭作品へ戻る。`/disco/` の転送スクリプトはAstroの画面遷移後も再実行する。
+
 ## #11: About の CMS 管理
 
 保存先は `src/content/about/profile.md` の単一Markdown / frontmatter。既存ContentDocumentの配置先にsingletonを追加し、共通Contents APIとpending batchを使う。CMSには専用About画面を設け、記事一覧・新規作成・削除から分離した。サイトは型付きAstro collectionから読み込む。従来のプロフィールをデータへ移し、本文の複数行、空の任意項目、未知のメタデータも保存時に保持する。
@@ -41,3 +43,13 @@ Gallery は Visual / Music の単一作品ビュー。Visual は contain 表示�
 Featured Worksの初期値は空配列。自動取得を廃止し、「紹介する作品は準備中です。」を表示する。選択は公開Visual / Musicの混在・手動順序に対応し、共通作品IDでGalleryへ直接つなぐ。URL、月日、画像参照、重複、不存在・非公開参照を検査する。参照された作品の削除や非公開化もAPIが拒否し、About側の参照削除を同一batchに含める場合は許可する。空文字タグは除き、全配列の順序は保持する。
 
 既存のGitHub revision競合検出とデプロイ処理を再利用する。実ファイルを書かないDOMテストでAppの編集→ブラウザ再起動→保存→デプロイ→再読込を検証し、APIは一時ディレクトリ／GitHub mockで検証する。ローカル確認で既存の未追跡 `vite.config.js` が古い設定を読み込む問題を見つけ、ViteコマンドにTS設定ファイルを明示した。
+
+## 最終検証（2026-10-02）
+
+- `npm test`: route 3件、現行CMS 117件、legacy 16件が成功。Journal 14 / Songs 5 / Gallery 10 / Projects 3ファイルのroundtripが成功。
+- サイトとCMSのproduction buildが成功。旧ページのローカル参照168件も解決する。
+- `npm --prefix journal-editor-app run check:worker` が成功。
+- 現行経路のcoverage: 行92.56%、分岐85.71%、関数88.65%。
+- 実ブラウザで一覧、Gallery、About、CMSのAbout編集画面、旧Discography URLの転送を確認した。
+
+変更はローカルコミットまで。push・本番公開・GitHub Issueのcloseは未実施。

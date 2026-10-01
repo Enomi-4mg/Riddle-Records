@@ -92,7 +92,8 @@ export function initializeGalleryViewers(root = document) {
     function readUrl() {
       const params = new URL(win.location.href).searchParams;
       filter = ["visual", "music"].includes(params.get("filter")) ? params.get("filter") : "all";
-      const legacyHash = decodeURIComponent(win.location.hash.slice(1));
+      let legacyHash = "";
+      try { legacyHash = decodeURIComponent(win.location.hash.slice(1)); } catch { /* An invalid old hash falls back to the first work. */ }
       const id = params.get("work") || works.find((work) => work.legacyHash === legacyHash)?.id;
       // An explicit work outside the requested filter still opens that work.
       const requested = works.find((work) => work.id === id);

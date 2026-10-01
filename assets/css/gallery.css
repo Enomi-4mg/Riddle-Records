@@ -227,7 +227,7 @@
 
 /* Immersive viewing keeps all metadata in optional panels. */
 body.gallery-immersive { padding: 0; overflow: hidden; }
-body.gallery-immersive .site-header, body.gallery-immersive footer { display: none; }
+body.gallery-immersive .site-header, body.gallery-immersive .sidebar, body.gallery-immersive footer { display: none; }
 body.gallery-immersive main.container { width: 100%; max-width: none; margin: 0; padding: 0; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .gallery-viewer { position: relative; height: 100svh; min-height: 320px; background: var(--color-paper); overflow: hidden; opacity: 1; animation: none; }

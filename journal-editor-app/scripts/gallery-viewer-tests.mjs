@@ -45,6 +45,7 @@ test("unknown URLs, contradictory filters, legacy hash and empty collections", (
   assert.equal(setup("?work=missing").stage.querySelector("img").alt, "One");
   assert.ok(setup("?work=songs%3Atwo&filter=visual").stage.querySelector("iframe"));
   assert.equal(setup("#one-png").stage.querySelector("img").alt, "One");
+  assert.equal(setup("#%").stage.querySelector("img").alt, "One");
   const { stage, document } = setup("?filter=music", works.filter((work) => work.kind === "visual"));
   assert.match(stage.textContent, /作品はまだ/); assert.equal(document.querySelector('[data-step="1"]').disabled, true);
   assert.match(setup("", []).stage.textContent, /作品はまだ/);

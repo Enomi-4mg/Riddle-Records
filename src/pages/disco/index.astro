@@ -7,7 +7,9 @@ const target = `${import.meta.env.BASE_URL}gallery/?filter=music`;
   <h1 class="web_title">Discography</h1>
   <p>楽曲はGalleryで鑑賞できます。<a href={target}>Musicを開く</a></p>
 </BaseLayout>
-<script>
-  const link = document.querySelector<HTMLAnchorElement>('a[href$="gallery/?filter=music"]');
-  if (link) location.replace(link.href);
+<script is:inline data-astro-rerun>
+  {
+    const link = document.querySelector('a[href$="gallery/?filter=music"]');
+    if (link) location.replace(link.href);
+  }
 </script>
