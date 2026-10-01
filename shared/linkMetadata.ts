@@ -18,7 +18,16 @@ export function publicAddress(value: string): boolean {
 export function metadataUrl(value: unknown): URL {
   if (typeof value !== "string" || value.length > 4096) throw new Error("URLを確認してください");
   const url = new URL(value);
-  if (url.protocol !== "https:" || url.username || url.password || url.port && url.port !== "443" || !url.hostname.includes(".") || /(?:^|\.)(?:localhost|local|internal|test|invalid|example)$/.test(url.hostname) || /^[\d.]+$/.test(url.hostname) || url.hostname.includes(":")) throw new Error("公開されたHTTPSページのURLを入力してください");
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    (url.port && url.port !== "443") ||
+    !url.hostname.includes(".") ||
+    /(?:^|\.)(?:localhost|local|internal|test|invalid|example)$/.test(url.hostname) ||
+    /^[\d.]+$/.test(url.hostname) ||
+    url.hostname.includes(":")
+  ) throw new Error("公開されたHTTPSページのURLを入力してください");
   url.hash = "";
   return url;
 }
