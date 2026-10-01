@@ -33,6 +33,7 @@ export async function load(url, context, nextLoad) {
   const source = await fs.readFile(sourcefile, "utf8");
   const result = await transform(source, {
     format: "esm",
+    jsx: "automatic",
     loader: url.endsWith(".tsx") ? "tsx" : "ts",
     sourcemap: "inline",
     sourcefile,

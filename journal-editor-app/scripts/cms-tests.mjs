@@ -15,7 +15,11 @@ import { renderContentMarkdown } from "../../src/utils/renderMarkdown.ts";
 
 const media = { version: 1, assets: [] };
 const makeDoc = (kind = "journal") => { const doc = createContentDocument(kind); doc.common.title = "Test"; return doc; };
-const makeQueue = () => [makeDoc(), makeDoc()].reduce((queue, document) => upsertPending(queue, { document, operation: "save" }), emptyPending());
+const makeQueue = () => {
+  const first = makeDoc(); first.common.date = "2026-01-02";
+  const second = makeDoc(); second.common.date = "2026-01-03";
+  return [first, second].reduce((queue, document) => upsertPending(queue, { document, operation: "save" }), emptyPending());
+};
 const unexpected = async () => { throw new Error("Unexpected individual write"); };
 const deps = (overrides = {}) => ({ readRevision: async () => undefined, loadMedia: async () => ({ registry: media, revision: "old" }), saveContent: unexpected, deleteContent: unexpected, saveMedia: unexpected, commitBatch: unexpected, ...overrides });
 async function withFetch(fetcher, callback) { const original = globalThis.fetch; globalThis.fetch = fetcher; try { return await callback(); } finally { globalThis.fetch = original; } }
@@ -75,6 +79,21 @@ describe("current CMS serialization and editor conversion", () => {
 });
 
 describe("production pending batch", () => {
+  test("default dependencies use the real HTTP batch client for two distinct documents", async () => {
+    let batches = 0;
+    await withFetch(async (url, options) => {
+      if (url.startsWith("/api/content-item")) return new Response(null, { status: 404 });
+      assert.equal(url, "/api/pending-batch"); batches++;
+      const payload = JSON.parse(options.body);
+      assert.deepEqual(payload.contents.map((item) => item.path), ["2026-01-02.md", "2026-01-03.md"]);
+      return Response.json({ commitSha: "http-commit", contents: payload.contents.map((item) => ({ id: item.id, path: item.path, revision: `revision-${item.id}` })) });
+    }, async () => {
+      const result = await applyPendingChanges(makeQueue(), () => {});
+      assert.equal(result.lastCommitSha, "http-commit");
+      assert.ok(result.contents.every((item) => item.applied && item.document.file.revision));
+    });
+    assert.equal(batches, 1);
+  });
   test("writes every revision, media revision, commit SHA and progress after success", async () => {
     const queue = { ...makeQueue(), media: { registry: media, expectedRevision: "old" } }; let progress;
     const result = await applyPendingChanges(queue, (next) => { progress = next; }, deps({ commitBatch: async (payload) => {

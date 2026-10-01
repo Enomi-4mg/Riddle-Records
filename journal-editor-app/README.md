@@ -79,7 +79,7 @@ Repository settingsのActions secretsへ次を登録します。
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`: 対象アカウントのWorkers Scripts編集に必要な最小権限を持つトークン
 
-`main` の `journal-editor-app/**` またはデプロイworkflowが変わると、テスト、roundtrip検証、buildの成功後にWorkerをデプロイします。初回はActionsを手動実行することもできます。
+`main` の `journal-editor-app/**`、共有 `src/utils/**` / `src/data/**`、roundtrip 対象の `src/content/**`、ルートの依存関係、またはデプロイworkflowが変わると、テスト、roundtrip検証、buildの成功後にWorkerをデプロイします。初回はActionsを手動実行することもできます。
 
 ### 3. Custom DomainとAccess
 
@@ -175,7 +175,9 @@ npm run build
 
 ## 往復変換の検証
 
-既存 `src/content/*/*.md` を import → export 相当で検証します。
+既存 `src/content/*/*.md` を、CMS が使用する `parseContentMarkdown()` → `buildContentMarkdown()` で検証します。
+本文と値のあるメタデータを比較し、2回目の保存結果が1回目と一致することを確認します。
+不一致は非ゼロ終了します。
 
 ```sh
 npm run test:roundtrip
@@ -214,20 +216,22 @@ npm run test:roundtrip:write
 - 空配列 field の省略
 - `type: "journal"` の追加
 
-本文Markdown、本文HTML、画像カードHTMLが変わる差分は要確認です。
+本文の変更は、Gallery の関連リンクを「関連記事」へ、Project の features を「主な機能」へ移す既定の移行だけを許容します。
+`cloudinary_id` / `categories` / `heroImage` は、それぞれ `image` / `tags` / `hero` へ移行します。
+それ以外の本文や値のあるメタデータが変わる場合は検証に失敗します。
 
-### Markdown 読み込みパーサーの制約
+### 現行 CMS と旧エディタのテスト
 
-frontmatter import はフルYAML parserではなく、行ベースの簡易parserです。通常の `key: value`、inline array、単純なblock arrayを想定しています。
+現行 CMS は `js-yaml` で frontmatter を読み書きし、block scalar や nested object も扱います。
+現行モデルで編集しないキーは、未知の frontmatter として保存します。
 
-以下のような複雑なYAMLは非推奨または未保証です。
+- `npm run test:unit`: 現行 CMS、React タグ入力、HTML 変換、HTTP client、Worker / local API を検証します。
+- `npm run test:coverage`: 現行 CMS の使用モジュールだけを対象にします。旧 Draft モデルのテストは実行しません。
+- `npm run test:legacy`: 残している旧 Draft モデルと旧 YAML helper を別スイートで検証します。
+- `npm test`: 現行テスト、全4種類の roundtrip、旧テストを順に実行します。
 
-- block scalar
-- nested object
-- 複雑なquoteやescape
-- quoted comma を含む inline array
-
-既存 content は `npm run test:content` で import/export 相当の検証をしています。複雑なfrontmatterを追加した場合は、roundtrip結果と実buildの両方を確認してください。
+ローカル API のテストは `contentApiPlugin(fixtureRoot)` と一時ディレクトリを使い、実記事や実メディアレジストリへ書き込みません。
+ルートの `npm test` は Journal URL 検査、エディタテスト、両方のビルド、生成済み legacy のリンク検査も実行します。
 
 ## `type: "journal"` の出力方針
 

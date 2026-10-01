@@ -1,2 +1,2 @@
-process.argv[2] = "projects";
-await import("./roundtrip-content-kind.mjs");
+import { checkRoundtrip } from "./roundtrip-cms.mjs";
+await checkRoundtrip("projects");

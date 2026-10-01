@@ -10,17 +10,18 @@
     "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview",
     "test:yaml": "node scripts/test-yaml-frontmatter.mjs",
-    "test:unit": "node --experimental-loader ./scripts/typescript-loader.mjs --test scripts/unit-tests.mjs",
-    "test:coverage": "node --experimental-loader ./scripts/typescript-loader.mjs --test --experimental-test-coverage --test-coverage-include='src/lib/**/*.ts' --test-coverage-include='../src/utils/*.ts' --test-coverage-include='../src/data/gallery.ts' --test-coverage-include='vite.config.ts' scripts/unit-tests.mjs",
-    "test:roundtrip:journal": "node scripts/roundtrip-journal.mjs",
-    "test:roundtrip:songs": "node scripts/roundtrip-songs.mjs",
-    "test:roundtrip:gallery": "node scripts/roundtrip-content-kind.mjs gallery",
-    "test:roundtrip:projects": "node scripts/roundtrip-content-kind.mjs projects",
-    "test:roundtrip": "npm run test:yaml && npm run test:roundtrip:journal && npm run test:roundtrip:songs && npm run test:roundtrip:gallery && npm run test:roundtrip:projects",
+    "test:unit": "node --experimental-loader ./scripts/typescript-loader.mjs --test scripts/unit-tests.mjs scripts/cms-tests.mjs scripts/api-tests.mjs scripts/tag-input-tests.mjs",
+    "test:coverage": "node --experimental-loader ./scripts/typescript-loader.mjs --test --experimental-test-coverage --test-coverage-include='src/lib/cmsMarkdown.ts' --test-coverage-include='src/lib/editorMarkdown.ts' --test-coverage-include='src/lib/deployPending.ts' --test-coverage-include='src/lib/commitBatch.ts' --test-coverage-include='src/lib/mediaRegistry.ts' --test-coverage-include='src/lib/articleDefaults.ts' --test-coverage-include='src/lib/siteDeploy.ts' --test-coverage-include='src/lib/contentFiles.ts' --test-coverage-include='src/lib/pendingChanges.ts' --test-coverage-include='src/components/TagInput.tsx' --test-coverage-include='src/types/media.ts' --test-coverage-include='../src/utils/*.ts' --test-coverage-include='worker/index.ts' --test-coverage-include='vite.config.ts' scripts/unit-tests.mjs scripts/cms-tests.mjs scripts/api-tests.mjs scripts/tag-input-tests.mjs",
+    "test:roundtrip:journal": "node --experimental-loader ./scripts/typescript-loader.mjs scripts/roundtrip-journal.mjs",
+    "test:roundtrip:songs": "node --experimental-loader ./scripts/typescript-loader.mjs scripts/roundtrip-songs.mjs",
+    "test:roundtrip:gallery": "node --experimental-loader ./scripts/typescript-loader.mjs scripts/roundtrip-content-kind.mjs gallery",
+    "test:roundtrip:projects": "node --experimental-loader ./scripts/typescript-loader.mjs scripts/roundtrip-content-kind.mjs projects",
+    "test:roundtrip": "npm run test:roundtrip:journal && npm run test:roundtrip:songs && npm run test:roundtrip:gallery && npm run test:roundtrip:projects",
     "test:content": "npm run test:roundtrip",
-    "test": "npm run test:unit && npm run test:roundtrip",
-    "test:roundtrip:write": "node scripts/roundtrip-journal.mjs --write-exported ./roundtrip-exported",
-    "media:rebuild": "node scripts/build-media-registry.mjs"
+    "test": "npm run test:unit && npm run test:roundtrip && npm run test:legacy",
+    "test:roundtrip:write": "node --experimental-loader ./scripts/typescript-loader.mjs scripts/roundtrip-journal.mjs --write-exported ./roundtrip-exported",
+    "media:rebuild": "node scripts/build-media-registry.mjs",
+    "test:legacy": "npm run test:yaml && node --experimental-loader ./scripts/typescript-loader.mjs --test scripts/legacy-tests.mjs"
   },
   "dependencies": {
     "@tiptap/core": "^3.31.3",
@@ -46,6 +47,7 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@types/turndown": "^5.0.6",
+    "happy-dom": "^20.14.5",
     "wrangler": "4.142.0"
   }
 }
