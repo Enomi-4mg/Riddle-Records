@@ -2,7 +2,13 @@ import { dump, load } from "js-yaml";
 import { createPlacement, type ContentDocument, type ContentKind } from "../types/content";
 import { slugify } from "./permalink";
 
-const knownKeys = new Set(["title", "date", "description", "tags", "draft", "type", "slug", "thumbnail", "thumbnail_alt", "thumbnail_fit", "thumbnail_position", "og_image", "og_description", "featured_related", "use_math", "permalink", "image", "thumbnail_class", "youtube_id", "credits", "lyrics", "detail", "article_url", "making_article_url", "hero", "heroImage", "status", "links", "features", "externalUrl", "sourceUrl", "cloudinary_id", "categories", "subtitle"]);
+const commonKeys = ["title", "date", "description", "tags", "draft"];
+const placementKeys = {
+  journal: ["type", "slug", "thumbnail", "thumbnail_alt", "thumbnail_fit", "thumbnail_position", "og_image", "og_description", "featured_related", "use_math", "permalink", "image", "thumbnail_class"],
+  songs: ["youtube_id", "credits", "lyrics"],
+  gallery: ["slug", "detail", "image", "cloudinary_id", "categories", "thumbnail", "thumbnail_alt", "article_url", "making_article_url"],
+  projects: ["slug", "hero", "heroImage", "status", "links", "features"]
+};
 const list = (value: unknown) => Array.isArray(value) ? value.map(String) : typeof value === "string" ? value.split(",").map((part) => part.trim()).filter(Boolean) : [];
 export const parseTagInput = (value: string) => value.split(",").map((tag) => tag.trim()).filter(Boolean);
 const text = (value: unknown) => typeof value === "string" ? value : "";
@@ -33,9 +39,9 @@ export function parseContentMarkdown(markdown: string, kind: ContentKind, file?:
   const raw = (match ? load(match[1]) : {}) as Record<string, unknown> || {};
   const doc = createContentDocument(kind);
   doc.id = file ? `file:${kind}:${file.path}` : doc.id; doc.source = file ? "imported" : "uploaded"; doc.file = file;
-  doc.common = { title: text(raw.title), date: dateText(raw.date) || doc.common.date, description: text(raw.description), tags: list(raw.tags), publication: raw.draft === true ? "draft" : "published" };
-  doc.body = match ? match[2] : normalized;
-  doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => !knownKeys.has(key)));
+  doc.common = { title: text(raw.title), date: dateText(raw.date) || doc.common.date, description: text(raw.description), tags: list(raw.tags ?? (kind === "gallery" ? raw.categories : undefined)), publication: raw.draft === true ? "draft" : "published" };
+  doc.body = match ? match[2].replace(/^\n/, "") : normalized;
+  doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => ![...commonKeys, ...placementKeys[kind]].includes(key)));
   if (kind === "journal") doc.placement = { kind, data: { articleType: ["making", "report"].includes(text(raw.type)) ? text(raw.type) as "making" | "report" : "journal", slug: text(raw.slug), thumbnail: typeof raw.thumbnail === "boolean" ? String(raw.thumbnail) : text(raw.thumbnail), thumbnailAlt: text(raw.thumbnail_alt), thumbnailFit: text(raw.thumbnail_fit), thumbnailPosition: text(raw.thumbnail_position), ogImage: text(raw.og_image), ogDescription: text(raw.og_description), relatedContent: list(raw.featured_related), useMath: raw.use_math === true, permalink: text(raw.permalink), image: text(raw.image), thumbnailClass: text(raw.thumbnail_class) } };
   if (kind === "songs") doc.placement = { kind, data: { youtubeId: text(raw.youtube_id), credits: Array.isArray(raw.credits) ? raw.credits.join("\n") : text(raw.credits), lyrics: text(raw.lyrics) } };
   if (kind === "gallery") {

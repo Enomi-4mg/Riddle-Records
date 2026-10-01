@@ -31,10 +31,13 @@ export function markdownToEditorHtml(markdown: string) {
 }
 
 export function editorHtmlToMarkdown(html: string) {
-  const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced" });
+  const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced", blankReplacement: (_content, node) => {
+    const element = node as HTMLElement;
+    return node.nodeType === 1 && element.hasAttribute("data-raw-html") ? `\n\n${decodeRawHtml(element.getAttribute("data-raw-html") || "")}\n\n` : (node as HTMLElement & { isBlock?: boolean }).isBlock ? "\n\n" : "";
+  } });
   turndown.addRule("strike", { filter: (node) => ["S", "STRIKE", "DEL"].includes(node.nodeName), replacement: (content) => `~~${content}~~` });
   turndown.addRule("rawHtml", {
-    filter: (node) => node instanceof HTMLElement && node.hasAttribute("data-raw-html"),
+    filter: (node) => node.nodeType === 1 && (node as HTMLElement).hasAttribute("data-raw-html"),
     replacement: (_content, node) => `\n\n${decodeRawHtml((node as HTMLElement).getAttribute("data-raw-html") || "")}\n\n`
   });
   turndown.addRule("taskItem", {
