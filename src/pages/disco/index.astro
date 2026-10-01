@@ -1,4 +1,5 @@
 ---
+import ListViewSwitch from "../../components/ListViewSwitch.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 
@@ -21,16 +22,18 @@ const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
     <p>公開した楽曲の一覧です。</p>
   </section>
 
-  <div class="works-grid works-grid-list">
+  <ListViewSwitch target="disco-index" page="disco" />
+
+  <div class="content-index" id="disco-index" data-view="grid">
     {songs.map((song) => (
-      <article class="work-card work-card-unified">
-        <a href={withBase(`/disco/${song.slug}/`)} class="work-thumb">
+      <article class="content-item">
+        <a href={withBase(`/disco/${song.slug}/`)} class="journal-thumb">
           <img src={`https://img.youtube.com/vi/${song.data.youtube_id}/sddefault.jpg`} alt={song.data.title} loading="lazy" />
         </a>
-        <div class="work-copy">
-          <h2 class="work-title"><a href={withBase(`/disco/${song.slug}/`)}>{song.data.title}</a></h2>
-          <time class="work-date" datetime={getEntryDateIso(song)}>{formatDate(song.data.date)}</time>
-          <p class="work-desc">{song.data.description ?? ""}</p>
+        <div class="journal-copy">
+          <time class="journal-date" datetime={getEntryDateIso(song)}>{formatDate(song.data.date)}</time>
+          <h2 class="journal-title"><a href={withBase(`/disco/${song.slug}/`)}>{song.data.title}</a></h2>
+          <p class="journal-desc">{song.data.description ?? ""}</p>
           <div class="work-tags" aria-label={`${song.data.title} tags`}>
             <span class="work-tag">Music</span>
             {(song.data.tags ?? []).map((tag) => <span class="work-tag">{tag}</span>)}

@@ -7,7 +7,7 @@ import { renderContentMarkdown } from "../../utils/renderMarkdown";
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
-const formatDate = (date: string) => new Date(date).toLocaleDateString("ja-JP");
+const formatDate = (date: string) => new Date(date).toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" });
 
 export async function getStaticPaths() {
   return (await getGalleryDetailItems()).map((item) => ({
@@ -38,7 +38,7 @@ const bodyHtml = await renderContentMarkdown(item.body);
   twitterImage={twitterImage}
   twitterImageAlt={item.title}
 >
-  <article class="gallery-detail journal-article journal-entry-animate">
+  <article class="journal-article journal-entry-animate">
     <div class="journal-back-link journal-back-link-top">
       <a href={href("/works/")}>Works一覧へ戻る</a>
     </div>

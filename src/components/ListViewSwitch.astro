@@ -1,0 +1,33 @@
+---
+const { target, page } = Astro.props;
+---
+<div class="list-view-switch" data-list-switch data-target={target} data-page={page} role="group" aria-label="一覧の表示方法">
+  <button type="button" class="control-btn active" data-view="grid" aria-pressed="true" aria-controls={target}>グリッド</button>
+  <button type="button" class="control-btn" data-view="list" aria-pressed="false" aria-controls={target}>リスト</button>
+</div>
+<script>
+  function initializeListViews() {
+    document.querySelectorAll<HTMLElement>("[data-list-switch]").forEach((control) => {
+      if (control.dataset.initialized) return;
+      const container = document.getElementById(control.dataset.target!);
+      if (!container) return;
+      control.dataset.initialized = "true";
+      const key = `riddle-list-view:${control.dataset.page}`;
+      const apply = (view: string) => {
+        container.dataset.view = view === "list" ? "list" : "grid";
+        control.querySelectorAll<HTMLButtonElement>("button[data-view]").forEach((button) => {
+          const selected = button.dataset.view === container.dataset.view;
+          button.classList.toggle("active", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+      };
+      try { apply(localStorage.getItem(key) || "grid"); } catch { apply("grid"); }
+      control.querySelectorAll<HTMLButtonElement>("button[data-view]").forEach((button) => button.addEventListener("click", () => {
+        apply(button.dataset.view!);
+        try { localStorage.setItem(key, container.dataset.view!); } catch { /* Storage is optional. */ }
+      }));
+    });
+  }
+  initializeListViews();
+  document.addEventListener("astro:page-load", initializeListViews);
+</script>

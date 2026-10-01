@@ -1,4 +1,5 @@
 ---
+import ListViewSwitch from "../components/ListViewSwitch.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getGalleryDetailPath, getSortedGalleryItems, hasGalleryDetail } from "../utils/gallery";
 import { resolveImageUrl } from "../utils/images";
@@ -34,29 +35,31 @@ const getThumbUrl = (image) => resolveImageUrl(image, "w_400,h_400,c_fill,q_auto
     </div>
   </div>
 
-  <div class="gallery-grid" id="gallery-container">
+  <ListViewSwitch target="gallery-container" page="gallery" />
+
+  <div class="content-index" id="gallery-container" data-view="grid">
     {sortedGallery.map((item) => {
       const detailUrl = hasGalleryDetail(item) ? withBase(getGalleryDetailPath(item)) : "";
       return (
-      <div class="gallery-item work-card work-card-unified journal-entry-animate" id={item.image.replace(/\./g, "-")} data-date={item.date} data-categories={item.tags.join(",")}>
+      <div class="gallery-item content-item journal-entry-animate" id={item.image.replace(/\./g, "-")} data-date={item.date} data-categories={item.tags.join(",")}>
         {detailUrl ? (
-          <a href={detailUrl} class="gallery-image-link work-thumb">
+          <a href={detailUrl} class="journal-thumb">
             <img src={getThumbUrl(item.image)} alt={item.imageAlt} loading="lazy" />
           </a>
         ) : (
-          <a href={getFullImageUrl(item.image)} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="gallery-image-link work-thumb">
+          <a href={getFullImageUrl(item.image)} data-lightbox="gallery" data-title={`${item.title} - ${item.description}`} class="journal-thumb">
             <img src={getThumbUrl(item.image)} alt={item.imageAlt} loading="lazy" />
           </a>
         )}
-        <div class="gallery-info work-copy">
-          <h3 class="work-title">
+        <div class="journal-copy">
+          <time class="journal-date" datetime={item.date}>{new Date(item.date).toLocaleDateString("ja-JP")}</time>
+          <h3 class="journal-title">
             {detailUrl ? <a href={detailUrl}>{item.title}</a> : item.title}
           </h3>
-          <time class="date work-date" datetime={item.date}>{new Date(item.date).toLocaleDateString("ja-JP")}</time>
-          <p class="description work-desc">{item.description}</p>
+          <p class="journal-desc">{item.description}</p>
           <div class="category-list work-tags">
             {item.tags.map((category) => (
-              <span class={`category category-${category} work-tag`}>{category}</span>
+              <span class="work-tag">{category}</span>
             ))}
           </div>
 
