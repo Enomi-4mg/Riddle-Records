@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { readFile } from "node:fs/promises";
 import { Window } from "happy-dom";
-import { transform } from "esbuild";
+import { build } from "esbuild";
+import { fileURLToPath } from "node:url";
 import { detectEmbedKind, parseEmbed, renderEmbed, embedMarkdown, internalPath } from "../../shared/embeds.ts";
 import { publicAddress, metadataUrl, extractMetadata, fetchLinkMetadata } from "../../shared/linkMetadata.ts";
 import { renderContentMarkdown } from "../../src/utils/renderMarkdown.ts";
@@ -67,7 +68,7 @@ test("metadata errors preserve failures rather than fetching unsafe or huge page
 test("actual list-switch script restores per-page settings and preserves filter state", async () => {
   const source=await readFile(new URL("../../src/components/ListViewSwitch.astro",import.meta.url),"utf8");
   const script=source.match(/<script>([\s\S]*?)<\/script>/)[1];
-  const js=(await transform(script,{loader:"ts",target:"es2022"})).code;
+  const js=(await build({stdin:{contents:script,loader:"ts",resolveDir:fileURLToPath(new URL("../../src/components/",import.meta.url))},bundle:true,format:"iife",target:"es2022",write:false})).outputFiles[0].text;
   const window=new Window({url:"https://4mg.dev/gallery/"});
   const setup=()=> { window.document.body.innerHTML='<div data-list-switch data-target="items" data-page="gallery"><button data-view="grid"></button><button data-view="list"></button></div><div id="items" data-view="grid"><article style="display:none"></article><article></article></div>'; };
   setup(); window.eval(js);
