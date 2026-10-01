@@ -23,6 +23,7 @@
     "src/lib/managedValidation.ts",
     "../shared/aboutProfile.ts",
     "../shared/contentStorage.ts",
+    "../shared/contentTags.ts",
     "../shared/workIdentity.ts",
     "../shared/linkMetadata.ts",
     "../shared/embeds.ts"

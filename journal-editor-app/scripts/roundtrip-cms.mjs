@@ -3,10 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { load } from "js-yaml";
 import { parseContentMarkdown, buildContentMarkdown } from "../src/lib/cmsMarkdown.ts";
+import { normalizeContentTags } from "../../shared/contentTags.ts";
 
 const metadata = (source) => load(source.match(/^---\n([\s\S]*?)\n---/)[1]);
 const body = (source) => source.replace(/^---\n[\s\S]*?\n---\n?/, "").trim();
-// Explicit migrations: aliases become canonical fields; related links/features move to body.
+// Explicit migrations: aliases become canonical fields; tags normalize; related links/features move to body.
 const aliases = { cloudinary_id: "image", categories: "tags", heroImage: "hero" };
 const moved = { gallery: { article_url: "作品記事", making_article_url: "メイキング" }, projects: { features: "主な機能" } };
 export async function checkRoundtrip(kind) {
@@ -37,6 +38,11 @@ export async function checkRoundtrip(kind) {
         continue;
       }
       const target = aliases[key] || key;
+      if ((key === "tags" || kind === "gallery" && key === "categories") && Array.isArray(value)) {
+        const tags = normalizeContentTags(value);
+        assert.deepEqual(after[target] ?? [], tags, `${kind}/${file}: tags changed outside canonicalization`);
+        continue;
+      }
       if (key === "credits" && Array.isArray(value)) { assert.equal(after[target], value.join("\n"), `${file}: credits changed`); continue; }
       if (key === "use_math" && value === false && after[target] === undefined) continue;
       assert.deepEqual(after[target], value, `${kind}/${file}: ${key} changed or lost`);

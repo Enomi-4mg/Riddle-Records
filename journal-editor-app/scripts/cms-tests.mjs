@@ -25,6 +25,52 @@ const deps = (overrides = {}) => ({ readRevision: async () => undefined, loadMed
 async function withFetch(fetcher, callback) { const original = globalThis.fetch; globalThis.fetch = fetcher; try { return await callback(); } finally { globalThis.fetch = original; } }
 
 describe("current CMS serialization and editor conversion", () => {
+  test("canonicalizes Music aliases and duplicates while preserving other tags and order", () => {
+    for (const kind of ["journal", "songs", "gallery", "projects"]) {
+      const doc = parseContentMarkdown('---\ntitle: Tagged\ndate: 2026-01-02\ntags: [" art ", music, Music, MUSIC, art, CG, cg, " "]\n---\n\nBody\n', kind);
+      assert.deepEqual(doc.common.tags, ["art", "Music", "CG", "cg"]);
+      // Pending data from an older browser is normalized on save too.
+      doc.common.tags = ["music", "Music", "ボカロ", " ボカロ "];
+      const saved = buildContentMarkdown(doc);
+      const read = parseContentMarkdown(saved, kind);
+      assert.deepEqual(read.common.tags, ["Music", "ボカロ"]);
+      assert.equal(buildContentMarkdown(read), saved);
+    }
+    const legacy = parseContentMarkdown('---\ntitle: Legacy\ndate: 2026-01-02\ncategories: [music, Music]\n---\n', "gallery");
+    assert.deepEqual(legacy.common.tags, ["Music"]);
+  });
+  test("new songs have an editable Music tag and removing it survives saving and reopening", () => {
+    const doc = createContentDocument("songs");
+    assert.deepEqual(doc.common.tags, ["Music"]);
+    doc.common.tags = [];
+    const saved = buildContentMarkdown(doc);
+    assert.deepEqual(parseContentMarkdown(saved, "songs").common.tags, []);
+    doc.common.tags = ["ボカロ"];
+    assert.deepEqual(parseContentMarkdown(buildContentMarkdown(doc), "songs").common.tags, ["ボカロ"]);
+    assert.deepEqual(createContentDocument("gallery").common.tags, []);
+  });
+  test("public Works/Gallery catalog uses saved song tags without injecting Music", async () => {
+    const { build } = await import("esbuild");
+    const { fileURLToPath } = await import("node:url");
+    const songs = [
+      { slug: "tagged", data: { title: "Tagged", date: "2026-01-02", youtube_id: "abcdefghijk", tags: ["music", "Music", " ボカロ "] } },
+      { slug: "empty", data: { title: "Empty", date: "2026-01-01", youtube_id: "abcdefghijk", tags: [] } },
+      { slug: "specific", data: { title: "Specific", date: "2025-12-31", youtube_id: "abcdefghijk", tags: ["Instrumental"] } }
+    ];
+    const result = await build({
+      entryPoints: [fileURLToPath(new URL("../../src/utils/works.ts", import.meta.url))], bundle: true, write: false,
+      format: "esm", platform: "node", define: { "import.meta.env.PROD": "true" },
+      plugins: [{ name: "content-fixture", setup(builder) {
+        builder.onResolve({ filter: /^astro:content$/ }, () => ({ path: "fixture", namespace: "content-fixture" }));
+        builder.onLoad({ filter: /.*/, namespace: "content-fixture" }, () => ({ contents: `export async function getCollection(kind) { return kind === "songs" ? ${JSON.stringify(songs)}.map(entry => ({ ...entry, data: { ...entry.data, date: new Date(entry.data.date) } })) : []; }` }));
+      } }]
+    });
+    const { getViewingWorks } = await import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString("base64")}`);
+    const works = await getViewingWorks();
+    assert.deepEqual(works.find((work) => work.id === "songs:tagged").tags, ["Music", "ボカロ"]);
+    assert.deepEqual(works.find((work) => work.id === "songs:empty").tags, []);
+    assert.deepEqual(works.find((work) => work.id === "songs:specific").tags, ["Instrumental"]);
+  });
   for (const kind of ["journal", "songs", "gallery", "projects"]) test(`${kind} metadata saves keep body stable`, () => {
     const original = "---\ntitle: Demo\ndate: 2026-01-02\ncustom: keep\n---\n\n# Heading\n\n  indented text\n";
     const doc = parseContentMarkdown(original, kind, { path: "demo.md" });

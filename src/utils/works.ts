@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { normalizeContentTags } from "../../shared/contentTags";
 import { galleryWorkPath, workReference, type WorkPreview } from "../../shared/workIdentity";
 import { getGalleryDetailPath, getGalleryItems, hasGalleryDetail } from "./gallery";
 import { resolveImageUrl } from "./images";
@@ -25,7 +26,7 @@ export async function getViewingWorks(): Promise<ViewingWork[]> {
     .map((entry) => ({
       id: workReference("songs", entry.slug), kind: "music", title: entry.data.title,
       date: entry.data.date.toISOString().slice(0, 10), description: entry.data.description ?? "",
-      tags: ["Music", ...(entry.data.tags ?? [])], image: "", imageAlt: entry.data.title,
+      tags: normalizeContentTags(entry.data.tags ?? []), image: "", imageAlt: entry.data.title,
       thumbnail: `https://img.youtube.com/vi/${entry.data.youtube_id}/sddefault.jpg`,
       youtubeId: entry.data.youtube_id,
       credits: Array.isArray(entry.data.credits) ? entry.data.credits.join("\n") : entry.data.credits,

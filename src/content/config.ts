@@ -1,5 +1,8 @@
 import { aboutProfileErrors, readAboutProfile } from "../../shared/aboutProfile";
+import { normalizeContentTags } from "../../shared/contentTags";
 import { defineCollection, z } from "astro:content";
+
+const contentTags = z.array(z.string()).transform(normalizeContentTags).optional();
 
 const journalCollection = defineCollection({
   type: "content",
@@ -21,7 +24,7 @@ const journalCollection = defineCollection({
     permalink: z.string().optional(),
     featured_related: z.array(z.string()).nullable().optional(),
     use_math: z.boolean().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: contentTags,
     thumbnail_class: z.string().optional(),
     draft: z.boolean().optional()
   })
@@ -36,7 +39,7 @@ const songsCollection = defineCollection({
     credits: z.union([z.string(), z.array(z.string())]).optional(),
     description: z.string().optional(),
     lyrics: z.string().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: contentTags,
     draft: z.boolean().optional()
   })
 });
@@ -51,8 +54,8 @@ const galleryCollection = defineCollection({
     image: z.string().optional(),
     cloudinary_id: z.string().optional(),
     description: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional(),
+    tags: contentTags,
+    categories: contentTags,
     article_url: z.string().optional(),
     making_article_url: z.string().optional(),
     thumbnail: z.union([z.boolean(), z.string()]).optional(),
@@ -70,7 +73,7 @@ const projectsCollection = defineCollection({
     subtitle: z.string().optional(),
     date: z.coerce.date(),
     description: z.string().optional(),
-    tags: z.array(z.string()).optional(),
+    tags: contentTags,
     hero: z.string().optional(),
     status: z.enum(["active", "paused", "archived", "completed"]).optional(),
     links: z.array(z.object({

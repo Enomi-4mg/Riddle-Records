@@ -1,5 +1,6 @@
 import { aboutKeys, aboutFrontmatter, readAboutProfile, aboutProfileErrors } from "../../../shared/aboutProfile";
 import { aboutFilename } from "../../../shared/contentStorage";
+import { normalizeContentTags } from "../../../shared/contentTags";
 import { dump, load } from "js-yaml";
 import { createPlacement, type ContentDocument, type ManagedContentKind } from "../types/content";
 import { slugify } from "./permalink";
@@ -13,7 +14,7 @@ const placementKeys = {
   projects: ["slug", "hero", "heroImage", "status", "links", "features"]
 };
 const list = (value: unknown) => Array.isArray(value) ? value.map(String) : typeof value === "string" ? value.split(",").map((part) => part.trim()).filter(Boolean) : [];
-export const parseTagInput = (value: string) => value.split(",").map((tag) => tag.trim()).filter(Boolean);
+export const parseTagInput = (value: string) => normalizeContentTags(value.split(","));
 const text = (value: unknown) => typeof value === "string" ? value : "";
 const dateText = (value: unknown) => value instanceof Date ? value.toISOString().slice(0, 10) : text(value).slice(0, 10);
 export function normalizeYouTubeId(value: string) {
@@ -33,7 +34,7 @@ export function normalizeYouTubeId(value: string) {
 
 export function createContentDocument(kind: ManagedContentKind): ContentDocument {
   const timestamp = new Date().toISOString();
-  return { id: crypto.randomUUID(), common: { title: "", date: timestamp.slice(0, 10), description: "", tags: [], publication: "draft" }, placement: createPlacement(kind), body: "", unknownFrontmatter: {}, createdAt: timestamp, updatedAt: timestamp, source: "manual" };
+  return { id: crypto.randomUUID(), common: { title: "", date: timestamp.slice(0, 10), description: "", tags: kind === "songs" ? ["Music"] : [], publication: "draft" }, placement: createPlacement(kind), body: "", unknownFrontmatter: {}, createdAt: timestamp, updatedAt: timestamp, source: "manual" };
 }
 
 export function parseContentMarkdown(markdown: string, kind: ManagedContentKind, file?: { path: string; revision?: string }): ContentDocument {
@@ -49,7 +50,7 @@ export function parseContentMarkdown(markdown: string, kind: ManagedContentKind,
     doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => !aboutKeys.includes(key)));
     return doc;
   }
-  doc.common = { title: text(raw.title), date: dateText(raw.date) || doc.common.date, description: text(raw.description), tags: list(raw.tags ?? (kind === "gallery" ? raw.categories : undefined)), publication: raw.draft === true ? "draft" : "published" };
+  doc.common = { title: text(raw.title), date: dateText(raw.date) || doc.common.date, description: text(raw.description), tags: normalizeContentTags(list(raw.tags ?? (kind === "gallery" ? raw.categories : undefined))), publication: raw.draft === true ? "draft" : "published" };
   doc.body = match ? match[2].replace(/^\n/, "") : normalized;
   doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => ![...commonKeys, ...placementKeys[kind]].includes(key)));
   if (kind === "journal") doc.placement = { kind, data: { articleType: ["making", "report"].includes(text(raw.type)) ? text(raw.type) as "making" | "report" : "journal", slug: text(raw.slug), thumbnail: typeof raw.thumbnail === "boolean" ? String(raw.thumbnail) : text(raw.thumbnail), thumbnailAlt: text(raw.thumbnail_alt), thumbnailFit: text(raw.thumbnail_fit), thumbnailPosition: text(raw.thumbnail_position), ogImage: text(raw.og_image), ogDescription: text(raw.og_description), relatedContent: list(raw.featured_related), useMath: raw.use_math === true, permalink: text(raw.permalink), image: text(raw.image), thumbnailClass: text(raw.thumbnail_class) } };
@@ -75,7 +76,8 @@ export function contentFrontmatter(doc: ContentDocument) {
   if (doc.placement.kind === "gallery") Object.assign(value, { slug: slugify(doc.placement.data.slug), detail: doc.placement.data.detail, image: doc.placement.data.image, ...(doc.placement.data.thumbnail && { thumbnail: doc.placement.data.thumbnail === "true" ? true : doc.placement.data.thumbnail === "false" ? false : doc.placement.data.thumbnail }), ...(doc.placement.data.thumbnailAlt && { thumbnail_alt: doc.placement.data.thumbnailAlt }) });
   if (doc.placement.kind === "projects") Object.assign(value, { slug: slugify(doc.placement.data.slug), ...(doc.placement.data.hero && { hero: doc.placement.data.hero }), status: doc.placement.data.status, ...(doc.placement.data.links.length && { links: doc.placement.data.links }) });
   if (doc.common.description) value.description = doc.common.description;
-  if (doc.common.tags.length) value.tags = doc.common.tags;
+  const tags = normalizeContentTags(doc.common.tags);
+  if (tags.length) value.tags = tags;
   value.draft = doc.common.publication === "draft";
   return value;
 }

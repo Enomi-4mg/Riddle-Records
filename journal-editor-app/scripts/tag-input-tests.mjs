@@ -21,12 +21,14 @@ test("actual tag input preserves a trailing comma and commits multiple tags on b
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
     await act(async () => { setter.call(input, "art,"); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
     assert.equal(input.value, "art,"); assert.deepEqual(commits, []);
-    await act(async () => { setter.call(input, "art, music, "); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
-    assert.equal(input.value, "art, music, ");
+    await act(async () => { setter.call(input, "art, music, Music, art, "); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
+    assert.equal(input.value, "art, music, Music, art, ");
     await act(async () => input.blur());
-    assert.deepEqual(commits, [["art", "music"]]); assert.equal(input.value, "art, music");
+    assert.deepEqual(commits, [["art", "Music"]]); assert.equal(input.value, "art, Music");
     await act(async () => { input.focus(); setter.call(input, "art, music, study"); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
     await act(async () => input.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
-    assert.deepEqual(commits.at(-1), ["art", "music", "study"]);
+    assert.deepEqual(commits.at(-1), ["art", "Music", "study"]);
+    await act(async () => { input.focus(); setter.call(input, "art"); input.dispatchEvent(new window.Event("input", { bubbles: true })); input.blur(); });
+    assert.deepEqual(commits.at(-1), ["art"]); assert.equal(input.value, "art");
   } finally { await act(async () => root.unmount()); container.remove(); }
 });

@@ -1,4 +1,5 @@
 import { galleryBodySections } from "../../shared/gallerySections";
+import { normalizeContentTags } from "../../shared/contentTags";
 import { getCollection } from "astro:content";
 import { galleryItems, type GalleryItem } from "../data/gallery";
 
@@ -38,7 +39,7 @@ const normalizeDataItem = (item: GalleryItem): GalleryItemView => ({
   imageAlt: item.title,
   description: item.description,
   body: item.body ?? item.description,
-  tags: item.categories,
+  tags: normalizeContentTags(item.categories),
   article_url: item.article_url || undefined,
   making_article_url: item.making_article_url,
   thumbnail: item.thumbnail ?? true,
@@ -62,7 +63,7 @@ const normalizeCollectionItem = (entry: GalleryCollectionEntry): GalleryItemView
     imageAlt: entry.data.thumbnail_alt ?? entry.data.title,
     description: entry.data.description ?? "",
     body: sections.body || entry.data.description || "",
-    tags: entry.data.tags ?? entry.data.categories ?? [],
+    tags: normalizeContentTags(entry.data.tags ?? entry.data.categories ?? []),
     article_url: sections.articleUrl ?? entry.data.article_url,
     making_article_url: sections.makingArticleUrl ?? entry.data.making_article_url,
     thumbnail: entry.data.thumbnail ?? true,

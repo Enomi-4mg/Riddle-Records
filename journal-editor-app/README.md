@@ -137,6 +137,8 @@ Cloudinary ID候補は `src/data/galleryIds.ts` に分離しています。本�
 
 Gallery Markdown の標準frontmatterは `image` / `tags` 優先です。`cloudinary_id` / `categories` は旧データ互換として読み取り可能ですが、新規作成では使わない方針です。`detail: true` の item だけ `/gallery/[slug]/` が生成され、`draft: true` は production build から除外されます。`thumbnail: true` は Journal 一覧などのサムネイル照合候補に含める意味です。
 
+作品のタグはCMSのタグ欄で編集し、その保存値をWorks / Galleryにも表示します。楽曲の `Music` は表示側で自動追加せず、通常のタグとして保存します。新規Songsの初期値は `Music` ですが、削除・変更できます。既知の表記ゆれ `music` / `MUSIC` は `Music` に統一し、前後の空白・空項目・同じタグの重複を除きます。その他のタグの大文字小文字と表示順は保持します。
+
 ### 単体Markdown import
 
 `Markdown import` から `.md` ファイルを選ぶと、Markdownエディタとして読み込みます。ファイル名が `.md` の場合は保存先候補として使い、それ以外はfrontmatterから推奨ファイル名を生成します。
