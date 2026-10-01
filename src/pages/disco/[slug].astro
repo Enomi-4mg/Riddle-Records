@@ -1,6 +1,7 @@
 ---
+import { renderSiteMarkdown } from "../../utils/siteEmbeds";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getCollection, render } from "astro:content";
+import { getCollection } from "astro:content";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
@@ -20,7 +21,7 @@ export async function getStaticPaths() {
 }
 
 const { song } = Astro.props;
-const { Content } = await render(song);
+const bodyHtml = await renderSiteMarkdown(song.body);
 const credits = Array.isArray(song.data.credits) ? song.data.credits.join("\n") : song.data.credits;
 const entryDateIso = song.id.split("/").pop()?.replace(/\.md$/, "") ?? song.data.date.toISOString().slice(0, 10);
 ---
@@ -61,7 +62,7 @@ const entryDateIso = song.id.split("/").pop()?.replace(/\.md$/, "") ?? song.data
           allowfullscreen
         ></iframe>
       </div>
-      <Content />
+      <div class="rendered-markdown" set:html={bodyHtml} />
     </div>
 
     {credits && (

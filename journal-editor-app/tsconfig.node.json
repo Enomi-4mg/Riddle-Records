@@ -4,10 +4,19 @@
     "outDir": "./.cache/types",
     "skipLibCheck": true,
     "target": "ES2020",
-    "lib": ["ES2020"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "rootDir": ".."
   },
-  "include": ["vite.config.ts", "src/types/media.ts"]
+  "include": [
+    "vite.config.ts",
+    "src/types/media.ts",
+    "../shared/linkMetadata.ts",
+    "../shared/embeds.ts"
+  ]
 }

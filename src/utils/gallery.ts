@@ -1,3 +1,4 @@
+import { galleryBodySections } from "../../shared/gallerySections";
 import { getCollection } from "astro:content";
 import { galleryItems, type GalleryItem } from "../data/gallery";
 
@@ -7,6 +8,7 @@ export type GalleryItemView = {
   source: GalleryItemSource;
   slug: string;
   detail: boolean;
+  draft?: boolean;
   title: string;
   date: string;
   image: string;
@@ -46,16 +48,6 @@ const normalizeDataItem = (item: GalleryItem): GalleryItemView => ({
 
 type GalleryCollectionEntry = Awaited<ReturnType<typeof getCollection<"gallery">>>[number];
 
-function galleryBodySections(body: string) {
-  const match = body.match(/(?:^|\n)## 関連記事\s*\n([\s\S]*?)(?=\n## |$)/);
-  const links = match ? [...match[1].matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)] : [];
-  return {
-    body: match ? body.replace(match[0], "").trim() : body.trim(),
-    articleUrl: links.find((link) => link[1] === "作品記事")?.[2],
-    makingArticleUrl: links.find((link) => link[1] === "メイキング")?.[2]
-  };
-}
-
 const normalizeCollectionItem = (entry: GalleryCollectionEntry): GalleryItemView => {
   const image = entry.data.image ?? entry.data.cloudinary_id ?? "";
   const sections = galleryBodySections(entry.body ?? "");
@@ -63,6 +55,7 @@ const normalizeCollectionItem = (entry: GalleryCollectionEntry): GalleryItemView
     source: "collection",
     slug: entry.data.slug || entry.slug,
     detail: entry.data.detail === true,
+    draft: entry.data.draft === true,
     title: entry.data.title,
     date: normalizeDate(entry.data.date),
     image,

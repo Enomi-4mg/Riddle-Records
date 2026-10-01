@@ -1,3 +1,4 @@
+import { fetchLinkMetadata } from "../../shared/linkMetadata";
 import { isMediaRegistry, validateMediaRegistry, type MediaRegistry } from "../src/types/media";
 
 const contentDirectories = {
@@ -153,6 +154,12 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
 
   if ((request.method === "POST" || request.method === "PUT" || request.method === "DELETE") && !validateWriteOrigin(request)) {
     return json(403, { error: "Forbidden origin" });
+  }
+
+  if (url.pathname === "/api/link-metadata" && request.method === "POST") {
+    const payload = await readPayload(request);
+    try { return json(200, await fetchLinkMetadata(payload?.url, fetcher)); }
+    catch (error) { return json(400, { error: error instanceof Error ? error.message : "リンク情報を取得できませんでした" }); }
   }
 
   if (url.pathname === "/api/pending-batch" && request.method === "POST") {

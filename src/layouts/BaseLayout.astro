@@ -1,8 +1,10 @@
 ---
+import EmbedWidgets from "../components/EmbedWidgets.astro";
 import Header from "../components/Header.astro";
 import Sidebar from "../components/Sidebar.astro";
 import Footer from "../components/Footer.astro";
 import { ClientRouter } from "astro:transitions";
+import embedStyles from "../../assets/css/embeds.css?url";
 import mainStyles from "../../assets/css/main.css?url";
 import animationsStyles from "../../assets/css/animations.css?url";
 import galleryStyles from "../../assets/css/gallery.css?url";
@@ -99,6 +101,7 @@ const resolvedOgImageHeight = ogImageHeight ?? (ogImage ? undefined : 630);
     <link rel="stylesheet" href={animationsStyles} />
     <link rel="stylesheet" href={galleryStyles} />
     <link rel="stylesheet" href={journalStyles} />
+    <link rel="stylesheet" href={embedStyles} />
     <link rel="stylesheet" href={lightboxStyles} integrity={lightboxStylesIntegrity} crossorigin="anonymous" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -115,6 +118,7 @@ const resolvedOgImageHeight = ogImageHeight ?? (ogImage ? undefined : 630);
       <slot />
     </main>
     <Footer />
+    <EmbedWidgets />
     <script src={galleryScript}></script>
     <script src={siteScript}></script>
     <script defer src={lightboxScript} integrity={lightboxScriptIntegrity} crossorigin="anonymous"></script>

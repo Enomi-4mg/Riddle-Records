@@ -1,3 +1,6 @@
+import { fetchLinkMetadata } from "../shared/linkMetadata";
+import { request as httpsRequest } from "node:https";
+import { isIP } from "node:net";
 import { isMediaRegistry, validateMediaRegistry } from "./src/types/media";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
@@ -69,7 +72,7 @@ export function contentApiPlugin(root = repositoryRoot) {
     name: "riddle-content-api",
     configureServer(server: import("vite").ViteDevServer) {
       server.middlewares.use(async (request, response, next) => {
-        if (!request.url?.startsWith("/api/content-") && !request.url?.startsWith("/api/media-registry") && !request.url?.startsWith("/api/site-deploy") && !request.url?.startsWith("/api/pending-batch")) {
+        if (!request.url?.startsWith("/api/content-") && !request.url?.startsWith("/api/media-registry") && !request.url?.startsWith("/api/site-deploy") && !request.url?.startsWith("/api/pending-batch") && !request.url?.startsWith("/api/link-metadata")) {
           next();
           return;
         }
@@ -90,6 +93,24 @@ export function contentApiPlugin(root = repositoryRoot) {
           }
           if ((request.method === "POST" || request.method === "DELETE") && !isTrustedWriteOrigin(request)) {
             sendJson(response, 403, { error: "Forbidden origin" });
+            return;
+          }
+
+          if (request.method === "POST" && url.pathname === "/api/link-metadata") {
+            try {
+              const payload = JSON.parse(await readRequestBody(request)) as { url?: unknown } | null;
+              const metadata = await fetchLinkMetadata(payload?.url, fetch, async (target, addresses, signal) => new Promise<Response>((resolve, reject) => {
+                // Pin the validated address to prevent DNS rebinding on local networks.
+                const req = httpsRequest(target, { signal, headers: { Accept: "text/html" }, lookup: (_hostname, options, callback) => options.all ? callback(null, addresses.map((address) => ({ address, family: isIP(address) }))) : callback(null, addresses[0], isIP(addresses[0])) }, (res) => {
+                  const headers = new Headers();
+                  for (const [key, value] of Object.entries(res.headers)) if (value) headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+                  const stream = new ReadableStream<Uint8Array>({ start(controller) { res.on("data", (chunk) => controller.enqueue(new Uint8Array(chunk))); res.on("end", () => controller.close()); res.on("error", (error) => controller.error(error)); }, cancel() { res.destroy(); } });
+                  resolve(new Response(stream, { status: res.statusCode || 502, headers }));
+                });
+                req.on("error", reject); req.end();
+              }));
+              sendJson(response, 200, metadata);
+            } catch (error) { sendJson(response, 400, { error: error instanceof Error ? error.message : "リンク情報を取得できませんでした" }); }
             return;
           }
 

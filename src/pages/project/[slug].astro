@@ -2,7 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getProjectItems } from "../../utils/projects";
 import { resolveImageUrl } from "../../utils/images";
-import { renderContentMarkdown } from "../../utils/renderMarkdown";
+import { renderSiteMarkdown } from "../../utils/siteEmbeds";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
@@ -23,7 +23,7 @@ export async function getStaticPaths() {
 
 const { project } = Astro.props;
 const heroUrl = resolveImageUrl(project.hero);
-const bodyHtml = await renderContentMarkdown(project.body || project.description || "");
+const bodyHtml = await renderSiteMarkdown(project.body || project.description || "");
 ---
 
 <BaseLayout

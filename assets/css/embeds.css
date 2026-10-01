@@ -1,0 +1,17 @@
+.embed-card { display: flex; gap: 1rem; overflow: hidden; width: 100%; box-sizing: border-box; padding: 1rem; border: 1px solid var(--color-line, #dcece4); border-radius: var(--radius-md, 10px); background: var(--color-card, #f4fffa); color: var(--color-ink, #06110d); text-decoration: none; }
+.embed-card:hover { border-color: var(--color-mint-deep, #1bb48e); text-decoration: none; }
+.embed-card > img { flex: 0 0 120px; width: 120px; height: 90px; object-fit: cover; border-radius: 6px; }
+.embed-card-copy { display: grid; gap: .4rem; min-width: 0; overflow-wrap: anywhere; }
+.embed-card-copy strong { font-size: 1rem; line-height: 1.5; }
+.embed-card-description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: .9rem; line-height: 1.6; color: var(--color-muted, #34443d); }
+.embed-card-copy small, .embed-source { color: var(--color-muted, #34443d); font-size: .8rem; overflow-wrap: anywhere; }
+.content-embed { margin: 1rem 0; min-width: 0; }
+.content-embed iframe { display: block; width: 100%; border: 0; border-radius: 10px; }
+.embed-youtube iframe { aspect-ratio: 16 / 9; height: auto; }
+.embed-spotify iframe { height: 352px; }
+.embed-x { max-width: 550px; }
+.embed-source { display: block; margin-top: .5rem; }
+.related-link-cards { display: grid; gap: 1rem; }
+@media (max-width: 600px) { .embed-card { padding: .75rem; gap: .75rem; } .embed-card > img { flex-basis: 80px; width: 80px; height: 80px; } }
+.rendered-markdown { display: grid; gap: .5rem; min-width: 0; }
+.rendered-markdown > * { min-width: 0; }

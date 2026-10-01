@@ -1,6 +1,7 @@
 ---
+import { renderSiteMarkdown } from "../../utils/siteEmbeds";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getCollection, render } from "astro:content";
+import { getCollection } from "astro:content";
 import { resolveImageUrl } from "../../utils/images";
 import { assertUniqueJournalRoutes, getJournalRoutePath } from "../../utils/journal";
 
@@ -30,7 +31,7 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await render(entry);
+const bodyHtml = await renderSiteMarkdown(entry.body);
 const entryDate = formatDate(entry.data.date);
 const summary = entry.data.description ?? entry.data.og_description ?? entry.data.title;
 const socialImage = entry.data.og_image ?? entry.data.image ?? entry.data.thumbnail;
@@ -68,7 +69,7 @@ const olderEntry = currentIndex >= 0 && currentIndex < journalEntries.length - 1
     </header>
 
     <div class="post-content journal-content">
-      <Content />
+      <div class="rendered-markdown" set:html={bodyHtml} />
     </div>
 
     {entry.data.credits && (

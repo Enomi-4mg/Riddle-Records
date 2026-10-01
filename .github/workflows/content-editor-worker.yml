@@ -6,6 +6,8 @@ on:
     paths:
       - "journal-editor-app/**"
       - "src/utils/**"
+      - "shared/**"
+      - "assets/css/embeds.css"
       - "src/data/**"
       - "src/content/**"
       - "package.json"
