@@ -145,7 +145,7 @@ function initializeJournalFeatures() {
 
     if (!alreadyHasButton && parent) {
       const btn = document.createElement('a');
-      btn.href = buildSiteUrl(`/gallery/#${slugifyCloudinaryId(galleryItem.image)}`);
+      btn.href = buildSiteUrl(`/gallery/?work=${encodeURIComponent(`gallery:${galleryItem.slug}`)}`);
       btn.className = 'gallery-link-btn';
       btn.textContent = '📸 ギャラリーで見る';
       parent.insertAdjacentElement('afterend', btn);

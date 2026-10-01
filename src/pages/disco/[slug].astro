@@ -1,5 +1,6 @@
 ---
 import { renderSiteMarkdown } from "../../utils/siteEmbeds";
+import { galleryWorkPath, workReference } from "../../../shared/workIdentity";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 
@@ -40,6 +41,7 @@ const entryDateIso = song.id.split("/").pop()?.replace(/\.md$/, "") ?? song.data
   <article class="post journal-article song-article">
     <div class="journal-back-link journal-back-link-top">
       <a href={withBase("/works/")}>Works一覧へ戻る</a>
+      <a href={withBase(galleryWorkPath(workReference("songs", song.slug)))}>Galleryで鑑賞する</a>
     </div>
 
     <header class="journal-hero">
@@ -85,6 +87,7 @@ const entryDateIso = song.id.split("/").pop()?.replace(/\.md$/, "") ?? song.data
 
     <div class="journal-back-link">
       <a href={withBase("/works/")}>Works一覧へ戻る</a>
+      <a href={withBase(galleryWorkPath(workReference("songs", song.slug)))}>Galleryで鑑賞する</a>
     </div>
   </article>
 </BaseLayout>

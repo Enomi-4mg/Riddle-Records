@@ -1,45 +1,13 @@
 ---
-import ListViewSwitch from "../../components/ListViewSwitch.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
-
-const base = import.meta.env.BASE_URL;
-const showDrafts = !import.meta.env.PROD;
-const songs = (await getCollection("songs")).filter((entry) => showDrafts || !entry.data.draft).sort((left, right) => {
-  const dateDiff = right.data.date.getTime() - left.data.date.getTime();
-  if (dateDiff !== 0) return dateDiff;
-  return right.id.localeCompare(left.id);
-});
-const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
-const getEntryDateIso = (entry) => entry.id.split("/").pop()?.replace(/\.md$/, "") ?? entry.data.date.toISOString().slice(0, 10);
-const basePath = base.endsWith("/") ? base : `${base}/`;
-const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
+const target = `${import.meta.env.BASE_URL}gallery/?filter=music`;
 ---
-
-<BaseLayout title="Discography" description="公開した楽曲の一覧。">
-  <section class="page-header">
-    <h1>Discography</h1>
-    <p>公開した楽曲の一覧です。</p>
-  </section>
-
-  <ListViewSwitch target="disco-index" page="disco" />
-
-  <div class="content-index" id="disco-index" data-view="grid">
-    {songs.map((song) => (
-      <article class="content-item">
-        <a href={withBase(`/disco/${song.slug}/`)} class="journal-thumb">
-          <img src={`https://img.youtube.com/vi/${song.data.youtube_id}/sddefault.jpg`} alt={song.data.title} loading="lazy" />
-        </a>
-        <div class="journal-copy">
-          <time class="journal-date" datetime={getEntryDateIso(song)}>{formatDate(song.data.date)}</time>
-          <h2 class="journal-title"><a href={withBase(`/disco/${song.slug}/`)}>{song.data.title}</a></h2>
-          <p class="journal-desc">{song.data.description ?? ""}</p>
-          <div class="work-tags" aria-label={`${song.data.title} tags`}>
-            <span class="work-tag">Music</span>
-            {(song.data.tags ?? []).map((tag) => <span class="work-tag">{tag}</span>)}
-          </div>
-        </div>
-      </article>
-    ))}
-  </div>
+<BaseLayout title="Discography" description="楽曲の鑑賞はGalleryへ移動しました。">
+  <meta http-equiv="refresh" content={`0;url=${target}`} />
+  <h1 class="web_title">Discography</h1>
+  <p>楽曲はGalleryで鑑賞できます。<a href={target}>Musicを開く</a></p>
 </BaseLayout>
+<script>
+  const link = document.querySelector<HTMLAnchorElement>('a[href$="gallery/?filter=music"]');
+  if (link) location.replace(link.href);
+</script>

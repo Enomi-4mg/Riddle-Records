@@ -25,3 +25,11 @@ coverage は現行経路のみを対象とし、行 90.20%、分岐 78.39%、関
 Journal はリスト、Works / Project はグリッドを初期表示にする。保存された表示設定がある場合はユーザーの選択を優先し、無効な設定や storage が使えない環境ではページの初期値へ戻る。切替はラベル付きの丸い SVG アイコンに統一した。日付順は「新しい順 ↓ / 古い順 ↑」に揃え、Works ではタグを左、表示操作を右に配置した。既存タグの複数選択・OR絞り込みは維持する。
 
 `list-ui-tests.mjs` が初期値・保存設定・storage 例外・日付順・タグとの併用を検証する。
+
+## #10: Gallery 鑑賞ビュー
+
+Gallery は Visual / Music の単一作品ビュー。Visual は contain 表示、Music は YouTube のプライバシー強化プレイヤーを使用し、自動再生しない。左の作品メニューで All / Visual / Music を切替え、右の情報パネルから説明・タグ・クレジット・既存詳細記事を開く。左右キー、前後ボタン、水平スワイプで移動し、Esc でパネルを閉じる。端では前後ボタンを無効にする。YouTube 内の操作はプレイヤーが受け取り、作品移動は周囲のスワイプ領域や前後ボタンを使う。
+
+作品 URL は `/gallery/?work=gallery%3Acry`、`/gallery/?work=songs%3A2026-09-29-summer-song` のように collection と slug を組み合わせる。`filter=visual` / `filter=music` を指定できる。不存在の指定は該当種別の先頭へ戻り、指定作品とフィルターが矛盾する場合は All で指定作品を開く。旧画像IDの hash も読み取る。
+
+`/disco/` は `/gallery/?filter=music` へ移動する。`/disco/[slug]/` と `/gallery/[slug]/` の詳細記事は維持し、Works の一覧・タグ・ソート・表示切替も維持する。

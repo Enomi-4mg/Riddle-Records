@@ -56,7 +56,8 @@ const {
   twitterCreator = "@4mgEnomi",
   twitterImage,
   twitterImageAlt = ogImageAlt,
-  wideContainer = false
+  wideContainer = false,
+  immersive = false
 } = Astro.props;
 
 const canonicalUrl = new URL(Astro.url.pathname, siteOrigin).href;
@@ -110,7 +111,7 @@ const resolvedOgImageHeight = ogImageHeight ?? (ogImage ? undefined : 630);
     <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity={fontAwesomeIntegrity} crossorigin="anonymous" />
   </head>
-  <body>
+  <body class:list={{ "gallery-immersive": immersive }}>
     <div class="transition-curtain initial"></div>
     <Header />
     <Sidebar />

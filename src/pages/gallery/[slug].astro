@@ -1,4 +1,5 @@
 ---
+import { galleryWorkPath, workReference } from "../../../shared/workIdentity";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getGalleryDetailItems } from "../../utils/gallery";
 import { resolveImageUrl } from "../../utils/images";
@@ -42,6 +43,7 @@ const relatedCards = await Promise.all([item.article_url, item.making_article_ur
   <article class="journal-article journal-entry-animate">
     <div class="journal-back-link journal-back-link-top">
       <a href={href("/works/")}>Works一覧へ戻る</a>
+      <a href={href(galleryWorkPath(workReference("gallery", item.slug)))}>Galleryで鑑賞する</a>
     </div>
 
     <header class="journal-hero">
@@ -76,6 +78,7 @@ const relatedCards = await Promise.all([item.article_url, item.making_article_ur
 
     <div class="journal-back-link">
       <a href={href("/works/")}>Works一覧へ戻る</a>
+      <a href={href(galleryWorkPath(workReference("gallery", item.slug)))}>Galleryで鑑賞する</a>
     </div>
   </article>
 </BaseLayout>

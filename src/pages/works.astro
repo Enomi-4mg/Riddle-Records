@@ -2,57 +2,13 @@
 import SortSwitch from "../components/SortSwitch.astro";
 import ListViewSwitch from "../components/ListViewSwitch.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
-import { getGalleryDetailPath, getGalleryItems, hasGalleryDetail } from "../utils/gallery";
-import { resolveImageUrl } from "../utils/images";
+import { getViewingWorks, galleryWorkPath } from "../utils/works";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
-const showDrafts = !import.meta.env.PROD;
-const songs = (await getCollection("songs")).filter((entry) => showDrafts || !entry.data.draft);
-const galleryItems = await getGalleryItems();
-
 const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
-
-const galleryWorks = galleryItems.map((item) => ({
-  kind: "gallery",
-  id: `gallery-${item.slug}`,
-  title: item.title,
-  date: item.date,
-  description: item.description,
-  tags: item.tags,
-  image: resolveImageUrl(item.image, "w_600,h_400,c_fill,q_auto,f_auto"),
-  imageAlt: item.imageAlt,
-  href: hasGalleryDetail(item)
-    ? href(getGalleryDetailPath(item))
-    : item.article_url
-      ? href(item.article_url)
-      : resolveImageUrl(item.image, "w_1920,q_auto,f_auto"),
-  external: !hasGalleryDetail(item) && !item.article_url
-}));
-
-const songWorks = songs.map((song) => ({
-  kind: "song",
-  id: `song-${song.id}`,
-  title: song.data.title,
-  date: song.data.date.toISOString().slice(0, 10),
-  description: song.data.description ?? "",
-  tags: ["Music", ...(song.data.tags ?? [])],
-  image: `https://img.youtube.com/vi/${song.data.youtube_id}/sddefault.jpg`,
-  imageAlt: song.data.title,
-  href: href(`/disco/${song.slug}/`),
-  external: false
-}));
-
-const works = [...galleryWorks, ...songWorks].sort((left, right) => {
-  const dateDiff = new Date(right.date).getTime() - new Date(left.date).getTime();
-  if (dateDiff !== 0) {
-    return dateDiff;
-  }
-
-  return left.title.localeCompare(right.title, "ja");
-});
+const works = (await getViewingWorks()).map((work) => ({ ...work, href: href(galleryWorkPath(work.id)), image: work.thumbnail, external: false }));
 const allTags = [...new Set(works.flatMap((work) => work.tags))].sort((left, right) => left.localeCompare(right, "ja"));
 ---
 

@@ -224,3 +224,43 @@
     gap: var(--grid-gap);
   }
 }
+
+/* Immersive viewing keeps all metadata in optional panels. */
+body.gallery-immersive { padding: 0; overflow: hidden; }
+body.gallery-immersive .site-header, body.gallery-immersive footer { display: none; }
+body.gallery-immersive main.container { width: 100%; max-width: none; margin: 0; padding: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.gallery-viewer { position: relative; height: 100svh; min-height: 320px; background: var(--color-paper); overflow: hidden; opacity: 1; animation: none; }
+.viewer-topbar { position: absolute; inset: var(--space-md) var(--space-md) auto; display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); z-index: 2; pointer-events: none; }
+.viewer-topbar > * { pointer-events: auto; }
+.viewer-exit { background: var(--color-paper); padding: .4rem .8rem; border-radius: var(--radius-pill); color: var(--color-muted); font-size: .85rem; }
+.viewer-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; background: var(--color-paper); color: var(--color-ink); border: 1px solid var(--color-line); border-radius: var(--radius-md); font: inherit; font-size: 1.5rem; cursor: pointer; }
+.viewer-button:focus-visible, .viewer-work-list button:focus-visible, .viewer-filters button:focus-visible { outline: 2px solid var(--color-mint-deep); outline-offset: 2px; }
+.viewer-stage { display: flex; align-items: center; justify-content: center; position: absolute; inset: 0; padding: 76px 60px 24px; touch-action: pan-y pinch-zoom; }
+.viewer-stage img { width: 100%; height: 100%; object-fit: contain; }
+.viewer-stage iframe { width: 100%; aspect-ratio: 16 / 9; max-height: 100%; border: 0; }
+.viewer-previous, .viewer-next { position: absolute; top: 50%; z-index: 1; opacity: .65; }
+.viewer-previous { left: .5rem; } .viewer-next { right: .5rem; }
+.viewer-button:hover, .viewer-button:focus-visible { opacity: 1; }
+.viewer-button:disabled { opacity: .2; cursor: default; }
+.viewer-panel { position: absolute; z-index: 3; top: 0; bottom: 0; width: min(380px, 100%); padding: var(--space-lg); background: var(--color-paper); border: 1px solid var(--color-line); box-shadow: var(--shadow-soft); overflow-y: auto; }
+.viewer-panel[hidden], .viewer-work-list li[hidden] { display: none; }
+.viewer-menu { left: 0; } .viewer-info { right: 0; }
+.viewer-panel header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-md); margin-bottom: var(--space-lg); }
+.viewer-panel h2 { font-size: 1.2rem; margin: 0; }
+.viewer-panel h3 { font-size: 1.15rem; margin-top: var(--space-lg); }
+.viewer-filters { display: flex; gap: var(--space-sm); }
+.viewer-filters button { font: inherit; background: transparent; border: 0; border-bottom: 2px solid transparent; padding: .5rem; cursor: pointer; color: var(--color-muted); }
+.viewer-filters button[aria-pressed="true"] { border-color: var(--color-mint-deep); color: var(--color-ink); }
+.viewer-work-list { list-style: none; margin: var(--space-md) 0; padding: 0; }
+.viewer-work-list button { display: flex; align-items: center; gap: var(--space-md); width: 100%; text-align: left; font: inherit; color: var(--color-ink); background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm); padding: .6rem; cursor: pointer; }
+.viewer-work-list button[aria-current="true"] { background: var(--color-card); border-color: var(--color-mint-deep); }
+.viewer-work-list img { width: 56px; height: 44px; object-fit: cover; border-radius: var(--radius-sm); }
+.viewer-description { white-space: pre-wrap; overflow-wrap: anywhere; }
+.viewer-detail-links { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-lg); }
+.viewer-noscript { position: absolute; bottom: 0; padding: .5rem; background: var(--color-paper); }
+@media (max-width: 600px) { .viewer-stage { padding: 72px 12px 54px; } .viewer-previous, .viewer-next { top: auto; bottom: .5rem; } .viewer-topbar { inset: .5rem .5rem auto; } }
+html:has(body.gallery-immersive) { overflow: hidden; }
+body.gallery-immersive .gallery-viewer { opacity: 1; animation: none; transform: none; }
+main.container .viewer-work-list { list-style: none; padding: 0; margin: var(--space-md) 0; }
+main.container .viewer-work-list li { margin: 0; }
