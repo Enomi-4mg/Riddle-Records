@@ -5,14 +5,13 @@ bio: ボカロ曲・イラスト・ゲーム制作をしています。
 birthday: 09-26
 motto: 初心忘るべからず（仮）
 hobbies:
-  - 漫画
   - 散歩
-  - ゲーム
+  - マンガ
   - ギター
 skills:
   - 作詞・作曲
-  - イラスト制作
   - コーディング
+  - たまーにイラスト
 likes:
   - ボーカロイド
   - 月ノ美兎
@@ -32,7 +31,6 @@ sns:
     label: ニコニコ動画
 featured_works:
   - gallery:light
-  - gallery:homework
   - songs:2025-08-23
   - songs:2025-01-03
 ---
