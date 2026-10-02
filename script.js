@@ -178,43 +178,20 @@ function setSidebarOpen(open, restoreFocus = true) {
   else if (restoreFocus) trigger.focus();
 }
 
+let scrollObserver;
 function initScrollAnimations() {
-  const manualEntries = document.querySelectorAll('.journal-entry-animate');
-  const autoEntries = document.querySelectorAll(`
-    article.post > *:not(script):not(style):not(.journal-entry-animate),
-    main > *:not(article):not(script):not(style):not(.gallery-grid):not(.related-grid):not(.journal-entry-animate)
-  `);
-  const entries = [...manualEntries, ...autoEntries];
-
-  if (entries.length === 0) return;
-
-  const observer = new IntersectionObserver((elements) => {
-    elements.forEach((element) => {
-      if (element.isIntersecting) {
-        element.target.classList.add('visible');
-        observer.unobserve(element.target);
+  scrollObserver?.disconnect();
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || typeof IntersectionObserver !== 'function') return;
+  // Content stays visible. The observer only starts a brief movement on entry.
+  scrollObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('scroll-reveal');
+        scrollObserver.unobserve(entry.target);
       }
-    });
-  }, {
-    threshold: 0.05,
-    rootMargin: '0px 0px -30px 0px'
-  });
-
-  entries.forEach((entry) => {
-    if (!entry.classList.contains('journal-entry-animate') && !entry.classList.contains('visible')) {
-      entry.style.opacity = '0';
     }
-
-    const rect = entry.getBoundingClientRect();
-    const isInViewport = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
-
-    if (isInViewport) {
-      entry.classList.add('visible');
-      entry.style.opacity = '';
-    } else {
-      observer.observe(entry);
-    }
-  });
+  }, { threshold: 0.05 });
+  document.querySelectorAll('.journal-entry-animate, article.post > :not(script):not(style), main > :not(article):not(script):not(style):not(.gallery-grid):not(.related-grid)').forEach((entry) => scrollObserver.observe(entry));
 }
 
 function initializeCopyButtons() {
@@ -247,24 +224,6 @@ function initializeCopyButtons() {
   });
 }
 
-function initializeCurtain() {
-  const curtain = document.querySelector('.transition-curtain');
-  if (!curtain || curtain.dataset.initialized === 'true') return;
-
-  curtain.dataset.initialized = 'true';
-  curtain.addEventListener('animationend', function onAscendComplete(event) {
-    if (event.animationName === 'curtainAscend') {
-      initScrollAnimations();
-      curtain.removeEventListener('animationend', onAscendComplete);
-    }
-  });
-
-  setTimeout(() => {
-    curtain.classList.remove('initial');
-    curtain.classList.add('ascending');
-  }, 100);
-}
-
 function initializePage() {
   setSidebarOpen(false, false);
   updateNavigationActiveState();
@@ -275,7 +234,6 @@ function initializePage() {
 
   initializeJournalFeatures();
   initializeCopyButtons();
-  initializeCurtain();
   initScrollAnimations();
 }
 
@@ -315,7 +273,7 @@ if (!window.__riddleSiteListenersInitialized) {
   window.matchMedia('(min-width: 769px)').addEventListener('change', (event) => {
     if (event.matches) setSidebarOpen(false, false);
   });
-  document.addEventListener('astro:before-swap', () => setSidebarOpen(false, false));
+  document.addEventListener('astro:before-swap', () => { scrollObserver?.disconnect(); setSidebarOpen(false, false); });
 
   document.addEventListener('astro:page-load', initializePage);
 }
