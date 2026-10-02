@@ -33,15 +33,41 @@ test("scroll enhancement keeps content visible with no observer or reduced motio
   }
 });
 
-test("site text and link tokens meet AA contrast on paper and mint surfaces", () => {
-  const css = fs.readFileSync(new URL('../../assets/css/main.css', import.meta.url), 'utf8');
-  const token = (name) => css.match(new RegExp(`--color-${name}: (#[a-f0-9]{6})`))[1];
-  const luminance = (hex) => {
-    const rgb = hex.slice(1).match(/../g).map((part) => parseInt(part, 16) / 255).map((v) => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
-    return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
-  };
-  for (const [foreground, background] of [['ink','paper'], ['muted','paper'], ['link','paper'], ['link-hover','paper'], ['ink','mint'], ['link','mint']]) {
-    const values = [luminance(token(foreground)), luminance(token(background))].sort((a,b) => b-a);
-    assert.ok((values[0]+.05)/(values[1]+.05) >= 4.5, `${foreground} on ${background}`);
+const mainCss = fs.readFileSync(new URL('../../assets/css/main.css', import.meta.url), 'utf8');
+const token = (name) => mainCss.match(new RegExp(`--color-${name}: (#[a-f0-9]{6})`))[1];
+const luminance = (hex) => {
+  const rgb = hex.slice(1).match(/../g).map((part) => parseInt(part, 16) / 255).map((v) => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
+  return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2];
+};
+const contrast = (first, second) => {
+  const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
+  return (values[0] + .05) / (values[1] + .05);
+};
+// Comments are dropped so they do not join selectors; commas inside :not(...) belong to one selector.
+const cssRules = [...mainCss.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selectors, body]) => ({ selectors: selectors.split(/,(?![^()]*\))/).map((selector) => selector.trim()), body }));
+// Returns the last declaration among selectors listed from least to most specific, resolving color tokens.
+const declared = (selectors, property) => {
+  let value;
+  for (const selector of selectors) for (const rule of cssRules.filter(({ selectors: list }) => list.includes(selector))) {
+    value = rule.body.match(new RegExp(`(?:^|[;\\s])${property}\\s*:\\s*([^;]+)`))?.[1].trim() ?? value;
   }
+  const name = value?.match(/^var\(--color-([a-z-]+)\)$/)?.[1];
+  return name ? token(name) : value === 'white' ? '#ffffff' : value;
+};
+
+test("site text and link tokens meet AA contrast on paper and mint surfaces", () => {
+  for (const [foreground, background] of [['ink','paper'], ['muted','paper'], ['link','paper'], ['link-hover','paper'], ['ink','mint'], ['link','mint']]) {
+    assert.ok(contrast(token(foreground), token(background)) >= 4.5, `${foreground} on ${background}`);
+  }
+});
+
+test("button-styled links keep readable text inside articles and on About", () => {
+  const prose = cssRules.find(({ selectors, body }) => /text-decoration:\s*underline/.test(body) && selectors.some((selector) => selector.startsWith('.post-content a')));
+  assert.ok(prose.selectors.includes('.post-content a:not(.embed-card, .gallery-link-btn)'), 'article prose link colors must not reach the gallery button');
+  const about = ['.profile-links .link-list a', '.profile-links .link-list .platform-icons a'];
+  for (const [label, fill, text] of [
+    ['gallery button', declared(['.gallery-link-btn'], 'background'), declared(['.gallery-link-btn'], 'color')],
+    ['About link', declared(about, 'background'), declared(about, 'color')],
+    ['About link hover', declared(about, 'background'), declared([...about, ...about.map((selector) => `${selector}:hover`)], 'color')],
+  ]) assert.ok(contrast(text, fill) >= 4.5, `${label}: ${text} on ${fill}`);
 });

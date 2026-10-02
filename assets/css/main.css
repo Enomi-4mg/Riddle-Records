@@ -551,10 +551,6 @@ body.sidebar-open { overflow: hidden; }
 }
 .profile-links .link-list .platform-icons a {
     font-size: 1.4rem;
-    color: var(--color-ink);
-}
-.profile-links .link-list .platform-icons a:hover {
-    color: var(--color-link);
 }
 .profile-links .link-list a {
     display: inline-block;
@@ -1237,8 +1233,8 @@ body.sidebar-open { overflow: hidden; }
     }
 }
 
-/* Prose links remain recognizable without color or hover. */
-.post-content a:not(.embed-card),
+/* Prose links remain recognizable without color or hover; button-styled links keep their own colors. */
+.post-content a:not(.embed-card, .gallery-link-btn),
 .info-section p a,
 .home-card-cta,
 .project-back-link,
@@ -1248,7 +1244,7 @@ body.sidebar-open { overflow: hidden; }
     text-underline-offset: 0.18em;
     text-decoration-thickness: 1px;
 }
-.post-content a:not(.embed-card):hover,
+.post-content a:not(.embed-card, .gallery-link-btn):hover,
 .info-section p a:hover { color: var(--color-link-hover); }
 
 .post ul,
