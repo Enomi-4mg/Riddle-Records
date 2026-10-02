@@ -54,13 +54,13 @@
 }
 
 .control-btn.active {
-  background: var(--color-mint-deep);
+  background: var(--color-link);
   color: white;
   border-color: var(--color-mint-deep);
 }
 
 .filter-btn.active {
-  background: var(--color-mint-deep);
+  background: var(--color-link);
   color: white;
   border-color: var(--color-mint-deep);
 }
@@ -145,7 +145,7 @@
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
   font-size: 0.85rem;
-  font-weight: bold;
+  font-weight: 500;
   margin-bottom: 0.5rem;
 }
 
@@ -156,22 +156,22 @@
 }
 
 .category-3DCG {
-  background: #007acc;
+  background: var(--color-link);
   color: white;
 }
 
 .category-イラスト {
-  background: #ff6b6b;
+  background: var(--color-link);
   color: white;
 }
 
 .category-写真 {
-  background: #51cf66;
+  background: var(--color-link);
   color: white;
 }
 
 .category-四コマ漫画 {
-  background: #ffa94d;
+  background: var(--color-link);
   color: white;
 }
 
@@ -182,7 +182,7 @@
   display: inline-block;
   margin-top: 0.75rem;
   padding: 0.6rem 1.2rem;
-  background: var(--color-mint-deep);
+  background: var(--color-link);
   color: var(--color-paper);
   text-decoration: none;
   border: 1px solid var(--color-mint-deep);

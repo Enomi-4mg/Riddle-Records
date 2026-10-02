@@ -234,7 +234,7 @@
 
 .journal-content h3 {
   margin: 1rem 0 0;
-  color: #1a5f4e;
+  color: var(--color-link);
   font-size: 1.18rem;
 }
 
@@ -338,7 +338,7 @@
 }
 
 .journal-article .post-credits h3 {
-  color: var(--color-mint-deep);
+  color: var(--color-link);
   font-size: 1.2rem;
 }
 
@@ -361,7 +361,7 @@
   padding: 0.5rem;
   color: var(--color-ink);
   font-size: 1.2rem;
-  font-weight: bold;
+  font-weight: 500;
   user-select: none;
   transition: background-color 0.2s ease;
 }
@@ -408,7 +408,7 @@
 .journal-back-link a::before {
   content: "←";
   margin-right: 0.45rem;
-  color: var(--color-mint-deep);
+  color: var(--color-link);
 }
 
 .journal-back-link a:hover {
@@ -427,7 +427,7 @@
 }
 
 .journal-article .post-nav a {
-  color: var(--color-mint-deep);
+  color: var(--color-link);
   text-decoration: none;
 }
 
@@ -547,7 +547,7 @@
 
 .works-row .journal-title a:hover,
 .project-row .journal-title a:hover {
-  color: var(--color-mint-deep);
+  color: var(--color-link);
 }
 
 .works-row .work-tags,
@@ -562,13 +562,13 @@
   padding: var(--space-sm);
   background: #e6f7f1;
   color: var(--color-ink);
-  font-weight: 700;
+  font-weight: 500;
   text-align: center;
 }
 
 .project-detail .project-kicker {
   margin-top: 0.5rem;
-  color: var(--color-mint-deep);
+  color: var(--color-link);
 }
 
 .project-detail .project-hero {
@@ -687,7 +687,7 @@
 .sort-switch { display: flex; gap: var(--space-sm); }
 .sort-option { font: inherit; font-size: .9rem; color: var(--color-muted); padding: .45rem .2rem; border: 0; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; }
 .sort-option.active { color: var(--color-ink); border-bottom-color: var(--color-mint-deep); }
-.sort-option:hover { color: var(--color-mint-deep); }
+.sort-option:hover { color: var(--color-link); }
 .sort-option:focus-visible, .list-view-switch button:focus-visible { outline: 2px solid var(--color-mint-deep); outline-offset: 3px; }
 @media (max-width: 600px) { .index-toolbar .filter-controls { justify-content: flex-start; } }
 .profile-bio { white-space: pre-wrap; }

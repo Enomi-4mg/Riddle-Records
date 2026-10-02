@@ -5,6 +5,10 @@
     --color-mint-deep: #1bb48e;
     --color-ink: #06110d;
     --color-muted: #34443d;
+    --color-link: #105a46;
+    --color-link-hover: #0d4f3d;
+    --font-site: "Kiwi Maru", serif;
+    --font-code: ui-monospace, "Courier New", monospace;
     --color-line: rgba(20, 40, 30, 0.12);
     --color-card: rgba(255, 255, 255, 0.72);
     --space-xs: 0.4rem;
@@ -29,6 +33,9 @@
     --shadow-soft: 0 4px 14px rgba(10, 21, 16, 0.08);
 }
 
+h1, h2, h3, h4, h5, h6, strong, b { font-weight: 500; }
+button, input, select, textarea { font: inherit; }
+
 html {
     overflow-y: scroll;
 }
@@ -38,7 +45,8 @@ html {
 }
 
 body {
-    font-family: "Kiwi Maru",serif;
+    font-family: var(--font-site);
+    font-synthesis: none;
     width: 100%;
     margin: 0;
     background-color: var(--color-paper);
@@ -49,11 +57,11 @@ body {
 }
 h1{
     color: var(--color-ink);
-    font-family: "Kiwi Maru",serif;
+    font-family: var(--font-site);
 }
 h2{
     color: var(--color-ink);
-    font-family: "Kiwi Maru",serif;
+    font-family: var(--font-site);
 }
 p{
     color: var(--color-ink);
@@ -178,7 +186,7 @@ img {
 
 .comparison-label {
     font-size: 1.1rem;
-    font-weight: bold;
+    font-weight: 500;
     color: var(--color-ink);
     margin: 0;
 }
@@ -196,7 +204,6 @@ img {
     margin: 25px auto 25px auto;
     font-size: 2.8rem;
     color: var(--color-ink);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
     max-width: var(--layout-wide-max);
     padding: 0 var(--layout-pad);
 }
@@ -205,7 +212,6 @@ img {
     margin: 1.5rem auto;
     padding: 0 var(--layout-pad);
     color: var(--color-ink);
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.349);
     max-width: var(--layout-max);
 }
 
@@ -255,7 +261,7 @@ img {
 
 .site-title {
     font-size: 1.8rem;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--color-ink);
     white-space: nowrap;
 }
@@ -292,7 +298,7 @@ img {
 }
 
 .nav-item a:hover {
-    color: var(--color-mint-deep);
+    color: var(--color-link);
 }
 
 /* Menu Toggle (Mobile Only) */
@@ -305,7 +311,7 @@ img {
     height: 48px;
     border-radius: 0;
     background-color: transparent;
-    color: #0a1510;
+    color: var(--color-ink);
     border: none;
     font-size: 1.6rem;
     display: flex;
@@ -362,7 +368,7 @@ body.sidebar-open { overflow: hidden; }
     bottom: auto;
     width: 100%;
     padding: 80px 1.5rem 2rem 1.5rem;
-    color: #f4fffa;
+    color: var(--color-ink);
     user-select: none;
 }
 .sidebar_menu {
@@ -376,7 +382,7 @@ body.sidebar-open { overflow: hidden; }
     padding: 0.5rem 0;
 }
 .menu_item a {
-    color: #f4fffa;
+    color: var(--color-ink);
     transition: color 0.2s ease, padding-left 0.2s ease;
     display: block;
     padding-left: 1rem;
@@ -384,12 +390,12 @@ body.sidebar-open { overflow: hidden; }
     font-weight: 500;
 }
 .menu_item a:hover {
-    color: #0a1510;
+    color: var(--color-ink);
     padding-left: 1.5rem;
 }
 .menu_item a.active {
-    color: #0a1510;
-    font-weight: 700;
+    color: var(--color-ink);
+    font-weight: 500;
     padding-left: 1.5rem;
 }
 .gallery_item {
@@ -432,13 +438,13 @@ body.sidebar-open { overflow: hidden; }
   
   .social_links a {
     font-size: 2rem;
-    color: #333;
+    color: var(--color-ink);
     transition: transform 0.2s ease;
   }
   
   .social_links a:hover {
     transform: scale(1.2);
-    color: #69fd95; /* Xの場合など、ホバー色調整 */
+    color: var(--color-link); /* Xの場合など、ホバー色調整 */
   }
 
 /* ===== Profile Card Styles (About) ===== */
@@ -476,11 +482,11 @@ body.sidebar-open { overflow: hidden; }
 .profile-name {
     margin: 0;
     font-size: 1.6rem;
-    color: #0a1510;
+    color: var(--color-ink);
 }
 .profile-bio {
     margin: 0.25rem 0 0.5rem 0;
-    color: #333;
+    color: var(--color-ink);
 }
 .profile-meta {
     display: grid;
@@ -492,8 +498,8 @@ body.sidebar-open { overflow: hidden; }
     display: contents; /* allow dt/dd to align in CSS grid */
 }
 .profile-meta dt {
-    color: #666;
-    font-weight: 700;
+    color: var(--color-muted);
+    font-weight: 500;
 }
 .profile-meta dd {
     margin: 0;
@@ -510,8 +516,8 @@ body.sidebar-open { overflow: hidden; }
     flex-wrap: wrap;
 }
 .tag-label {
-    font-weight: 700;
-    color: #0a1510;
+    font-weight: 500;
+    color: var(--color-ink);
 }
 .tag-items {
     display: flex;
@@ -523,7 +529,7 @@ body.sidebar-open { overflow: hidden; }
     padding: 0.15rem 0.55rem;
     border-radius: 999px;
     background: #e6f7f1;
-    color: #0a1510;
+    color: var(--color-ink);
     border: 1px solid #bfe7d9;
     font-size: 0.9rem;
 }
@@ -545,17 +551,17 @@ body.sidebar-open { overflow: hidden; }
 }
 .profile-links .link-list .platform-icons a {
     font-size: 1.4rem;
-    color: #333;
+    color: var(--color-ink);
 }
 .profile-links .link-list .platform-icons a:hover {
-    color: #1bb48e;
+    color: var(--color-link);
 }
 .profile-links .link-list a {
     display: inline-block;
     padding: 0.35rem 0.8rem;
     border-radius: 0.5rem;
-    background: #1bb48e;
-    color: #f4fffa;
+    background: var(--color-link);
+    color: var(--color-paper);
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
 .profile-links .link-list a:hover {
@@ -620,7 +626,7 @@ body.sidebar-open { overflow: hidden; }
 }
 .work_title {
     font-size: 0.95rem;
-    font-weight: 700;
+    font-weight: 500;
     margin: 0;
     color: var(--color-ink);
     line-height: 1.4;
@@ -958,13 +964,13 @@ body.sidebar-open { overflow: hidden; }
 
 .post-credits h3 {
     margin-top: 0;
-    color: #1bb48e;
+    color: var(--color-link);
     font-size: 1.2rem;
 }
 
 .post-credits p {
     margin: 0.5rem 0;
-    color: #333;
+    color: var(--color-ink);
     line-height: 1.6;
 }
 
@@ -976,7 +982,7 @@ body.sidebar-open { overflow: hidden; }
     font-family: inherit;
     font-size: 20px;
     line-height: 1.6;
-    color: #333;
+    color: var(--color-ink);
     white-space: pre-wrap;
     word-wrap: break-word;
 }
@@ -990,20 +996,20 @@ body.sidebar-open { overflow: hidden; }
 
 .post-description h3 {
     margin-top: 0;
-    color: #0a1510;
+    color: var(--color-ink);
     font-size: 1.2rem;
 }
 
 .post-description p {
     margin: 0.5rem 0;
-    color: #333;
+    color: var(--color-ink);
     line-height: 1.6;
 }
 
 .post-lyrics {
     margin-top: 2rem;
     padding: 1.5rem;
-    background-color: #f9f9f9;
+    background-color: var(--color-paper);
     border: 1px solid #ddd;
     border-radius: 0.5rem;
 }
@@ -1014,8 +1020,8 @@ body.sidebar-open { overflow: hidden; }
 
 .post-lyrics summary {
     font-size: 1.2rem;
-    font-weight: bold;
-    color: #0a1510;
+    font-weight: 500;
+    color: var(--color-ink);
     padding: 0.5rem;
     margin: -0.5rem -0.5rem 0 -0.5rem;
     user-select: none;
@@ -1028,7 +1034,7 @@ body.sidebar-open { overflow: hidden; }
 }
 
 .post-lyrics summary::marker {
-    color: #1bb48e;
+    color: var(--color-link);
 }
 
 .post-lyrics pre {
@@ -1037,10 +1043,10 @@ body.sidebar-open { overflow: hidden; }
     background-color: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 0.3rem;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-site);
     font-size: 0.95rem;
     line-height: 1.8;
-    color: #333;
+    color: var(--color-ink);
     overflow-x: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -1067,8 +1073,8 @@ body.sidebar-open { overflow: hidden; }
 
 .home-welcome {
     font-size: 2rem;
-    font-weight: bold;
-    color: #0a1510;
+    font-weight: 500;
+    color: var(--color-ink);
     margin-bottom: 1rem;
 }
 
@@ -1147,27 +1153,27 @@ body.sidebar-open { overflow: hidden; }
 .home-card-label {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    background: #1bb48e;
-    color: #f4fffa;
+    background: var(--color-link);
+    color: var(--color-paper);
     border-radius: 999px;
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .home-card-date {
-    color: #666;
+    color: var(--color-muted);
     font-size: 0.85rem;
 }
 
 .home-card-title {
     margin: 0;
     font-size: 1.3rem;
-    color: #0a1510;
+    color: var(--color-ink);
     line-height: 1.4;
 }
 
 .home-card-desc {
-    color: #333;
+    color: var(--color-ink);
     font-size: 0.95rem;
     line-height: 1.6;
     flex: 1;
@@ -1180,8 +1186,8 @@ body.sidebar-open { overflow: hidden; }
 }
 
 .home-card-cta {
-    color: #1bb48e;
-    font-weight: 700;
+    color: var(--color-link);
+    font-weight: 500;
     font-size: 0.95rem;
     text-decoration: none;
     position: relative;
@@ -1191,7 +1197,7 @@ body.sidebar-open { overflow: hidden; }
 }
 
 .home-card-cta:hover {
-    color: #179a74;
+    color: var(--color-link);
 }
 
 .home-card-cta::after {
@@ -1201,7 +1207,7 @@ body.sidebar-open { overflow: hidden; }
     bottom: -0.15em;
     width: 100%;
     height: 2px;
-    background-color: #1bb48e;
+    background-color: var(--color-link);
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
@@ -1209,7 +1215,7 @@ body.sidebar-open { overflow: hidden; }
 
 .home-card-cta:hover::after {
     transform: scaleX(1);
-    background-color: #179a74;
+    background-color: var(--color-link-hover);
 }
 
 @media screen and (max-width: 768px) {
@@ -1231,88 +1237,19 @@ body.sidebar-open { overflow: hidden; }
     }
 }
 
-/* Markdown content: links and lists */
-.post p a,
-.post li a,
-.post h1 a,
-.post h2 a,
-.post h3 a,
-.post h4 a,
-.post blockquote a,
-main.container p a,
-main.container li a,
-main.container h1 a,
-main.container h2 a,
-main.container h3 a,
-main.container h4 a,
-main.container blockquote a {
-    color: #1bb48e;
-    text-decoration: none;
-    position: relative;
-    display: inline-block;
-    transition: color 0.2s ease;
+/* Prose links remain recognizable without color or hover. */
+.post-content a:not(.embed-card),
+.info-section p a,
+.home-card-cta,
+.project-back-link,
+.project-detail-link {
+    color: var(--color-link);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    text-decoration-thickness: 1px;
 }
-
-.post p a:hover,
-.post li a:hover,
-.post h1 a:hover,
-.post h2 a:hover,
-.post h3 a:hover,
-.post h4 a:hover,
-.post blockquote a:hover,
-main.container p a:hover,
-main.container li a:hover,
-main.container h1 a:hover,
-main.container h2 a:hover,
-main.container h3 a:hover,
-main.container h4 a:hover,
-main.container blockquote a:hover {
-    color: #179a74;
-}
-
-.post p a::after,
-.post li a::after,
-.post h1 a::after,
-.post h2 a::after,
-.post h3 a::after,
-.post h4 a::after,
-.post blockquote a::after,
-main.container p a::after,
-main.container li a::after,
-main.container h1 a::after,
-main.container h2 a::after,
-main.container h3 a::after,
-main.container h4 a::after,
-main.container blockquote a::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -0.15em;
-    width: 100%;
-    height: 2px;
-    background-color: #1bb48e;
-    transform: scaleX(0);
-    transform-origin: left center;
-    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
-}
-
-.post p a:hover::after,
-.post li a:hover::after,
-.post h1 a:hover::after,
-.post h2 a:hover::after,
-.post h3 a:hover::after,
-.post h4 a:hover::after,
-.post blockquote a:hover::after,
-main.container p a:hover::after,
-main.container li a:hover::after,
-main.container h1 a:hover::after,
-main.container h2 a:hover::after,
-main.container h3 a:hover::after,
-main.container h4 a:hover::after,
-main.container blockquote a:hover::after {
-    transform: scaleX(1);
-    background-color: #179a74;
-}
+.post-content a:not(.embed-card):hover,
+.info-section p a:hover { color: var(--color-link-hover); }
 
 .post ul,
 main.container ul {
@@ -1332,20 +1269,20 @@ main.container ol {
 
 .post li,
 main.container li {
-    color: #0a1510;
+    color: var(--color-ink);
     margin: 0.5rem 0;
 }
 
 .post ul li::marker,
 main.container ul li::marker {
-    color: #1bb48e;
+    color: var(--color-link);
     font-size: 1.1em;
 }
 
 .post ol li::marker,
 main.container ol li::marker {
-    color: #1db88a;
-    font-weight: 700;
+    color: var(--color-link);
+    font-weight: 500;
 }
 
 .post ul ul,
@@ -1358,7 +1295,7 @@ main.container ol ul {
 
 .post ul ul li::marker,
 main.container ul ul li::marker {
-    color: #2adca3;
+    color: var(--color-link);
 }
 
 /* =====================================
@@ -1376,7 +1313,7 @@ main.container li code {
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     padding: 0.2rem 0.4rem;
-    font-family: 'Courier New', 'Courier', monospace;
+    font-family: var(--font-code);
     font-size: 0.9em;
     color: #c7254e;
     word-break: break-word;
@@ -1392,13 +1329,14 @@ main.container pre {
     margin: 1.5rem 0;
     overflow-x: auto;
     line-height: 1.6;
-    font-family: 'Courier New', 'Courier', monospace;
+    font-family: var(--font-code);
     font-size: 0.95rem;
     position: relative;
 }
 
 /* 歌詞はコードブロック用の暗色スタイルから除外する */
 .post .post-lyrics pre {
+    font-family: var(--font-site);
     background-color: var(--color-paper);
     border: 1px solid var(--color-line);
     color: var(--color-ink);
@@ -1418,7 +1356,7 @@ main.container pre[class*="language-"]::before {
     color: #abb2bf;
     border-radius: 4px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     pointer-events: none;
@@ -1532,12 +1470,12 @@ main.container pre .copy-button {
     top: 0.5rem;
     right: 0.5rem;
     padding: 0.4rem 0.8rem;
-    background-color: rgba(27, 180, 142, 0.8);
-    color: white;
+    background-color: var(--color-link);
+    color: var(--color-paper);
     border: none;
     border-radius: 4px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
     z-index: 10;
@@ -1551,13 +1489,13 @@ main.container pre .copy-button::after {
 
 .post pre .copy-button:hover,
 main.container pre .copy-button:hover {
-    background-color: rgba(27, 180, 142, 1);
+    background-color: var(--color-link-hover);
     transform: translateY(-1px);
 }
 
 .post pre .copy-button.copied,
 main.container pre .copy-button.copied {
-    background-color: rgba(152, 195, 121, 0.9);
+    background-color: var(--color-link);
 }
 
 .post pre .copy-button.copied::after,
@@ -1613,7 +1551,7 @@ main.container pre code .hljs-type {
 
 .post pre code .hljs-comment,
 main.container pre code .hljs-comment {
-    color: #5c6370;
+    color: #8e97a6;
 }
 
 /* スクロール可能なコードブロックのスタイル */
@@ -1649,8 +1587,8 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     width: fit-content;
     margin: 0.8rem auto 1.5rem;
     padding: 0.6rem 1.2rem;
-    background: linear-gradient(135deg, #2adca3 0%, #1db88a 100%);
-    color: white;
+    background: var(--color-link);
+    color: var(--color-paper);
     text-align: center;
     border-radius: 8px;
     font-size: 0.9rem;
@@ -1663,7 +1601,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .gallery-link-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(42, 220, 163, 0.5);
-    background: linear-gradient(135deg, #1db88a 0%, #179a74 100%);
+    background: var(--color-link-hover);
 }
 
 /* Gallery ページ: 横並びボタン */
@@ -1679,8 +1617,8 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     width: auto;
     text-align: center;
     padding: 0.5rem 0.8rem;
-    background: #007acc;
-    color: white;
+    background: var(--color-link);
+    color: var(--color-paper);
     border-radius: 6px;
     text-decoration: none;
     font-size: 0.85rem;
@@ -1689,36 +1627,36 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 }
 
 .article-links-horizontal .article-link-btn:hover {
-    background: #005a9e;
+    background: var(--color-link-hover);
 }
 
 .article-links-horizontal .article-link-btn.making-link {
-    background: #28a745;
+    background: var(--color-link);
 }
 
 .article-links-horizontal .article-link-btn.making-link:hover {
-    background: #218838;
+    background: var(--color-link-hover);
 }
 
 /* 関連作品セクション */
 .post-related {
     margin: 3rem 0 2rem;
     padding: 2rem;
-    background: #f9f9f9;
+    background: var(--color-paper);
     border-radius: 12px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--color-mint-deep);
 }
 
 .post-related h2 {
     margin-top: 0;
     margin-bottom: 1.5rem;
-    color: #333;
+    color: var(--color-ink);
     font-size: 1.8rem;
 }
 
 .post-related h3 {
     margin: 1.5rem 0 1rem;
-    color: #555;
+    color: var(--color-muted);
     font-size: 1.3rem;
 }
 
@@ -1726,15 +1664,15 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .post-related-articles {
     margin: 3rem 0 2rem;
     padding: 2rem;
-    background: #f9f9f9;
+    background: var(--color-paper);
     border-radius: 12px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--color-mint-deep);
 }
 
 .post-related-articles h2 {
     margin-top: 0;
     margin-bottom: 1.5rem;
-    color: #333;
+    color: var(--color-ink);
     font-size: 1.8rem;
 }
 
@@ -1749,13 +1687,13 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 }
 
 .post-related-articles a {
-    color: #1f8b6d;
+    color: var(--color-link);
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
 .post-related-articles a:hover {
-    color: #0d5a48;
+    color: var(--color-link);
     text-decoration: underline;
 }
 
@@ -1800,13 +1738,13 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     font-size: 0.85rem;
     font-weight: 500;
     text-align: center;
-    color: #333;
+    color: var(--color-ink);
 }
 
 /* 関連作品なしメッセージ */
 .no-related-text {
     text-align: center;
-    color: #888;
+    color: var(--color-muted);
     font-size: 0.95rem;
     padding: 2rem 1rem;
     margin: 0;
@@ -1912,7 +1850,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 }
 
 .work-title a:hover {
-    color: var(--color-mint-deep);
+    color: var(--color-link);
 }
 
 .work-date {
@@ -1949,7 +1887,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     background: #e6f7f1;
     color: var(--color-ink);
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .profile-section-title {
@@ -2028,9 +1966,9 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .project-card-visual-fallback,
 .project-hero-fallback {
     min-height: 220px;
-    color: #0a1510;
+    color: var(--color-ink);
     font-size: 1.6rem;
-    font-weight: 700;
+    font-weight: 500;
     text-align: center;
     background:
         linear-gradient(135deg, rgba(42, 220, 163, 0.3), rgba(255, 255, 255, 0.8)),
@@ -2049,14 +1987,14 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 
 .project-kicker {
     margin: 0;
-    color: #34443d;
+    color: var(--color-muted);
     font-size: 0.9rem;
     letter-spacing: 0;
 }
 
 .project-card-title {
     margin: 0;
-    color: #06110d;
+    color: var(--color-ink);
     font-size: 1.35rem;
     line-height: 1.35;
     min-height: 2.7em;
@@ -2070,18 +2008,18 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .project-card-title a:hover,
 .project-back-link:hover,
 .project-detail-link:hover {
-    color: #1bb48e;
+    color: var(--color-link);
 }
 
 .project-date {
-    color: #34443d;
+    color: var(--color-muted);
     font-size: 0.92rem;
 }
 
 .project-description,
 .project-lead {
     margin: 0;
-    color: #34443d;
+    color: var(--color-muted);
     font-size: 1rem;
     line-height: 1.7;
 }
@@ -2107,14 +2045,14 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     border: 1px solid #bfe7d9;
     border-radius: 999px;
     background: #e6f7f1;
-    color: #0a1510;
+    color: var(--color-ink);
     font-size: 0.85rem;
 }
 
 .project-detail-link {
     margin-top: auto;
-    color: #0a1510;
-    font-weight: 700;
+    color: var(--color-ink);
+    font-weight: 500;
 }
 
 .project-detail {
@@ -2125,7 +2063,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .project-back-link {
     display: inline-block;
     margin-bottom: 1rem;
-    color: #34443d;
+    color: var(--color-muted);
 }
 
 .project-detail-header {
@@ -2167,7 +2105,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     border-left: 4px solid #1bb48e;
     border-radius: 0.5rem;
     background: rgba(255, 255, 255, 0.72);
-    color: #34443d;
+    color: var(--color-muted);
     line-height: 1.7;
 }
 
@@ -2186,14 +2124,14 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     padding: 0.65rem 1rem;
     border: 1px solid #1bb48e;
     border-radius: 0.5rem;
-    color: #0a1510;
-    font-weight: 700;
+    color: var(--color-ink);
+    font-weight: 500;
     transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .project-action-primary {
-    background: #1bb48e;
-    color: #f4fffa;
+    background: var(--color-link);
+    color: var(--color-paper);
 }
 
 .project-action:hover {
@@ -2239,12 +2177,12 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .info-link-item span {
     color: var(--color-ink);
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .info-link-item span::after {
     content: " →";
-    color: var(--color-mint-deep);
+    color: var(--color-link);
 }
 
 .info-link-item small {
