@@ -49,19 +49,14 @@
 
 .control-btn:hover,
 .filter-btn:hover {
-  background: #f5f5f5;
+  background: var(--color-mint-tint);
   border-color: var(--color-mint-deep);
 }
 
-.control-btn.active {
-  background: var(--color-link);
-  color: white;
-  border-color: var(--color-mint-deep);
-}
-
+.control-btn.active,
 .filter-btn.active {
-  background: var(--color-link);
-  color: white;
+  background: var(--color-mint);
+  color: var(--color-ink);
   border-color: var(--color-mint-deep);
 }
 

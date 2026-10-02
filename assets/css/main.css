@@ -1,12 +1,16 @@
 @charset "UTF-8";
 :root {
     --color-paper: #f4fffa;
+    /* Brand mint fills surfaces under ink text; mint-deep draws borders, underlines and markers. */
     --color-mint: #2adca3;
     --color-mint-deep: #1bb48e;
+    --color-mint-tint: #e6f7f1;
+    --color-mint-line: #bfe7d9;
     --color-ink: #06110d;
     --color-muted: #34443d;
-    --color-link: #105a46;
-    --color-link-hover: #0d4f3d;
+    /* The brand mint hue, deep enough for text on light surfaces. */
+    --color-link: #077657;
+    --color-link-hover: #065f46;
     --font-site: "Kiwi Maru", serif;
     --font-code: ui-monospace, "Courier New", monospace;
     --color-line: rgba(20, 40, 30, 0.12);
@@ -298,7 +302,7 @@ img {
 }
 
 .nav-item a:hover {
-    color: var(--color-link);
+    border-bottom-color: var(--color-ink);
 }
 
 /* Menu Toggle (Mobile Only) */
@@ -470,7 +474,7 @@ body.sidebar-open { overflow: hidden; }
     border-radius: 12px; /* 角丸の正方形 */
     object-fit: cover;
     border: 3px solid #8d8d8d;
-    background: #e6f7f1;
+    background: var(--color-mint-tint);
     max-width: none; /* グローバル img の max-width を無効化 */
     aspect-ratio: 1 / 1; /* 念のため正方形比率を強制 */
 }
@@ -528,9 +532,9 @@ body.sidebar-open { overflow: hidden; }
     display: inline-block;
     padding: 0.15rem 0.55rem;
     border-radius: 999px;
-    background: #e6f7f1;
+    background: var(--color-mint-tint);
     color: var(--color-ink);
-    border: 1px solid #bfe7d9;
+    border: 1px solid var(--color-mint-line);
     font-size: 0.9rem;
 }
 
@@ -549,20 +553,18 @@ body.sidebar-open { overflow: hidden; }
 .profile-links .link-list .platform-icons {
     gap: 0.6rem;
 }
-.profile-links .link-list .platform-icons a {
-    font-size: 1.4rem;
-}
 .profile-links .link-list a {
     display: inline-block;
-    padding: 0.35rem 0.8rem;
-    border-radius: 0.5rem;
-    background: var(--color-link);
-    color: var(--color-paper);
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-mint-deep);
+    border-radius: var(--radius-md);
+    background: var(--color-mint);
+    color: var(--color-ink);
+    transition: transform 0.15s ease, background-color 0.15s ease;
 }
 .profile-links .link-list a:hover {
     transform: translateY(-1px);
-    opacity: 0.9;
+    background: var(--color-mint-deep);
 }
 
 /* Intro section width align with profile card */
@@ -954,7 +956,7 @@ body.sidebar-open { overflow: hidden; }
 .post-credits {
     padding: 1.5rem;
     background-color: rgba(27, 180, 142, 0.1);
-    border-left: 4px solid #1bb48e;
+    border-left: 4px solid var(--color-mint-deep);
     border-radius: 0.5rem;
 }
 
@@ -1128,7 +1130,7 @@ body.sidebar-open { overflow: hidden; }
     aspect-ratio: 16 / 10;
     overflow: hidden;
     border-radius: 0.5rem;
-    background: #e6f7f1;
+    background: var(--color-mint-tint);
 }
 
 .home-card-thumb img {
@@ -1149,8 +1151,8 @@ body.sidebar-open { overflow: hidden; }
 .home-card-label {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    background: var(--color-link);
-    color: var(--color-paper);
+    background: var(--color-mint);
+    color: var(--color-ink);
     border-radius: 999px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -1182,36 +1184,11 @@ body.sidebar-open { overflow: hidden; }
 }
 
 .home-card-cta {
-    color: var(--color-link);
     font-weight: 500;
     font-size: 0.95rem;
-    text-decoration: none;
-    position: relative;
     display: inline-block;
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
     align-self: flex-start;
-}
-
-.home-card-cta:hover {
-    color: var(--color-link);
-}
-
-.home-card-cta::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -0.15em;
-    width: 100%;
-    height: 2px;
-    background-color: var(--color-link);
-    transform: scaleX(0);
-    transform-origin: left center;
-    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
-}
-
-.home-card-cta:hover::after {
-    transform: scaleX(1);
-    background-color: var(--color-link-hover);
 }
 
 @media screen and (max-width: 768px) {
@@ -1241,11 +1218,18 @@ body.sidebar-open { overflow: hidden; }
 .project-detail-link {
     color: var(--color-link);
     text-decoration: underline;
-    text-underline-offset: 0.18em;
-    text-decoration-thickness: 1px;
+    text-decoration-color: var(--color-mint-deep);
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 2px;
 }
 .post-content a:not(.embed-card, .gallery-link-btn):hover,
-.info-section p a:hover { color: var(--color-link-hover); }
+.info-section p a:hover,
+.home-card-cta:hover,
+.project-back-link:hover,
+.project-detail-link:hover {
+    color: var(--color-link-hover);
+    text-decoration-color: currentColor;
+}
 
 .post ul,
 main.container ul {
@@ -1271,7 +1255,7 @@ main.container li {
 
 .post ul li::marker,
 main.container ul li::marker {
-    color: var(--color-link);
+    color: var(--color-mint-deep);
     font-size: 1.1em;
 }
 
@@ -1291,7 +1275,7 @@ main.container ol ul {
 
 .post ul ul li::marker,
 main.container ul ul li::marker {
-    color: var(--color-link);
+    color: var(--color-mint-deep);
 }
 
 /* =====================================
@@ -1466,8 +1450,8 @@ main.container pre .copy-button {
     top: 0.5rem;
     right: 0.5rem;
     padding: 0.4rem 0.8rem;
-    background-color: var(--color-link);
-    color: var(--color-paper);
+    background-color: var(--color-mint);
+    color: var(--color-ink);
     border: none;
     border-radius: 4px;
     font-size: 0.75rem;
@@ -1485,13 +1469,13 @@ main.container pre .copy-button::after {
 
 .post pre .copy-button:hover,
 main.container pre .copy-button:hover {
-    background-color: var(--color-link-hover);
+    background-color: var(--color-mint-deep);
     transform: translateY(-1px);
 }
 
 .post pre .copy-button.copied,
 main.container pre .copy-button.copied {
-    background-color: var(--color-link);
+    background-color: var(--color-mint-tint);
 }
 
 .post pre .copy-button.copied::after,
@@ -1583,8 +1567,8 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     width: fit-content;
     margin: 0.8rem auto 1.5rem;
     padding: 0.6rem 1.2rem;
-    background: var(--color-link);
-    color: var(--color-paper);
+    background: var(--color-mint);
+    color: var(--color-ink);
     text-align: center;
     border-radius: 8px;
     font-size: 0.9rem;
@@ -1597,7 +1581,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 .gallery-link-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(42, 220, 163, 0.5);
-    background: var(--color-link-hover);
+    background: var(--color-mint-deep);
 }
 
 /* Gallery ページ: 横並びボタン */
@@ -1878,9 +1862,9 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     align-items: center;
     width: fit-content;
     padding: 0.18rem 0.6rem;
-    border: 1px solid #bfe7d9;
+    border: 1px solid var(--color-mint-line);
     border-radius: var(--radius-pill);
-    background: #e6f7f1;
+    background: var(--color-mint-tint);
     color: var(--color-ink);
     font-size: 0.82rem;
     font-weight: 500;
@@ -1942,7 +1926,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    background: #e6f7f1;
+    background: var(--color-mint-tint);
 }
 
 .project-card-visual {
@@ -2038,9 +2022,9 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     display: inline-flex;
     align-items: center;
     padding: 0.2rem 0.65rem;
-    border: 1px solid #bfe7d9;
+    border: 1px solid var(--color-mint-line);
     border-radius: 999px;
-    background: #e6f7f1;
+    background: var(--color-mint-tint);
     color: var(--color-ink);
     font-size: 0.85rem;
 }
@@ -2098,7 +2082,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 
 .project-feature-list li {
     padding: 1rem;
-    border-left: 4px solid #1bb48e;
+    border-left: 4px solid var(--color-mint-deep);
     border-radius: 0.5rem;
     background: rgba(255, 255, 255, 0.72);
     color: var(--color-muted);
@@ -2118,7 +2102,7 @@ main.container pre::-webkit-scrollbar-thumb:hover {
     justify-content: center;
     min-height: 44px;
     padding: 0.65rem 1rem;
-    border: 1px solid #1bb48e;
+    border: 1px solid var(--color-mint-deep);
     border-radius: 0.5rem;
     color: var(--color-ink);
     font-weight: 500;
@@ -2126,8 +2110,8 @@ main.container pre::-webkit-scrollbar-thumb:hover {
 }
 
 .project-action-primary {
-    background: var(--color-link);
-    color: var(--color-paper);
+    background: var(--color-mint);
+    color: var(--color-ink);
 }
 
 .project-action:hover {

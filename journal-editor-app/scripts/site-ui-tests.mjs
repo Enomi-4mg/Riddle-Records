@@ -33,7 +33,8 @@ test("scroll enhancement keeps content visible with no observer or reduced motio
   }
 });
 
-const mainCss = fs.readFileSync(new URL('../../assets/css/main.css', import.meta.url), 'utf8');
+const readCss = (name) => fs.readFileSync(new URL(`../../assets/css/${name}.css`, import.meta.url), 'utf8');
+const mainCss = readCss('main');
 const token = (name) => mainCss.match(new RegExp(`--color-${name}: (#[a-f0-9]{6})`))[1];
 const luminance = (hex) => {
   const rgb = hex.slice(1).match(/../g).map((part) => parseInt(part, 16) / 255).map((v) => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4);
@@ -44,7 +45,7 @@ const contrast = (first, second) => {
   return (values[0] + .05) / (values[1] + .05);
 };
 // Comments are dropped so they do not join selectors; commas inside :not(...) belong to one selector.
-const cssRules = [...mainCss.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selectors, body]) => ({ selectors: selectors.split(/,(?![^()]*\))/).map((selector) => selector.trim()), body }));
+const cssRules = [...[mainCss, readCss('gallery'), readCss('journal')].join('\n').replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selectors, body]) => ({ selectors: selectors.split(/,(?![^()]*\))/).map((selector) => selector.trim()), body }));
 // Returns the last declaration among selectors listed from least to most specific, resolving color tokens.
 const declared = (selectors, property) => {
   let value;
@@ -56,7 +57,7 @@ const declared = (selectors, property) => {
 };
 
 test("site text and link tokens meet AA contrast on paper and mint surfaces", () => {
-  for (const [foreground, background] of [['ink','paper'], ['muted','paper'], ['link','paper'], ['link-hover','paper'], ['ink','mint'], ['link','mint']]) {
+  for (const [foreground, background] of [['ink','paper'], ['muted','paper'], ['link','paper'], ['link-hover','paper'], ['link','mint-tint'], ['ink','mint-tint'], ['ink','mint'], ['ink','mint-deep']]) {
     assert.ok(contrast(token(foreground), token(background)) >= 4.5, `${foreground} on ${background}`);
   }
 });
@@ -70,4 +71,19 @@ test("button-styled links keep readable text inside articles and on About", () =
     ['About link', declared(about, 'background'), declared(about, 'color')],
     ['About link hover', declared(about, 'background'), declared([...about, ...about.map((selector) => `${selector}:hover`)], 'color')],
   ]) assert.ok(contrast(text, fill) >= 4.5, `${label}: ${text} on ${fill}`);
+});
+
+test("mint-filled controls and the mint header keep ink text at AA contrast", () => {
+  const fill = (selectors, property = 'background') => declared(selectors, property);
+  for (const [label, background, text] of [
+    ['header nav hover', token('mint'), declared(['.nav-item a', '.nav-item a:hover'], 'color')],
+    ['Home card label', fill(['.home-card-label']), declared(['.home-card-label'], 'color')],
+    ['active filter', fill(['.filter-btn.active']), declared(['.filter-btn', '.filter-btn.active'], 'color')],
+    ['active view switch', fill(['.control-btn.active']), declared(['.control-btn', '.control-btn.active'], 'color')],
+    ['Project primary action', fill(['.project-action-primary']), declared(['.project-action', '.project-action-primary'], 'color')],
+    ['code copy button', fill(['.post pre .copy-button'], 'background-color'), declared(['.post pre .copy-button'], 'color')],
+    ['code copy button hover', fill(['.post pre .copy-button:hover'], 'background-color'), declared(['.post pre .copy-button'], 'color')],
+    ['gallery button hover', fill(['.gallery-link-btn:hover']), declared(['.gallery-link-btn'], 'color')],
+    ['About link hover', fill(['.profile-links .link-list a:hover']), declared(['.profile-links .link-list a'], 'color')],
+  ]) assert.ok(contrast(text, background) >= 4.5, `${label}: ${text} on ${background}`);
 });
