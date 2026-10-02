@@ -1196,3 +1196,11 @@ button:disabled:hover { border-color: var(--cms-border); }
 .pending-summary { margin-inline: auto; max-width: 1120px; }
 .pending-summary summary { cursor: pointer; font-weight: 600; }
 @media (max-width: 850px) { .cms-notice.global-notice { width: calc(100vw - 32px); } }
+.confirmation-dialog { width: min(34rem, calc(100% - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; padding: 1.5rem; border: 1px solid var(--cms-border); border-radius: 12px; background: var(--cms-paper); color: var(--cms-ink); }
+.confirmation-dialog::backdrop { background: rgba(6, 17, 13, .35); }
+.confirmation-dialog h2 { font-size: 1.2rem; overflow-wrap: anywhere; }
+.pending-list { padding: 0; list-style: none; }
+.pending-list li { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .5rem 0; border-bottom: 1px solid var(--cms-border); }
+.pending-list li span { min-width: 0; overflow-wrap: anywhere; }
+.pending-list small { display: block; color: var(--cms-muted); }
+.pending-list button { flex-shrink: 0; }

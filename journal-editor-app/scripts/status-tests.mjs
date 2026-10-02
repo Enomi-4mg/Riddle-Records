@@ -11,7 +11,7 @@ const { cmsStatus } = await import("../src/lib/cmsStatus.ts");
 const { useContentDocuments } = await import("../src/hooks/useContentDocuments.ts");
 const { useNotice } = await import("../src/hooks/useNotice.ts");
 const { Notice } = await import("../src/components/CmsFeedback.tsx");
-const { readPending } = await import("../src/lib/pendingChanges.ts");
+const { readPending, removePending } = await import("../src/lib/pendingChanges.ts");
 const empty = { version: 1, contents: [] };
 const deployment = { id: "id", sha: "sha" };
 const button = (container, text) => [...container.querySelectorAll("button")].find((item) => item.textContent === text);
@@ -51,6 +51,7 @@ test("App separates save feedback from pending state, resolves conflicts and dis
     await click(button(mounted.container, "入力を確認")); const notice = mounted.container.querySelector(".cms-notice"); assert.equal(notice.getAttribute("role"), "status"); assert.ok(!notice.classList.contains("status-pill"));
     await click(notice.querySelector("button")); assert.equal(mounted.container.querySelector(".cms-notice"), null); assert.equal(mounted.container.querySelector(".status-pill").textContent, "未反映");
     external = true; await click([...mounted.container.querySelectorAll("button")].find((item) => item.textContent.startsWith("保留変更をサイトに反映")));
+    await click(document.querySelector(".confirmation-dialog .primary"));
     assert.equal(mounted.container.querySelector(".status-pill").textContent, "競合"); assert.match(mounted.container.querySelector(".conflict-bar").textContent, /new/);
     await click(button(mounted.container, "GitHub版を再読み込み")); assert.equal(readPending().contents.length, 0); assert.equal(mounted.container.querySelector(".title-input").value, "Remote title"); assert.equal(mounted.container.querySelector(".status-pill").textContent, "保存済み");
     localStorage.setItem("riddle-cms-active-tab", JSON.stringify({ id: "other", at: Date.now() })); await act(async () => window.dispatchEvent(new window.StorageEvent("storage", { key: "riddle-cms-active-tab" })));
@@ -79,4 +80,40 @@ test("transient notice expires independently of persistent CMS state", async () 
   const mounted = await mount(Harness);
   try { await click(button(mounted.container, "Save")); assert.match(mounted.container.textContent, /Saved/); await act(async () => new Promise((resolve) => setTimeout(resolve, 5100))); assert.equal(mounted.container.querySelector(".cms-notice"), null); }
   finally { await mounted.close(); }
+});
+
+test("pending cancellation refuses applied entries and active deployments", () => {
+  const doc = { id: "id" };
+  const queue = { version: 1, contents: [{ document: doc, operation: "save" }], media: { registry: {} } };
+  assert.equal(removePending(queue, "id").contents.length, 0);
+  assert.equal(removePending(queue, "media").media, undefined);
+  assert.throws(() => removePending({ ...queue, contents: [{ document: doc, operation: "delete", applied: true }] }, "id"), /GitHub反映済み/);
+  assert.throws(() => removePending({ ...queue, media: { registry: {}, applied: true } }, "media"), /GitHub反映済み/);
+  assert.throws(() => removePending({ ...queue, deployment }, "id"), /デプロイ中/);
+});
+
+test("App confirms deletion and cancelling save/delete restores the server document", async () => {
+  localStorage.clear(); const original = globalThis.fetch;
+  globalThis.fetch = async (address) => {
+    const url = new URL(address, window.location.href);
+    if (url.pathname === "/api/content-list") return Response.json({ files: [{ kind: "journal", path: "example.md", revision: "old" }] });
+    if (url.pathname === "/api/content-item") return Response.json({ markdown: "---\ntitle: Original\ndate: 2026-10-01\n---\n\nBody", revision: "old" });
+    if (url.pathname === "/api/media-registry") return Response.json({ registry: { version: 1, assets: [] }, revision: "media" });
+    throw new Error(`Unexpected write ${address}`);
+  };
+  const mounted = await mount(App);
+  try {
+    await click(mounted.container.querySelector(".content-row"));
+    const input = mounted.container.querySelector(".title-input");
+    await act(async () => { Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(input, "Changed"); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
+    await click(mounted.container.querySelector('[aria-label="Changedの保留変更を取消"]'));
+    assert.equal(readPending().contents.length, 0); assert.match(mounted.container.querySelector(".content-row").textContent, /Original/);
+    await click(mounted.container.querySelector(".content-row")); await click(button(mounted.container, "記事設定")); await click(button(mounted.container, "削除する"));
+    assert.equal(readPending().contents.length, 0); assert.match(mounted.container.querySelector("dialog h2").textContent, /Original/);
+    await click(mounted.container.querySelector("dialog button")); assert.equal(readPending().contents.length, 0);
+    await click(button(mounted.container, "削除する")); await click(button(mounted.container, "削除を保留する"));
+    assert.equal(readPending().contents[0].operation, "delete"); assert.equal(mounted.container.querySelector(".content-row"), null);
+    await click(mounted.container.querySelector('[aria-label="Originalの保留変更を取消"]'));
+    assert.equal(readPending().contents.length, 0); assert.match(mounted.container.querySelector(".content-row").textContent, /Original/);
+  } finally { await mounted.close(); globalThis.fetch = original; }
 });

@@ -55,6 +55,7 @@ test("real App keeps About separate, edits every field and deploys/reloads throu
     await act(async () => root.unmount()); root = createRoot(container); await act(async () => root.render(createElement(App))); await click(button(container, "About"));
     assert.equal(input(container, "名前").value, "New Name"); assert.equal(container.querySelectorAll(".about-featured-list li").length, 2);
     await click([...container.querySelectorAll("button")].find((item) => item.textContent.startsWith("保留変更をサイトに反映")));
+    await click(document.querySelector(".confirmation-dialog .primary"));
     assert.match(container.querySelector(".global-notice").textContent, /ローカルファイルに反映/);
     const saved = parseContentMarkdown(sources.get("about/profile.md"), "about").placement.data;
     assert.equal(saved.icon, "avatars/icon.png"); assert.equal(saved.name, "New Name"); assert.equal(saved.bio, "First line\nSecond line"); assert.equal(saved.birthday, "02-29"); assert.equal(saved.motto, "New motto");

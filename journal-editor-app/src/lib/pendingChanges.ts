@@ -22,3 +22,13 @@ export function writePending(value: PendingChanges) {
 export function upsertPending(value: PendingChanges, entry: PendingContent): PendingChanges {
   return { ...value, contents: [...value.contents.filter((item) => item.document.id !== entry.document.id), entry] };
 }
+
+export function removePending(value: PendingChanges, id: string): PendingChanges {
+  if (value.deployment) throw new Error("デプロイ中の変更は取り消せません");
+  if (id === "media") {
+    if (value.media?.applied) throw new Error("GitHub反映済みの変更は取り消せません。編集して再反映してください");
+    return { ...value, media: undefined };
+  }
+  if (value.contents.find((item) => item.document.id === id)?.applied) throw new Error("GitHub反映済みの変更は取り消せません。編集して再反映してください");
+  return { ...value, contents: value.contents.filter((item) => item.document.id !== id) };
+}

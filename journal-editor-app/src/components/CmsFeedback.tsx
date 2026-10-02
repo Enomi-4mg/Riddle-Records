@@ -33,8 +33,11 @@ export function ConflictPanel({ conflict, disabled, onResolve }: { conflict: Pen
   return <aside className="conflict-bar" role="alert"><div><strong>{conflict.target === "media" ? "メディア情報" : "コンテンツ"}が外部の変更と競合しています</strong><small>現在のrevision: {conflict.currentRevision || "削除済み"}</small></div><div className="button-row"><button disabled={disabled} onClick={() => onResolve("reload")}>GitHub版を再読み込み</button><button disabled={disabled} onClick={() => onResolve("discard")}>保留変更を破棄</button><button disabled={disabled} className="danger" onClick={() => onResolve("force")}>{conflict.operation === "delete" ? "強制削除" : "強制上書き"}</button></div></aside>;
 }
 
-export function PendingSummary({ pending }: { pending: PendingChanges }) {
+export function PendingList({ pending, disabled, onCancel }: { pending: PendingChanges; disabled?: boolean; onCancel?: (id: string) => void }) {
+  return <ul className="pending-list">{pending.contents.map((item) => <li key={item.document.id}><span><strong>{item.operation === "delete" ? "削除" : item.document.common.publication === "draft" ? "下書きの保存" : "公開内容の保存"}</strong>: {item.document.common.title || "タイトル未設定"}<small>{item.applied ? "GitHub反映済み · サイト公開待ち" : "このブラウザのみ"}</small></span>{onCancel && <button disabled={disabled || item.applied} aria-label={`${item.document.common.title || "タイトル未設定"}の保留変更を取消`} onClick={() => onCancel(item.document.id)}>取消</button>}</li>)}{pending.media && <li><span><strong>メディア情報の保存</strong><small>{pending.media.applied ? "GitHub反映済み · サイト公開待ち" : "このブラウザのみ"}</small></span>{onCancel && <button disabled={disabled || pending.media.applied} aria-label="メディア情報の保留変更を取消" onClick={() => onCancel("media")}>取消</button>}</li>}</ul>;
+}
+export function PendingSummary({ pending, disabled, onCancel }: { pending: PendingChanges; disabled?: boolean; onCancel?: (id: string) => void }) {
   const count = pending.contents.length + (pending.media ? 1 : 0);
   if (!count) return null;
-  return <details className="pending-summary"><summary>未デプロイの変更 {count}件</summary><ul>{pending.contents.map((item) => <li key={item.document.id}>{item.operation === "delete" ? "削除" : item.document.common.publication === "draft" ? "下書き" : "公開"}: {item.document.common.title || "タイトル未設定"}{item.applied ? "（GitHub反映済み）" : ""}</li>)}{pending.media && <li>メディア情報{pending.media.applied ? "（GitHub反映済み）" : ""}</li>}</ul><small>保留内容はこのブラウザだけに保存されます。</small></details>;
+  return <details className="pending-summary"><summary>未デプロイの変更 {count}件</summary><PendingList pending={pending} disabled={disabled} onCancel={onCancel} /><small>取消するとブラウザの変更を破棄します。GitHub反映済みの変更は編集して再反映してください。</small></details>;
 }

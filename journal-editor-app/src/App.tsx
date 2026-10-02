@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { normalizeAboutProfile } from "../../shared/aboutProfile";
 import { AboutEditor } from "./components/AboutEditor";
 import { ArticleDefaultsDialog } from "./components/ArticleDefaultsDialog";
+import { ConfirmationDialog } from "./components/ConfirmationDialog";
 import { CmsEditor } from "./components/CmsEditor";
 import { ContentList } from "./components/ContentList";
 import { MediaLibrary } from "./components/MediaLibrary";
-import { ConflictPanel, Notice, PendingSummary, StatusControl } from "./components/CmsFeedback";
+import { ConflictPanel, Notice, PendingList, PendingSummary, StatusControl } from "./components/CmsFeedback";
 import { useCmsNavigation } from "./hooks/useCmsNavigation";
 import { useContentDocuments, overlayPending } from "./hooks/useContentDocuments";
 import { useConflict } from "./hooks/useConflict";
@@ -18,7 +19,7 @@ import { validateAboutDocument } from "./lib/about";
 import { readArticleDefaults, writeArticleDefaults, type ArticleDefaults } from "./lib/articleDefaults";
 import { createContentDocument, generatedContentFilename } from "./lib/cmsMarkdown";
 import { applyPendingChanges, PendingConflictError } from "./lib/deployPending";
-import { readPending, upsertPending } from "./lib/pendingChanges";
+import { readPending, removePending, upsertPending } from "./lib/pendingChanges";
 import { publishDocument } from "./lib/publication";
 import { startSiteDeploy } from "./lib/siteDeploy";
 import type { ContentDocument, ContentKind, EditingStatus } from "./types/content";
@@ -32,6 +33,8 @@ export function App() {
   const { documents, files } = content;
   const { registry } = media;
   const { notice, notify, dismiss } = useNotice();
+  const [deleteTarget, setDeleteTarget] = useState<ContentDocument | null>(null);
+  const [deployReview, setDeployReview] = useState<{ forceTarget?: string } | null>(null);
   const [current, setCurrent] = useState<ContentDocument | null>(null);
   const [editingStatus, setEditingStatus] = useState<EditingStatus>("clean");
   const [articleDefaults, setArticleDefaults] = useState<ArticleDefaults>(readArticleDefaults);
@@ -45,7 +48,7 @@ export function App() {
     setCurrent(doc); setEditingStatus("clean");
     if (doc) navigate(doc.placement.kind === "about" ? "about" : "editor", doc.id, true);
     else navigate("content", undefined, true);
-  }, onRefresh: refreshAll, onForce: (target) => { void deploySite(target); } });
+  }, onRefresh: refreshAll, onForce: (target) => { requestDeploy(target); } });
   const { conflict } = conflicts;
 
   useEffect(() => { if (externalRevision) void refreshAll(); }, [externalRevision]);
@@ -85,11 +88,25 @@ export function App() {
     setEditingStatus("clean"); notify("入力を確認しました。変更はブラウザに自動保存されています。サイトへの反映は別操作です");
   }
   function stageDelete() {
-    if (!current || !canEdit()) return;
+    if (!current || current.id !== deleteTarget?.id || !canEdit()) return;
+    setDeleteTarget(null);
     const queue = readPending();
     const next = current.file ? upsertPending(queue, { document: current, operation: "delete" }) : { ...queue, contents: queue.contents.filter((item) => item.document.id !== current.id) };
-    try { updatePending(next); setCurrent(null); navigate("content"); notify("削除を保留しました"); }
+    try { updatePending(next); setCurrent(null); navigate("content"); notify(current.file ? "削除を保留しました" : "新規下書きを破棄しました"); }
     catch { notify("削除をブラウザに保存できませんでした", "error"); }
+  }
+  function cancelPending(id: string) {
+    if (!canEdit()) return;
+    try {
+      updatePending(removePending(readPending(), id));
+      if (current?.id === id) { setCurrent(null); setEditingStatus("clean"); navigate("content"); }
+      if (conflict?.documentId === id || (id === "media" && conflict?.target === "media")) conflicts.setConflict(null);
+      notify("保留変更を取り消しました");
+    } catch (error) { notify(error instanceof Error ? error.message : "取り消せません", "error"); }
+  }
+  function requestDeploy(forceTarget?: string) {
+    if (readPending().deployment) { deployment.recheck(); return; }
+    setDeployReview({ forceTarget });
   }
   function changeRegistry(next: MediaRegistry) {
     if (!canEdit()) return;
@@ -103,7 +120,8 @@ export function App() {
       if (action !== "force") { deployment.clearError(); setEditingStatus("clean"); notify(action === "reload" ? "GitHub版を再読み込みしました" : "保留変更を破棄しました"); }
     } catch (error) { notify(error instanceof Error ? error.message : "競合を解消できません", "error"); }
   }
-  async function deploySite(forceTarget?: string) {
+  async function deploySite(forceTarget?: string, reviewedQueue?: string) {
+    if (reviewedQueue !== JSON.stringify(readPending())) { notify("保留変更が更新されました。内容を再確認してください", "error"); return; }
     if (tabLock.blocked || !tabLock.isOwner()) return;
     if (readPending().deployment) { deployment.recheck(); return; }
     if (deploying || !deployment.beginSync()) return;
@@ -126,10 +144,11 @@ export function App() {
   }
 
   const pendingCount = pending.contents.length + (pending.media ? 1 : 0);
-  const statusControl = <StatusControl pending={pending} deployment={deployment.state} document={current} editing={editingStatus} conflict={Boolean(conflict)} error={content.error || media.error} readonlyMessage={tabLock.message} registryRevision={media.revision} onRecheck={deployment.recheck} onRetry={() => { if (content.error || media.error) void refreshAll(); else void deploySite(); }} onStop={() => { deployment.stopTracking(); notify("デプロイ追跡を解除しました。GitHub側の公開状況を確認してください"); }} />;
-  const feedback = <><Notice value={notice} onDismiss={dismiss} /><ConflictPanel conflict={conflict} disabled={blocked} onResolve={(action) => void resolveConflict(action)} /><PendingSummary pending={pending} /></>;
-  const deployButton = <><button type="button" disabled={tabLock.blocked} onClick={() => setShowArticleDefaults(true)}>デフォルト設定</button><button className="primary" disabled={deploying || tabLock.blocked} onClick={() => void deploySite()}>{deploying ? "デプロイ中…" : `保留変更をサイトに反映${pendingCount ? ` (${pendingCount})` : ""}`}</button>{showArticleDefaults && <ArticleDefaultsDialog value={articleDefaults} registry={registry} onClose={() => setShowArticleDefaults(false)} onSave={(value) => { try { writeArticleDefaults(value); setArticleDefaults(value); setShowArticleDefaults(false); notify("記事のデフォルト設定を保存しました"); } catch { notify("ブラウザにデフォルト設定を保存できませんでした", "error"); } }} />}</>;
+  const statusControl = <StatusControl pending={pending} deployment={deployment.state} document={current} editing={editingStatus} conflict={Boolean(conflict)} error={content.error || media.error} readonlyMessage={tabLock.message} registryRevision={media.revision} onRecheck={deployment.recheck} onRetry={() => { if (content.error || media.error) void refreshAll(); else requestDeploy(); }} onStop={() => { deployment.stopTracking(); notify("デプロイ追跡を解除しました。GitHub側の公開状況を確認してください"); }} />;
+  const dialogs = <>{deleteTarget && <ConfirmationDialog title={`「${deleteTarget.common.title || "タイトル未設定"}」を削除しますか`} confirmLabel="削除を保留する" disabled={blocked} danger onClose={() => setDeleteTarget(null)} onConfirm={stageDelete}><p>削除は保留変更に追加され、次のサイト反映で実行します。反映前は保留一覧から取り消せます。</p></ConfirmationDialog>}{deployReview && <ConfirmationDialog title={`サイトへ反映する変更 ${pendingCount}件`} confirmLabel="確認して反映する" disabled={blocked} onClose={() => setDeployReview(null)} onConfirm={() => { const reviewed = JSON.stringify(pending); const target = deployReview.forceTarget; setDeployReview(null); void deploySite(target, reviewed); }}><PendingList pending={pending} disabled={blocked} onCancel={cancelPending} />{!pendingCount && <p>現在のサイト内容を再デプロイします。</p>}<p>この一覧の全件を反映します。削除も含まれます。</p></ConfirmationDialog>}</>;
+  const feedback = <>{dialogs}<Notice value={notice} onDismiss={dismiss} /><ConflictPanel conflict={conflict} disabled={blocked} onResolve={(action) => void resolveConflict(action)} /><PendingSummary pending={pending} disabled={blocked} onCancel={cancelPending} /></>;
+  const deployButton = <><button type="button" disabled={tabLock.blocked} onClick={() => setShowArticleDefaults(true)}>デフォルト設定</button><button className="primary" disabled={deploying || tabLock.blocked} onClick={() => requestDeploy()}>{deploying ? "デプロイ中…" : `保留変更をサイトに反映${pendingCount ? ` (${pendingCount})` : ""}`}</button>{showArticleDefaults && <ArticleDefaultsDialog value={articleDefaults} registry={registry} onClose={() => setShowArticleDefaults(false)} onSave={(value) => { try { writeArticleDefaults(value); setArticleDefaults(value); setShowArticleDefaults(false); notify("記事のデフォルト設定を保存しました"); } catch { notify("ブラウザにデフォルト設定を保存できませんでした", "error"); } }} />}</>;
   const shellNav = <nav className="cms-nav"><button className={(screen === "content" || screen === "editor") ? "active" : ""} onClick={() => navigate("content")}>コンテンツ</button><button className={screen === "about" ? "active" : ""} onClick={() => { const doc = documents.find((item) => item.placement.kind === "about"); if (doc) openDocument(doc); else notify("Aboutを読み込めません。接続を確認して再読み込みしてください", "error"); }}>About</button><button className={screen === "media" ? "active" : ""} onClick={() => navigate("media")}>メディア</button></nav>;
-  if (screen === "editor" && current) return <CmsEditor documents={documents} document={current} statusControl={statusControl} feedback={feedback} disabled={blocked} deployButton={deployButton} registry={registry} onChange={stageDocument} onSave={() => confirmContent(current)} onPublish={() => confirmContent(publishDocument(current), true)} onUnpublish={() => confirmContent({ ...current, common: { ...current.common, publication: "draft" } }, true)} onBack={() => navigate("content")} onDelete={stageDelete} />;
+  if (screen === "editor" && current) return <CmsEditor documents={documents} document={current} statusControl={statusControl} feedback={feedback} disabled={blocked} deployButton={deployButton} registry={registry} onChange={stageDocument} onSave={() => confirmContent(current)} onPublish={() => confirmContent(publishDocument(current), true)} onUnpublish={() => confirmContent({ ...current, common: { ...current.common, publication: "draft" } }, true)} onBack={() => navigate("content")} onDelete={() => setDeleteTarget(current)} />;
   return <main className="cms-shell"><header className="global-bar"><strong className="brand">Riddle Records CMS</strong>{shellNav}{statusControl}<div className="deploy-action">{deployButton}</div></header>{feedback}{screen === "about" && current?.placement.kind === "about" ? <AboutEditor document={current} documents={documents} registry={registry} disabled={blocked} onChange={stageDocument} onSave={() => confirmContent(current)} /> : screen === "media" ? <MediaLibrary registry={registry} editable={!blocked} onChange={changeRegistry} /> : <ContentList filters={filters} onFilters={setFilters} documents={documents} files={files.filter((file) => file.kind !== "about")} disabled={blocked} pendingIds={pending.contents.filter((item) => item.operation === "save").map((item) => item.document.id)} onOpen={openDocument} onNew={(kind: ContentKind) => { const doc = createContentDocument(kind); if (doc.placement.kind === "journal") doc.placement.data = { ...doc.placement.data, ...articleDefaults }; if (!stageDocument(doc)) return; setCurrent(doc); setEditingStatus("clean"); navigate("editor", doc.id); }} />}</main>;
 }
