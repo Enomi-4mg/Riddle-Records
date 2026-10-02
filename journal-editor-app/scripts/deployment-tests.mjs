@@ -42,6 +42,7 @@ async function mountWithApi(getStatus) {
 }
 const button = (container, label) => [...container.querySelectorAll("button")].find((item) => item.textContent === label);
 const click = async (node) => { assert.ok(node); await act(async () => node.click()); };
+const details = async (container) => { const trigger = container.querySelector(".cms-status > button"); if (trigger.getAttribute("aria-expanded") !== "true") await click(trigger); return document.querySelector(".status-detail"); };
 
 test("App resumes persisted deployment after reload, clears success and reloads content/media revisions", async () => {
   localStorage.clear(); writePending(pending()); let resolve, signal; let complete = false;
@@ -61,8 +62,8 @@ test("App keeps pending changes on network errors and rechecks manually or when 
   localStorage.clear(); writePending(pending()); let mode = "error";
   const mounted = await mountWithApi(async () => { if (mode === "error") throw new Error("offline"); return Response.json(status(mode === "success" ? "success" : undefined)); });
   try {
-    assert.match(mounted.container.textContent, /offline/); assert.ok(readPending().deployment);
-    mode = "queued"; await click(button(mounted.container, "状態を再確認")); assert.match(mounted.container.textContent, /デプロイ中/);
+    assert.equal(mounted.container.querySelector(".status-pill").textContent, "確認待ち"); assert.match((await details(mounted.container)).textContent, /offline/); assert.ok(readPending().deployment);
+    mode = "queued"; await click(button(await details(mounted.container), "状態を再確認")); assert.match(mounted.container.textContent, /デプロイ中/);
     mode = "success"; await act(async () => window.dispatchEvent(new window.Event("focus")));
     assert.equal(readPending().deployment, undefined); assert.equal(readPending().contents.length, 0);
   } finally { await mounted.close(); }
@@ -72,8 +73,8 @@ test("App persists failure, releases the edit lock and retains applied changes f
   localStorage.clear(); writePending(pending());
   const mounted = await mountWithApi(async () => Response.json(status("failure")));
   try {
-    assert.equal(readPending().deployment, undefined); assert.equal(readPending().contents[0].applied, true); assert.match(mounted.container.textContent, /失敗/);
-    assert.equal(restoredDeploymentState(readPending()).state, "failed"); await mounted.remount(); assert.match(mounted.container.textContent, /失敗/);
+    assert.equal(readPending().deployment, undefined); assert.equal(readPending().contents[0].applied, true); assert.equal(mounted.container.querySelector(".status-pill").textContent, "エラー"); assert.match((await details(mounted.container)).textContent, /失敗/);
+    assert.equal(restoredDeploymentState(readPending()).state, "failed"); await mounted.remount(); assert.equal(mounted.container.querySelector(".status-pill").textContent, "エラー"); assert.match((await details(mounted.container)).textContent, /失敗/);
     await click(mounted.container.querySelector(".content-row"));
     const input = mounted.container.querySelector(".title-input");
     await act(async () => { Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(input, "Edited after failure"); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
@@ -115,7 +116,7 @@ test("another tab's completed queue is revalidated without losing its deployment
     const before = mounted.calls.filter((path) => path === "/api/media-registry").length;
     writePending({ version: 1, contents: [], lastDeployment: { ...deployment, conclusion: "success", finishedAt: new Date().toISOString() } });
     await act(async () => window.dispatchEvent(new window.StorageEvent("storage", { key: "riddle-cms-pending-v1" })));
-    assert.equal(readPending().contents.length, 0); assert.match(mounted.container.textContent, /デプロイ完了/);
+    assert.equal(readPending().contents.length, 0); assert.match((await details(mounted.container)).textContent, /デプロイ完了/);
     assert.ok(mounted.calls.filter((path) => path === "/api/media-registry").length > before);
   } finally { await mounted.close(); }
 });

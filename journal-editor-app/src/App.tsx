@@ -1,167 +1,109 @@
-import { AboutEditor } from "./components/AboutEditor";
-import { validateAboutDocument } from "./lib/about";
-import { normalizeAboutProfile } from "../../shared/aboutProfile";
 import { useEffect, useState } from "react";
-import { loadContentFile, loadContentFiles } from "./lib/contentFiles";
-import { createContentDocument, generatedContentFilename, parseContentMarkdown } from "./lib/cmsMarkdown";
-import { applyPendingChanges, PendingConflictError } from "./lib/deployPending";
-import { loadMediaRegistry } from "./lib/mediaRegistry";
-import { emptyPending, readPending, upsertPending, writePending, type PendingChanges } from "./lib/pendingChanges";
-import { startSiteDeploy } from "./lib/siteDeploy";
-import { readArticleDefaults, writeArticleDefaults, type ArticleDefaults } from "./lib/articleDefaults";
-import { ContentList } from "./components/ContentList";
-import { CmsEditor } from "./components/CmsEditor";
-import { MediaLibrary } from "./components/MediaLibrary";
+import { normalizeAboutProfile } from "../../shared/aboutProfile";
+import { AboutEditor } from "./components/AboutEditor";
 import { ArticleDefaultsDialog } from "./components/ArticleDefaultsDialog";
-import type { ContentDocument, ContentFileInfo, ContentKind, EditingStatus } from "./types/content";
-import type { MediaRegistry } from "./types/media";
-
-import { useDeployment } from "./hooks/useDeployment";
+import { CmsEditor } from "./components/CmsEditor";
+import { ContentList } from "./components/ContentList";
+import { MediaLibrary } from "./components/MediaLibrary";
+import { ConflictPanel, Notice, PendingSummary, StatusControl } from "./components/CmsFeedback";
 import { useCmsNavigation } from "./hooks/useCmsNavigation";
-const emptyRegistry: MediaRegistry = { version: 1, assets: [] };
+import { useContentDocuments, overlayPending } from "./hooks/useContentDocuments";
+import { useConflict } from "./hooks/useConflict";
+import { useDeployment } from "./hooks/useDeployment";
+import { useMediaRegistry } from "./hooks/useMediaRegistry";
+import { useNotice } from "./hooks/useNotice";
+import { usePendingQueue } from "./hooks/usePendingQueue";
+import { useTabLock } from "./hooks/useTabLock";
+import { validateAboutDocument } from "./lib/about";
+import { readArticleDefaults, writeArticleDefaults, type ArticleDefaults } from "./lib/articleDefaults";
+import { createContentDocument, generatedContentFilename } from "./lib/cmsMarkdown";
+import { applyPendingChanges, PendingConflictError } from "./lib/deployPending";
+import { readPending, upsertPending } from "./lib/pendingChanges";
+import { startSiteDeploy } from "./lib/siteDeploy";
+import type { ContentDocument, ContentKind, EditingStatus } from "./types/content";
+import type { MediaRegistry } from "./types/media";
 
 export function App() {
   const { screen, documentId, filters, navigate, setFilters } = useCmsNavigation();
-  const setScreen = (next: typeof screen) => navigate(next);
-  const [files, setFiles] = useState<ContentFileInfo[]>([]);
-  const [documents, setDocuments] = useState<ContentDocument[]>([]);
+  const { pending, updatePending, externalRevision } = usePendingQueue();
+  const content = useContentDocuments(pending);
+  const media = useMediaRegistry(pending);
+  const { documents, files } = content;
+  const { registry } = media;
+  const { notice, notify, dismiss } = useNotice();
   const [current, setCurrent] = useState<ContentDocument | null>(null);
   const [editingStatus, setEditingStatus] = useState<EditingStatus>("clean");
-  const [notice, setNotice] = useState("準備できました");
-  const [registry, setRegistry] = useState(emptyRegistry);
-  const [registryRevision, setRegistryRevision] = useState<string>();
-  const [pending, setPending] = useState<PendingChanges>(readPending);
-
-  const [conflict, setConflict] = useState<PendingConflictError["detail"] | null>(null);
-  const [tabId] = useState(() => crypto.randomUUID());
-  const [otherTab, setOtherTab] = useState(false);
   const [articleDefaults, setArticleDefaults] = useState<ArticleDefaults>(readArticleDefaults);
   const [showArticleDefaults, setShowArticleDefaults] = useState(false);
-
-  const deployment = useDeployment({ pending, updatePending, enabled: !otherTab, onRefresh: async () => { await refresh(); await refreshRegistry(); } });
+  const refreshAll = async () => { await Promise.all([content.refresh(), media.refresh()]); };
+  const tabLock = useTabLock(() => { void refreshAll(); });
+  const deployment = useDeployment({ pending, updatePending, enabled: !tabLock.blocked, onRefresh: refreshAll });
   const deploying = deployment.state.state === "syncing-github" || deployment.state.state === "waiting";
+  const blocked = tabLock.blocked || deploying || Boolean(pending.deployment);
+  const conflicts = useConflict({ enabled: !blocked, updatePending, onDocument: (doc) => {
+    setCurrent(doc); setEditingStatus("clean");
+    if (doc) navigate(doc.placement.kind === "about" ? "about" : "editor", doc.id, true);
+    else navigate("content", undefined, true);
+  }, onRefresh: refreshAll, onForce: (target) => { void deploySite(target); } });
+  const { conflict } = conflicts;
 
-  function updatePending(next: PendingChanges) {
-    writePending(next);
-    setPending(next);
-    if (next.media?.applied) { setRegistryRevision(next.media.expectedRevision); setRegistry(next.media.registry); }
-    const applied = next.contents.filter((item) => item.applied && item.operation === "save");
-    if (applied.length) {
-      setCurrent((doc) => applied.find((item) => item.document.id === doc?.id)?.document ?? doc);
-      setDocuments((items) => overlayPending(items, next));
-    }
-  }
-  function overlayPending(loaded: ContentDocument[], queue = readPending()) {
-    const identity = (doc: ContentDocument) => doc.file ? `${doc.placement.kind}:${doc.file.path}` : doc.id;
-    const byId = new Map(loaded.map((doc) => [identity(doc), doc]));
-    for (const item of queue.contents) {
-      if (item.operation === "delete") byId.delete(identity(item.document));
-      else byId.set(identity(item.document), item.document);
-    }
-    return [...byId.values()];
-  }
-  async function refresh() {
-    const result = await loadContentFiles(); setFiles(result.files);
-    if (!result.available) { setNotice(result.error || "コンテンツAPIを利用できません"); return; }
-    const loaded = await Promise.all(result.files.map(async (file) => { try { const value = await loadContentFile(file.kind, file.path); return parseContentMarkdown(value.markdown, file.kind, { path: file.path, revision: value.revision }); } catch { return null; } }));
-    setDocuments(overlayPending(loaded.filter((value): value is ContentDocument => Boolean(value))));
-  }
-  async function refreshRegistry() {
-    try {
-      const value = await loadMediaRegistry();
-      setRegistry(readPending().media?.registry ?? value.registry);
-      setRegistryRevision(value.revision);
-    } catch (error) { setNotice(`メディアを読み込めません: ${error instanceof Error ? error.message : "Unknown error"}`); }
-  }
-  useEffect(() => { void refresh(); void refreshRegistry(); }, []);
+  useEffect(() => { if (externalRevision) void refreshAll(); }, [externalRevision]);
   useEffect(() => {
-    const key = "riddle-cms-active-tab";
-    const claim = () => {
-      let owner: { id: string; at: number } | null = null;
-      try { owner = JSON.parse(localStorage.getItem(key) || "null") as { id: string; at: number } | null; } catch { /* Recover invalid lock. */ }
-      if (owner && owner.id !== tabId && Date.now() - owner.at < 15000) { setOtherTab(true); setNotice("別のタブでCMSを使用中です。このタブでの編集とデプロイを停止しています"); return; }
-      localStorage.setItem(key, JSON.stringify({ id: tabId, at: Date.now() }));
-      if (otherTab) { void refresh(); void refreshRegistry(); }
-      setOtherTab(false);
-    };
-    const onStorage = (event: StorageEvent) => {
-      if (event.key === key) claim();
-      if (event.key === "riddle-cms-pending-v1") { const next = readPending(); setPending(next); if (!next.deployment) { void refresh(); void refreshRegistry(); } else setDocuments((items) => overlayPending(items, next)); }
-    };
-    claim();
-    const timer = window.setInterval(claim, 5000);
-    window.addEventListener("storage", onStorage);
-    const release = () => { try { const owner = JSON.parse(localStorage.getItem(key) || "null") as { id?: string } | null; if (owner?.id === tabId) localStorage.removeItem(key); } catch { /* Ignore invalid lock. */ } };
-    window.addEventListener("beforeunload", release);
-    return () => { window.clearInterval(timer); window.removeEventListener("storage", onStorage); window.removeEventListener("beforeunload", release); release(); };
-  }, [tabId, otherTab]);
-
-  useEffect(() => {
-    if (screen === "editor" || screen === "about") {
-      const doc = documents.find((item) => item.id === documentId || (screen === "about" && item.placement.kind === "about"));
-      const match = doc ?? documents.find((item) => current?.file && item.placement.kind === current.placement.kind && item.file?.path === current.file.path);
-      if (match && match !== current) {
-        setCurrent(match);
-        if (match.id !== current?.id) setEditingStatus("clean");
-        if (match.id !== documentId) navigate(screen, match.id, true);
-      }
-    } else setCurrent(null);
+    if (screen !== "editor" && screen !== "about") { setCurrent(null); return; }
+    const doc = documents.find((item) => item.id === documentId || (screen === "about" && item.placement.kind === "about"));
+    const match = doc ?? documents.find((item) => current?.file && item.placement.kind === current.placement.kind && item.file?.path === current.file.path);
+    if (match && match !== current) {
+      setCurrent(match);
+      if (match.id !== current?.id) setEditingStatus("clean");
+      if (match.id !== documentId) navigate(screen, match.id, true);
+    }
   }, [screen, documentId, documents, current?.id]);
 
   function openDocument(doc: ContentDocument) {
     setCurrent(doc); setEditingStatus("clean"); navigate(doc.placement.kind === "about" ? "about" : "editor", doc.id);
   }
+  function canEdit() {
+    if (!blocked && tabLock.isOwner() && !readPending().deployment) return true;
+    notify(tabLock.message || "進行中のデプロイを確認してから編集してください", "error"); return false;
+  }
   function stageDocument(doc: ContentDocument) {
-    if (otherTab || deploying || pending.deployment) { setNotice(otherTab ? "別のタブでCMSを使用中です" : "進行中のデプロイを確認してから編集してください"); return false; }
+    if (!canEdit()) return false;
     const edited = { ...doc, editedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-    const next = upsertPending(pending, { document: edited, operation: "save" });
-    try { updatePending(next); } catch { setNotice("ブラウザの保存容量が不足しています。変更を保存できません"); return false; }
-    setCurrent(edited); setEditingStatus("dirty");
-    setDocuments((items) => overlayPending(items, next));
-    return true;
+    try { updatePending(upsertPending(readPending(), { document: edited, operation: "save" })); }
+    catch { notify("ブラウザの保存容量が不足しています。変更を保存できません", "error"); return false; }
+    setCurrent(edited); setEditingStatus("dirty"); return true;
   }
   function saveLocally(doc: ContentDocument, force = false) {
-    if (!force && editingStatus === "clean") { setNotice("変更はありません"); return; }
+    if (!force && editingStatus === "clean") { notify("変更はありません"); return; }
     if (doc.placement.kind === "about") {
       const errors = validateAboutDocument(doc, documents);
-      if (errors.length) { setNotice(errors.join("; ")); setEditingStatus("error"); return; }
+      if (errors.length) { notify(errors.join("; "), "error"); setEditingStatus("error"); return; }
       doc = { ...doc, placement: { kind: "about", data: normalizeAboutProfile(doc.placement.data) } };
     }
-    const filename = generatedContentFilename(doc);
-    if (!filename) { setNotice("日付またはslugを入力してください"); setEditingStatus("error"); return; }
-    if (stageDocument(doc)) { setEditingStatus("clean"); setNotice("ブラウザに保存しました。サイトへの反映にはデプロイが必要です"); }
+    if (!generatedContentFilename(doc)) { notify("日付またはslugを入力してください", "error"); setEditingStatus("error"); return; }
+    if (stageDocument(doc)) { setEditingStatus("clean"); notify("ブラウザに保存しました。サイトへの反映にはデプロイが必要です"); }
   }
   function stageDelete() {
-    if (!current) return;
-    if (otherTab || deploying || pending.deployment) { setNotice(otherTab ? "別のタブでCMSを使用中です" : "進行中のデプロイを確認してから削除してください"); return; }
-    const next = current.file ? upsertPending(pending, { document: current, operation: "delete" }) : { ...pending, contents: pending.contents.filter((item) => item.document.id !== current.id) };
-    updatePending(next); setDocuments((items) => items.filter((item) => item.id !== current.id));
-    setCurrent(null); setScreen("content"); setNotice("削除を保留しました");
+    if (!current || !canEdit()) return;
+    const queue = readPending();
+    const next = current.file ? upsertPending(queue, { document: current, operation: "delete" }) : { ...queue, contents: queue.contents.filter((item) => item.document.id !== current.id) };
+    try { updatePending(next); setCurrent(null); navigate("content"); notify("削除を保留しました"); }
+    catch { notify("削除をブラウザに保存できませんでした", "error"); }
   }
   function changeRegistry(next: MediaRegistry) {
-    if (otherTab || deploying || pending.deployment) { setNotice(otherTab ? "別のタブでCMSを使用中です" : "進行中のデプロイを確認してから編集してください"); return; }
-    const queued = { ...pending, media: { registry: next, expectedRevision: pending.media?.expectedRevision ?? registryRevision } };
-    updatePending(queued); setRegistry(next);
+    if (!canEdit()) return;
+    const queue = readPending();
+    try { updatePending({ ...queue, media: { registry: next, expectedRevision: queue.media?.expectedRevision ?? media.revision } }); }
+    catch { notify("メディア情報をブラウザに保存できませんでした", "error"); }
   }
   async function resolveConflict(action: "reload" | "discard" | "force") {
-    if (!conflict) return;
-    if (action === "force") { void deploySite(conflict.target === "media" ? "media" : conflict.documentId); return; }
-    const next = conflict.target === "media" ? { ...pending, media: undefined } : { ...pending, contents: pending.contents.filter((item) => item.document.id !== conflict.documentId) };
-    updatePending(next); setConflict(null); setEditingStatus("clean");
-    if (conflict.target === "content") {
-      const item = pending.contents.find((entry) => entry.document.id === conflict.documentId);
-      if (item) {
-        try {
-          const value = await loadContentFile(item.document.placement.kind, generatedContentFilename(item.document));
-          setCurrent(parseContentMarkdown(value.markdown, item.document.placement.kind, { path: value.path, revision: value.revision }));
-        } catch { setCurrent(null); setScreen("content"); }
-      }
-    }
-    if (conflict.target === "media") await refreshRegistry();
-    await refresh(); setNotice(action === "reload" ? "GitHub版を再読み込みしました" : "保留変更を破棄しました");
+    try {
+      await conflicts.resolve(action);
+      if (action !== "force") { deployment.clearError(); setEditingStatus("clean"); notify(action === "reload" ? "GitHub版を再読み込みしました" : "保留変更を破棄しました"); }
+    } catch (error) { notify(error instanceof Error ? error.message : "競合を解消できません", "error"); }
   }
   async function deploySite(forceTarget?: string) {
-    if (otherTab) return;
+    if (tabLock.blocked || !tabLock.isOwner()) return;
     if (readPending().deployment) { deployment.recheck(); return; }
     if (deploying || !deployment.beginSync()) return;
     let queue = readPending();
@@ -170,22 +112,23 @@ export function App() {
       const about = merged.find((doc) => doc.placement.kind === "about");
       if (about) { const errors = validateAboutDocument(about, merged); if (errors.length) throw new Error(errors.join("; ")); }
       queue = await applyPendingChanges(queue, updatePending, undefined, forceTarget);
-      setConflict(null);
+      conflicts.setConflict(null);
       const deploymentId = crypto.randomUUID();
       const started = await startSiteDeploy(deploymentId, queue.lastCommitSha);
-      if (started.local) { await deployment.finishLocal(); setNotice("ローカルファイルに反映しました"); return; }
+      if (started.local) { await deployment.finishLocal(); notify("ローカルファイルに反映しました"); return; }
       updatePending({ ...queue, deployment: { id: deploymentId, sha: started.sha, startedAt: new Date().toISOString() } });
     } catch (error) {
-      if (error instanceof PendingConflictError) { setConflict(error.detail); setEditingStatus("conflict"); }
+      if (error instanceof PendingConflictError) { conflicts.setConflict(error.detail); setEditingStatus("conflict"); }
       const message = `デプロイできません: ${error instanceof Error ? error.message : "Unknown error"}`;
-      deployment.fail(message); setNotice(message);
+      deployment.fail(message); notify(message, "error");
     } finally { deployment.endSync(); }
   }
 
   const pendingCount = pending.contents.length + (pending.media ? 1 : 0);
-  const deployFeedback = <div className="deployment-feedback" role="status">{deployment.state.state === "waiting" ? "デプロイ中" : deployment.state.state === "paused" || deployment.state.state === "failed" ? deployment.state.message : deployment.state.state === "success" ? "デプロイ完了" : ""}{pending.deployment && <button type="button" disabled={otherTab} onClick={deployment.recheck}>状態を再確認</button>}</div>;
-  const deployButton = <>{deployFeedback}<button type="button" disabled={otherTab} onClick={() => setShowArticleDefaults(true)}>デフォルト設定</button><button className="primary" disabled={deploying || otherTab} onClick={() => void deploySite()}>{deploying ? "デプロイ中…" : `記事をデプロイ${pendingCount ? ` (${pendingCount})` : ""}`}</button>{showArticleDefaults && <ArticleDefaultsDialog value={articleDefaults} registry={registry} onClose={() => setShowArticleDefaults(false)} onSave={(value) => { try { writeArticleDefaults(value); setArticleDefaults(value); setShowArticleDefaults(false); setNotice("記事のデフォルト設定を保存しました"); } catch { setNotice("ブラウザにデフォルト設定を保存できませんでした"); } }} />}</>;
-  const shellNav = <nav className="cms-nav"><button className={(screen === "content" || screen === "editor") ? "active" : ""} onClick={() => { setScreen("content"); setCurrent(null); }}>コンテンツ</button><button className={screen === "about" ? "active" : ""} onClick={() => { const doc = documents.find((item) => item.placement.kind === "about"); if (doc) openDocument(doc); else setNotice("Aboutを読み込めません。接続を確認して再読み込みしてください"); }}>About</button><button className={screen === "media" ? "active" : ""} onClick={() => setScreen("media")}>メディア</button></nav>;
-  if (screen === "editor" && current) return <CmsEditor documents={documents} document={current} status={editingStatus} notice={notice} deployButton={deployButton} registry={registry} conflict={conflict} onChange={stageDocument} onSave={() => saveLocally(current)} onPublish={() => saveLocally({ ...current, common: { ...current.common, publication: "published" } }, true)} onUnpublish={() => saveLocally({ ...current, common: { ...current.common, publication: "draft" } }, true)} onBack={() => { setScreen("content"); setCurrent(null); }} onReload={() => void resolveConflict("reload")} onDiscard={() => void resolveConflict("discard")} onForce={() => void resolveConflict("force")} onDelete={stageDelete} />;
-  return <main className="cms-shell"><header className="global-bar"><strong className="brand">Riddle Records CMS</strong>{shellNav}<span className="status-pill global-notice">{notice}</span><div className="deploy-action">{deployButton}</div></header>{(pendingCount > 0 || pending.deployment) && <aside className="pending-summary"><strong>未デプロイの変更 {pendingCount}件</strong><ul>{pending.contents.map((item) => <li key={item.document.id}>{item.operation === "delete" ? "削除" : item.document.common.publication === "draft" ? "下書き" : "公開"}: {item.document.common.title || "タイトル未設定"}{item.applied ? "（GitHub反映済み）" : ""}</li>)}{pending.media && <li>メディア情報{pending.media.applied ? "（GitHub反映済み）" : ""}</li>}</ul>{pending.deployment && <button type="button" disabled={deploying} onClick={() => { deployment.stopTracking(); setNotice("デプロイ追跡を解除しました。GitHub側の公開状況を確認してください"); }}>デプロイ追跡を解除</button>}{conflict && <div className="conflict-bar"><strong>{conflict.target === "media" ? "メディア情報" : "コンテンツ"}が競合しています</strong><div className="button-row"><button onClick={() => void resolveConflict("reload")}>GitHub版を再読み込み</button><button onClick={() => void resolveConflict("discard")}>保留変更を破棄</button><button className="danger" onClick={() => void resolveConflict("force")}>強制上書き</button></div></div>}<small>保留内容はこのブラウザだけに保存されます。</small></aside>}{screen === "about" && current?.placement.kind === "about" ? <AboutEditor document={current} documents={documents} registry={registry} disabled={otherTab || deploying || Boolean(pending.deployment)} onChange={stageDocument} onSave={() => saveLocally(current)} /> : screen === "media" ? <MediaLibrary registry={registry} editable onChange={changeRegistry} onSave={() => setNotice("メディア情報をブラウザに保存しました")} saving={deploying} /> : <ContentList filters={filters} onFilters={setFilters} documents={documents} files={files.filter((file) => file.kind !== "about")} pendingIds={pending.contents.filter((item) => item.operation === "save").map((item) => item.document.id)} onOpen={openDocument} onNew={(kind: ContentKind) => { const doc = createContentDocument(kind); if (doc.placement.kind === "journal") doc.placement.data = { ...doc.placement.data, ...articleDefaults }; if (!stageDocument(doc)) return; setCurrent(doc); setEditingStatus("dirty"); navigate("editor", doc.id); }} />}</main>;
+  const statusControl = <StatusControl pending={pending} deployment={deployment.state} document={current} editing={editingStatus} conflict={Boolean(conflict)} error={content.error || media.error} readonlyMessage={tabLock.message} registryRevision={media.revision} onRecheck={deployment.recheck} onRetry={() => { if (content.error || media.error) void refreshAll(); else void deploySite(); }} onStop={() => { deployment.stopTracking(); notify("デプロイ追跡を解除しました。GitHub側の公開状況を確認してください"); }} />;
+  const feedback = <><Notice value={notice} onDismiss={dismiss} /><ConflictPanel conflict={conflict} disabled={blocked} onResolve={(action) => void resolveConflict(action)} /><PendingSummary pending={pending} /></>;
+  const deployButton = <><button type="button" disabled={tabLock.blocked} onClick={() => setShowArticleDefaults(true)}>デフォルト設定</button><button className="primary" disabled={deploying || tabLock.blocked} onClick={() => void deploySite()}>{deploying ? "デプロイ中…" : `記事をデプロイ${pendingCount ? ` (${pendingCount})` : ""}`}</button>{showArticleDefaults && <ArticleDefaultsDialog value={articleDefaults} registry={registry} onClose={() => setShowArticleDefaults(false)} onSave={(value) => { try { writeArticleDefaults(value); setArticleDefaults(value); setShowArticleDefaults(false); notify("記事のデフォルト設定を保存しました"); } catch { notify("ブラウザにデフォルト設定を保存できませんでした", "error"); } }} />}</>;
+  const shellNav = <nav className="cms-nav"><button className={(screen === "content" || screen === "editor") ? "active" : ""} onClick={() => navigate("content")}>コンテンツ</button><button className={screen === "about" ? "active" : ""} onClick={() => { const doc = documents.find((item) => item.placement.kind === "about"); if (doc) openDocument(doc); else notify("Aboutを読み込めません。接続を確認して再読み込みしてください", "error"); }}>About</button><button className={screen === "media" ? "active" : ""} onClick={() => navigate("media")}>メディア</button></nav>;
+  if (screen === "editor" && current) return <CmsEditor documents={documents} document={current} statusControl={statusControl} feedback={feedback} disabled={blocked} deployButton={deployButton} registry={registry} onChange={stageDocument} onSave={() => saveLocally(current)} onPublish={() => saveLocally({ ...current, common: { ...current.common, publication: "published" } }, true)} onUnpublish={() => saveLocally({ ...current, common: { ...current.common, publication: "draft" } }, true)} onBack={() => navigate("content")} onDelete={stageDelete} />;
+  return <main className="cms-shell"><header className="global-bar"><strong className="brand">Riddle Records CMS</strong>{shellNav}{statusControl}<div className="deploy-action">{deployButton}</div></header>{feedback}{screen === "about" && current?.placement.kind === "about" ? <AboutEditor document={current} documents={documents} registry={registry} disabled={blocked} onChange={stageDocument} onSave={() => saveLocally(current)} /> : screen === "media" ? <MediaLibrary registry={registry} editable={!blocked} onChange={changeRegistry} onSave={() => notify("メディア情報をブラウザに保存しました")} saving={deploying} /> : <ContentList filters={filters} onFilters={setFilters} documents={documents} files={files.filter((file) => file.kind !== "about")} disabled={blocked} pendingIds={pending.contents.filter((item) => item.operation === "save").map((item) => item.document.id)} onOpen={openDocument} onNew={(kind: ContentKind) => { const doc = createContentDocument(kind); if (doc.placement.kind === "journal") doc.placement.data = { ...doc.placement.data, ...articleDefaults }; if (!stageDocument(doc)) return; setCurrent(doc); setEditingStatus("dirty"); navigate("editor", doc.id); }} />}</main>;
 }

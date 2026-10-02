@@ -55,7 +55,7 @@ function nodeKind(element: HTMLElement): string {
   return element.tagName.toLowerCase();
 }
 
-export function VisualEditor({ value, onChange, onOpenMedia, documents = [] }: { documents?: ContentDocument[]; value: string; onChange: (markdown: string) => void; onOpenMedia: (insert: (image: EditorImage) => void) => void }) {
+export function VisualEditor({ value, onChange, onOpenMedia, documents = [], editable = true }: { editable?: boolean; documents?: ContentDocument[]; value: string; onChange: (markdown: string) => void; onOpenMedia: (insert: (image: EditorImage) => void) => void }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const draggingPos = useRef<number | null>(null);
   const addHandle = useRef<HTMLButtonElement>(null);
@@ -71,6 +71,7 @@ export function VisualEditor({ value, onChange, onOpenMedia, documents = [] }: {
   useDismissable(Boolean(pasted), () => setPasted(null), [pasteRegion]);
   const editor = useEditor({
     extensions: [StarterKit.configure({ link: false }), Link.configure({ openOnClick: false }), Image.configure({ allowBase64: false }), TaskList, TaskItem.configure({ nested: true }), TableKit.configure({ table: { resizable: true } }), RawHtml, EmbedNode.configure({ onEdit: (pos, data) => { if (typeof pos === "number") setEmbedEdit({ data, from: pos, expected: JSON.stringify(data) }); } })],
+    editable,
     content: markdownToEditorHtml(value),
     onUpdate: ({ editor }) => {
       onChange(editorHtmlToMarkdown(editor.getHTML()));
@@ -94,6 +95,7 @@ export function VisualEditor({ value, onChange, onOpenMedia, documents = [] }: {
     }, attributes: { "aria-label": "本文エディター" } }
   });
 
+  useEffect(() => { editor?.setEditable(editable); }, [editor, editable]);
   useEffect(() => { if (editor && editorHtmlToMarkdown(editor.getHTML()) !== value.trim()) editor.commands.setContent(markdownToEditorHtml(value), { emitUpdate: false }); }, [editor, value]);
 
   const updateActive = useCallback((target: EventTarget | null) => {

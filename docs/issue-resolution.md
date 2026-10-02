@@ -75,3 +75,13 @@ GitHub反映とdeployment pollingを分離し、`useDeployment` / `deploymentTra
 成功時は保留queueを解消し、contentとmediaのrevisionを再取得する。現在の文書も取得したrevisionへ同期する。失敗時はdeploymentだけを外し、GitHub反映済みの変更とrevisionを保持して再編集／再試行できる。完了結果を永続化し、reload後も失敗を表示する。別タブのqueue更新時も同期する。既存の対象別競合処理を維持。
 
 `deployment-tests.mjs` でpolling上限・再開・中断、実際のAppのreload→成功とrevision取得、通信失敗→手動／focus再確認、失敗→reload→再編集を検証。既存About保存／競合テストとCMS buildも成功。
+
+## #15: 保存状態・通知・責務の整理
+
+通常のpillは短い継続状態だけを表示し、共通`StatusControl`の詳細パネルからGitHub反映、公開状況、更新日時、ファイル、revision、Workflowリンク、エラー詳細、再試行／再確認を開く。公開設定は別のラベルで表示する。保存などの一時通知は`useNotice` / `Notice`へ移し、5秒（エラーは10秒）または閉じる操作で消える。通知が消えても保存／競合状態は変わらない。
+
+Appのserver stateは`useContentDocuments`、`useMediaRegistry`、`usePendingQueue`、`useDeployment`へ分離。文書取得は古い応答を無視し、通信失敗時に既存文書を消さない。UI stateはURL navigation、編集中文書、設定dialogに分け、競合の解消は`useConflict`、タブ所有権は`useTabLock`で管理する。競合パネルと保留一覧を編集画面と一覧で共用。保留変更は開閉できるsummaryに収納する。
+
+非所有タブ／デプロイ中は編集欄と公開操作を無効化する。focus、disabled、選択状態を共通CSSで確認し、Block移動ラインにも既存mintトークンを使用する。
+
+`status-tests.mjs` で主要状態の優先順位、一時通知と未反映状態の分離、実際の競合→再読込、readonlyエディタ、古い応答・通信失敗、通知期限を検証。既存navigation / About / deploymentテストとCMS buildも成功。

@@ -35,7 +35,7 @@ export function useDeployment({ pending, updatePending, onRefresh, enabled = tru
     if (!pending.deployment && !syncing.current) setState(restoredDeploymentState(pending));
   }, [pending.lastDeployment, pending.deployment?.id]);
 
-  return { state, recheck, beginSync: () => { if (syncing.current) return false; syncing.current = true; setState({ state: "syncing-github" }); return true; }, endSync: () => { syncing.current = false; }, fail: (message: string) => setState({ state: "failed", message }),
+  return { state, recheck, clearError: () => setState(restoredDeploymentState(readPending())), beginSync: () => { if (syncing.current) return false; syncing.current = true; setState({ state: "syncing-github" }); return true; }, endSync: () => { syncing.current = false; }, fail: (message: string) => setState({ state: "failed", message }),
     async finishLocal() { latest.current.updatePending(emptyPending()); setState({ state: "success", sha: "local" }); await latest.current.onRefresh(); },
     stopTracking() { latest.current.updatePending({ ...readPending(), deployment: undefined }); setState({ state: "idle" }); }
   };
