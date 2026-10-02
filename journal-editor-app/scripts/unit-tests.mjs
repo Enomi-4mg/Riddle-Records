@@ -13,7 +13,7 @@ import { validateMediaRegistry } from "../src/types/media.ts";
 import { contentApiPlugin, isAllowedContentFilename, isTrustedWriteOrigin } from "../vite.config.ts";
 import { createWorkerHandler } from "../worker/index.ts";
 import { getGalleryDetailPath, hasGalleryDetail, validateGalleryItems } from "../../src/data/gallery.ts";
-import { resolveImageUrl } from "../../src/utils/images.ts";
+import { resolveImageUrl, resolveWorkImageUrls } from "../../src/utils/images.ts";
 import { getJournalPermalink, getJournalRoutePath, getJournalThumbnail, toJournalRoutePath } from "../../src/utils/journal.ts";
 
 // Every local API mutation is isolated from repository content.
@@ -402,6 +402,20 @@ describe("site utility behavior", () => {
     assert.equal(resolveImageUrl("https://example.com/a.jpg", "w_100"), "https://example.com/a.jpg");
     assert.equal(resolveImageUrl("/images/a.jpg"), "/images/a.jpg");
     assert.equal(resolveImageUrl("gallery/a.jpg", "/w_100,q_auto/"), "https://res.cloudinary.com/dzq8y9qes/image/upload/w_100,q_auto/v1/gallery/a.jpg");
+  });
+
+  test("delivers original work GIFs and transforms only one thumbnail frame", () => {
+    const base = "https://res.cloudinary.com/dzq8y9qes/image/upload";
+    const gif = resolveWorkImageUrls("result-4_qptaza.gif");
+    assert.equal(gif.image, `${base}/v1/result-4_qptaza.gif`);
+    assert.equal(gif.thumbnail, `${base}/pg_1,w_600,h_400,c_fill,q_auto,f_auto/v1/result-4_qptaza.gif`);
+    assert.equal(resolveWorkImageUrls(" folder/animation.GIF ").image, `${base}/v1/folder/animation.GIF`);
+    const still = resolveWorkImageUrls("art.jpg");
+    assert.equal(still.image, `${base}/w_1920,q_auto,f_auto/v1/art.jpg`);
+    assert.equal(still.thumbnail, `${base}/w_600,h_400,c_fill,q_auto,f_auto/v1/art.jpg`);
+    for (const url of ["https://example.com/animation.gif", "/images/animation.gif"]) {
+      assert.deepEqual(resolveWorkImageUrls(url), { image: url, thumbnail: url });
+    }
   });
 
   test("generates and normalizes journal routes", () => {

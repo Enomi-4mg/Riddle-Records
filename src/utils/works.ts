@@ -3,7 +3,7 @@ import { hasVisiblePublicationDate } from "../../shared/publicationDate";
 import { normalizeContentTags } from "../../shared/contentTags";
 import { galleryWorkPath, workReference, type WorkPreview } from "../../shared/workIdentity";
 import { getGalleryDetailPath, getGalleryItems, hasGalleryDetail } from "./gallery";
-import { resolveImageUrl } from "./images";
+import { resolveWorkImageUrls } from "./images";
 
 export type ViewingWork = WorkPreview & {
   date: string; description: string; tags: readonly string[]; image: string; imageAlt: string;
@@ -14,8 +14,7 @@ export async function getViewingWorks(): Promise<ViewingWork[]> {
   const visuals: ViewingWork[] = (await getGalleryItems()).map((item) => ({
     id: workReference("gallery", item.slug), kind: "visual", title: item.title,
     legacyHash: item.image.replace(/\./g, "-"), date: item.date, description: item.description, tags: item.tags,
-    image: resolveImageUrl(item.image, "w_1920,q_auto,f_auto"), imageAlt: item.imageAlt,
-    thumbnail: resolveImageUrl(item.image, "w_600,h_400,c_fill,q_auto,f_auto"),
+    ...resolveWorkImageUrls(item.image), imageAlt: item.imageAlt,
     links: [
       ...(hasGalleryDetail(item) ? [{ label: "詳細記事", url: getGalleryDetailPath(item) }] : []),
       ...(item.article_url ? [{ label: "作品記事", url: item.article_url }] : []),

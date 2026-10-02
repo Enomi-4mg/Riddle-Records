@@ -56,8 +56,12 @@ Jekyll 時代のファイルは移行後に削除済みです。
 `/works/` は全作品の一覧です。
 `src/content/gallery/*.md` の Gallery 作品と `src/content/songs/` の楽曲を、共通の Works カードで表示します。
 
-`/gallery/` は美術作品に絞ったアーカイブです。
-`detail: true` の Gallery 項目には `/gallery/[slug]/` の個別ページを生成し、それ以外の項目は従来どおり Lightbox で表示します。
+`/gallery/` は Visual / Music 共通の鑑賞画面です。
+Works のカードから選択した作品を開き、`detail: true` の Gallery 項目には `/gallery/[slug]/` の個別ページも生成します。
+
+Cloudinary の公開 ID が `.gif` の作品は、鑑賞画面では変換せずに原本を配信し、Works と鑑賞画面のメニューでは先頭フレームの静止画を表示します。
+GIF 全体を幅1920pxに拡大すると全フレームの合計画素数が変換上限を超える場合があるためです。
+通常の静止画は従来どおり拡大・最適化し、指定済みの画像 URL はそのまま使います。
 
 Gallery の標準 frontmatter は次のとおりです。
 
