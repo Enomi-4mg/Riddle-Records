@@ -5,6 +5,10 @@ const window = new Window({ url: "http://localhost:5174/?kind=projects&publicati
 for (const key of ["window", "document", "Element", "HTMLElement", "Node", "Event", "MouseEvent", "KeyboardEvent", "navigator", "MutationObserver", "localStorage", "getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame"]) {
   Object.defineProperty(globalThis, key, { configurable: true, value: key === "window" ? window : ["getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame"].includes(key) ? window[key].bind(window) : window[key] });
 }
+let scrollY = 0;
+Object.defineProperty(window, "scrollY", { configurable: true, get: () => scrollY });
+window.scrollTo = (options) => { scrollY = options.top; };
+const scroll = (y) => { scrollY = y; window.dispatchEvent(new window.Event("scroll")); };
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const { act, createElement } = await import("react");
 const { createRoot } = await import("react-dom/client");
@@ -23,6 +27,7 @@ test("App preserves URL filters through editor, media, reload and browser histor
   const original = globalThis.fetch;
   const sources = new Map([
     ["projects/target.md", "---\ntitle: Target project\ndate: 2026-10-01\nslug: target\ndraft: true\n---\n\nBody"],
+    ["about/profile.md", "---\ntitle: About\nname: 4mg\n---\n"],
     ["journal/other.md", "---\ntitle: Other article\ndate: 2026-10-01\n---\n"]
   ]);
   globalThis.fetch = async (address) => {
@@ -36,13 +41,17 @@ test("App preserves URL filters through editor, media, reload and browser histor
   try {
     await act(async () => root.render(createElement(App)));
     assert.equal(container.querySelectorAll(".content-row").length, 1);
-    await click(container.querySelector(".content-row")); assert.ok(container.querySelector(".editor-shell"));
+    scroll(840);
+    await click(container.querySelector(".content-row")); assert.ok(container.querySelector(".editor-shell")); assert.equal(window.scrollY, 0);
+    scroll(310);
     assert.equal(new URLSearchParams(window.location.search).get("kind"), "projects");
     await click(button(container, "← コンテンツ")); assert.equal(container.querySelectorAll(".content-row").length, 1);
+    assert.equal(window.scrollY, 840);
     assert.equal(button(container, "Projects").className, "active"); assert.equal(button(container, "下書き").className, "active");
-    await act(async () => { window.history.back(); await tick(); }); assert.ok(container.querySelector(".editor-shell"));
-    await act(async () => { window.history.forward(); await tick(); }); assert.ok(container.querySelector(".content-index"));
-    await click(button(container, "メディア")); await click(button(container, "コンテンツ"));
+    await act(async () => { window.history.back(); await tick(); }); assert.ok(container.querySelector(".editor-shell")); assert.equal(window.scrollY, 310);
+    await act(async () => { window.history.forward(); await tick(); }); assert.ok(container.querySelector(".content-index")); assert.equal(window.scrollY, 840);
+    await click(button(container, "メディア")); assert.equal(window.scrollY, 0); scroll(240); await click(button(container, "コンテンツ")); assert.equal(window.scrollY, 840);
+    await click(button(container, "About")); assert.equal(window.scrollY, 0); await click(button(container, "コンテンツ")); assert.equal(window.scrollY, 840);
     assert.equal(container.querySelector(".filter-bar input").value, "Target");
     await act(async () => root.unmount()); root = createRoot(container); await act(async () => root.render(createElement(App)));
     assert.equal(container.querySelectorAll(".content-row").length, 1); assert.equal(button(container, "Projects").className, "active");
@@ -61,5 +70,19 @@ test("App preserves URL filters through editor, media, reload and browser histor
     await act(async () => root.render(createElement(ContentList, { documents: [doc], files: [], filters: { kind: "all", publication: "all", query: "searchable" }, onFilters() {}, onOpen() {}, onNew() {} })));
     assert.equal(container.querySelector(".content-row small").textContent, "Searchable legacy summary");
     assert.equal(doc.common.description, "");
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});
+
+test("new documents start at the top and list filter changes retain the position", async () => {
+  const { useCmsNavigation } = await import("../src/hooks/useCmsNavigation.ts");
+  window.history.replaceState(null, "", "/");
+  let navigation; function Probe() { navigation = useCmsNavigation(); return null; }
+  const container = document.createElement("div"); document.body.append(container); const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(Probe)));
+    scroll(600);
+    await act(async () => navigation.setFilters({ kind: "journal", publication: "all", query: "" })); assert.equal(window.scrollY, 600);
+    await act(async () => navigation.navigate("editor", "new-document")); assert.equal(window.scrollY, 0);
+    await act(async () => navigation.navigate("content")); assert.equal(window.scrollY, 600);
   } finally { await act(async () => root.unmount()); container.remove(); }
 });
