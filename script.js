@@ -163,6 +163,21 @@ function initializeJournalFeatures() {
   }
 }
 
+function setSidebarOpen(open, restoreFocus = true) {
+  const sidebar = document.querySelector('.sidebar');
+  const trigger = document.querySelector('.menu_toggle');
+  if (!sidebar || !trigger) return;
+  sidebar.classList.toggle('show', open);
+  sidebar.inert = !open;
+  sidebar.setAttribute('aria-hidden', String(!open));
+  trigger.setAttribute('aria-expanded', String(open));
+  trigger.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+  document.querySelector('.sidebar-overlay')?.toggleAttribute('hidden', !open);
+  document.body.classList.toggle('sidebar-open', open);
+  if (open) sidebar.querySelector('button, a')?.focus();
+  else if (restoreFocus) trigger.focus();
+}
+
 function initScrollAnimations() {
   const manualEntries = document.querySelectorAll('.journal-entry-animate');
   const autoEntries = document.querySelectorAll(`
@@ -251,6 +266,7 @@ function initializeCurtain() {
 }
 
 function initializePage() {
+  setSidebarOpen(false, false);
   updateNavigationActiveState();
 
   if (typeof initGallery === 'function') {
@@ -277,26 +293,29 @@ if (!window.__riddleSiteListenersInitialized) {
   document.addEventListener('click', (event) => {
     const target = event.target instanceof Element ? event.target : null;
     const sidebar = document.querySelector('.sidebar');
-    const toggleButton = target?.closest('.menu_toggle');
-
-    if (toggleButton && sidebar) {
-      sidebar.classList.toggle('show');
-      return;
-    }
-
-    if (!sidebar?.classList.contains('show')) {
-      return;
-    }
-
-    if (target?.closest('.sidebar a')) {
-      sidebar.classList.remove('show');
-      return;
-    }
-
-    if (!target?.closest('.sidebar') && !target?.closest('.menu_toggle')) {
-      sidebar.classList.remove('show');
+    if (target?.closest('.menu_toggle')) {
+      setSidebarOpen(!sidebar?.classList.contains('show'));
+    } else if (target?.closest('.sidebar-close, .sidebar-overlay')) {
+      setSidebarOpen(false);
+    } else if (target?.closest('.sidebar a')) {
+      setSidebarOpen(false, false);
     }
   });
+  document.addEventListener('keydown', (event) => {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar?.classList.contains('show')) return;
+    if (event.key === 'Escape') { event.preventDefault(); setSidebarOpen(false); }
+    if (event.key === 'Tab') {
+      const items = [...sidebar.querySelectorAll('button, a[href]')];
+      const first = items[0], last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    }
+  });
+  window.matchMedia('(min-width: 769px)').addEventListener('change', (event) => {
+    if (event.matches) setSidebarOpen(false, false);
+  });
+  document.addEventListener('astro:before-swap', () => setSidebarOpen(false, false));
 
   document.addEventListener('astro:page-load', initializePage);
 }

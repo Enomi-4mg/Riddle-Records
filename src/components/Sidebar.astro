@@ -4,7 +4,8 @@ const basePath = base.endsWith("/") ? base : `${base}/`;
 const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 ---
 
-<nav class="sidebar" aria-label="Mobile navigation">
+<div class="sidebar-overlay" hidden></div>
+<nav id="mobile-navigation" class="sidebar" aria-label="モバイルナビゲーション" aria-hidden="true" inert>
   <button class="sidebar-close" type="button" aria-label="メニューを閉じる">×</button>
   <div class="sidebar_content">
     <ul class="sidebar_menu">
@@ -45,15 +46,7 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
   .sidebar-close:active,
   .sidebar-close:focus-visible {
     background: rgba(244, 255, 250, 0.42);
-    outline: none;
+    outline: 3px solid var(--color-ink);
+    outline-offset: 3px;
   }
 </style>
-
-<script is:inline>
-  const sidebarCloseButton = document.querySelector('.sidebar-close');
-  const mobileSidebar = document.querySelector('.sidebar');
-
-  sidebarCloseButton?.addEventListener('click', () => {
-    mobileSidebar?.classList.remove('show');
-  });
-</script>
