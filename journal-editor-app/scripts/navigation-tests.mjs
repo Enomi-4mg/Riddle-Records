@@ -1,0 +1,53 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { Window } from "happy-dom";
+const window = new Window({ url: "http://localhost:5174/?kind=projects&publication=draft&q=Target" });
+for (const key of ["window", "document", "Element", "HTMLElement", "Node", "Event", "MouseEvent", "KeyboardEvent", "navigator", "MutationObserver", "localStorage", "getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame"]) {
+  Object.defineProperty(globalThis, key, { configurable: true, value: key === "window" ? window : ["getComputedStyle", "requestAnimationFrame", "cancelAnimationFrame"].includes(key) ? window[key].bind(window) : window[key] });
+}
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+const { act, createElement } = await import("react");
+const { createRoot } = await import("react-dom/client");
+const { App } = await import("../src/App.tsx");
+const { readNavigation } = await import("../src/hooks/useCmsNavigation.ts");
+const button = (container, text) => [...container.querySelectorAll("button")].find((item) => item.textContent === text);
+const click = async (node) => { assert.ok(node); await act(async () => node.click()); };
+const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+test("invalid parameters fall back safely without admitting About into the list", () => {
+  assert.deepEqual(readNavigation("?kind=about&publication=no&screen=invalid&q=%E0%A4").filters, { kind: "all", publication: "all", query: "�" });
+  assert.equal(readNavigation("?screen=invalid").screen, "content");
+});
+
+test("App preserves URL filters through editor, media, reload and browser history", async () => {
+  const original = globalThis.fetch;
+  const sources = new Map([
+    ["projects/target.md", "---\ntitle: Target project\ndate: 2026-10-01\nslug: target\ndraft: true\n---\n\nBody"],
+    ["journal/other.md", "---\ntitle: Other article\ndate: 2026-10-01\n---\n"]
+  ]);
+  globalThis.fetch = async (address) => {
+    const url = new URL(address, window.location.href);
+    if (url.pathname === "/api/content-list") return Response.json({ files: [...sources.keys()].map((path) => ({ kind: path.split("/")[0], path: path.split("/")[1], revision: "rev" })) });
+    if (url.pathname === "/api/media-registry") return Response.json({ registry: { version: 1, assets: [] }, revision: "media" });
+    if (url.pathname === "/api/content-item") return Response.json({ markdown: sources.get(`${url.searchParams.get("kind")}/${url.searchParams.get("path")}`), revision: "rev" });
+    throw new Error(`Unexpected ${address}`);
+  };
+  const container = document.createElement("div"); document.body.append(container); let root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(App)));
+    assert.equal(container.querySelectorAll(".content-row").length, 1);
+    await click(container.querySelector(".content-row")); assert.ok(container.querySelector(".editor-shell"));
+    assert.equal(new URLSearchParams(window.location.search).get("kind"), "projects");
+    await click(button(container, "← コンテンツ")); assert.equal(container.querySelectorAll(".content-row").length, 1);
+    assert.equal(button(container, "Projects").className, "active"); assert.equal(button(container, "下書き").className, "active");
+    await act(async () => { window.history.back(); await tick(); }); assert.ok(container.querySelector(".editor-shell"));
+    await act(async () => { window.history.forward(); await tick(); }); assert.ok(container.querySelector(".content-index"));
+    await click(button(container, "メディア")); await click(button(container, "コンテンツ"));
+    assert.equal(container.querySelector(".filter-bar input").value, "Target");
+    await act(async () => root.unmount()); root = createRoot(container); await act(async () => root.render(createElement(App)));
+    assert.equal(container.querySelectorAll(".content-row").length, 1); assert.equal(button(container, "Projects").className, "active");
+    await click(container.querySelector(".content-row"));
+    await act(async () => root.unmount()); root = createRoot(container); await act(async () => root.render(createElement(App)));
+    assert.ok(container.querySelector(".editor-shell")); assert.equal(container.querySelector(".title-input").value, "Target project");
+  } finally { await act(async () => root.unmount()); container.remove(); globalThis.fetch = original; localStorage.clear(); }
+});

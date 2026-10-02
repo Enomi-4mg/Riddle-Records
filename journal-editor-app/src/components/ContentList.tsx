@@ -1,8 +1,13 @@
 import { useMemo, useState } from "react";
 import { contentKindLabels, type ContentDocument, type ContentFileInfo, type ContentKind, type PublicationStatus } from "../types/content";
+import type { ContentFilters } from "../hooks/useCmsNavigation";
 
-export function ContentList({ documents, files, pendingIds = [], onOpen, onNew }: { documents: ContentDocument[]; files: ContentFileInfo[]; pendingIds?: string[]; onOpen: (doc: ContentDocument) => void; onNew: (kind: ContentKind) => void }) {
-  const [query, setQuery] = useState(""); const [kind, setKind] = useState<"all" | ContentKind>("all"); const [publication, setPublication] = useState<"all" | PublicationStatus>("all"); const [newMenu, setNewMenu] = useState(false);
+export function ContentList({ documents, files, filters, onFilters, pendingIds = [], onOpen, onNew }: { documents: ContentDocument[]; files: ContentFileInfo[]; filters: ContentFilters; onFilters: (value: ContentFilters, replace?: boolean) => void; pendingIds?: string[]; onOpen: (doc: ContentDocument) => void; onNew: (kind: ContentKind) => void }) {
+  const { query, kind, publication } = filters;
+  const setQuery = (query: string) => onFilters({ ...filters, query }, true);
+  const setKind = (kind: "all" | ContentKind) => onFilters({ ...filters, kind });
+  const setPublication = (publication: "all" | PublicationStatus) => onFilters({ ...filters, publication });
+  const [newMenu, setNewMenu] = useState(false);
   const visible = useMemo(() => documents.filter((doc) => doc.placement.kind !== "about" && (kind === "all" || doc.placement.kind === kind) && (publication === "all" || doc.common.publication === publication) && [doc.common.title, doc.common.description, ...doc.common.tags].join(" ").toLowerCase().includes(query.toLowerCase())), [documents, kind, publication, query]);
   return <section className="content-index"><header className="section-heading"><div><p>Content</p><h1>コンテンツ</h1></div><div className="new-content-wrap"><button className="primary" onClick={() => setNewMenu(!newMenu)}>新規作成</button>{newMenu && <div className="new-content-menu">{contentKindLabels.map((item) => <button key={item.kind} onClick={() => onNew(item.kind)}>{item.label}</button>)}</div>}</div></header>
     <div className="filter-bar"><input placeholder="タイトル、説明、タグを検索" value={query} onChange={(event) => setQuery(event.target.value)} /><div className="segmented"><button className={kind === "all" ? "active" : ""} onClick={() => setKind("all")}>すべて</button>{contentKindLabels.map((item) => <button className={kind === item.kind ? "active" : ""} onClick={() => setKind(item.kind)} key={item.kind}>{item.label}</button>)}</div><div className="segmented"><button className={publication === "all" ? "active" : ""} onClick={() => setPublication("all")}>すべて</button><button className={publication === "draft" ? "active" : ""} onClick={() => setPublication("draft")}>下書き</button><button className={publication === "published" ? "active" : ""} onClick={() => setPublication("published")}>公開中</button></div></div>
