@@ -1,8 +1,8 @@
 ---
-icon: ""
+icon: ''
 name: 4mg
 bio: ボカロ曲・イラスト・ゲーム制作をしています。
-birthday: "09-26"
+birthday: 09-26
 motto: 初心忘るべからず（仮）
 hobbies:
   - 漫画
@@ -30,5 +30,11 @@ sns:
   - service: ニコニコ動画
     url: https://www.nicovideo.jp/user/77764856
     label: ニコニコ動画
-featured_works: []
+featured_works:
+  - gallery:light
+  - gallery:homework
+  - songs:2025-08-23
+  - songs:2025-01-03
 ---
+
+
