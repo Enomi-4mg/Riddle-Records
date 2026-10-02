@@ -115,10 +115,10 @@ test("embed block actions duplicate and delete without losing metadata", async (
       const handle=mounted.container.querySelector('.drag-handle');assert.ok(handle);await act(async()=>handle.click());
     };
     await openActions();
-    await act(async()=>Array.from(mounted.container.querySelectorAll("button")).find((button)=>button.textContent==="複製").click());
+    await act(async()=>Array.from(document.querySelectorAll(".action-popover button")).find((button)=>button.textContent==="複製").click());
     assert.equal(mounted.container.querySelectorAll("[data-editor-embed]").length,2);assert.equal((outputs.at(-1).match(/```riddle-embed/g)||[]).length,2);
     await openActions();
-    await act(async()=>Array.from(mounted.container.querySelectorAll("button")).find((button)=>button.textContent==="削除").click());
+    await act(async()=>Array.from(document.querySelectorAll(".action-popover button")).find((button)=>button.textContent==="削除").click());
     assert.equal(mounted.container.querySelectorAll("[data-editor-embed]").length,1);assert.match(outputs.at(-1),/abcdefghijk/);
   } finally {await mounted.close();}
 });

@@ -109,7 +109,10 @@ button.primary {
 .block-controls { position: absolute; z-index: 8; left: -3.3rem; display: flex; gap: .15rem; align-items: flex-start; height: 2rem; transition: top .08s ease-out; }
 .block-control { width: 1.55rem; height: 1.8rem; border: 0; border-radius: 5px; padding: 0; background: transparent; color: #75827e; font-size: 1rem; }
 .block-control:hover { background: #edf3f0; color: var(--cms-ink); }
-.drag-handle { cursor: grab; letter-spacing: -.28em; padding-right: .28em; }
+.drag-handle { cursor: grab; }
+.drag-handle:active { cursor: grabbing; }
+.block-control { display: grid; place-items: center; }
+.block-control:focus-visible { outline: 2px solid var(--cms-accent); outline-offset: 2px; }
 .block-popover, .slash-menu { position: absolute; z-index: 40; display: grid; width: 230px; max-height: min(520px, 70vh); overflow-y: auto; border: 1px solid var(--cms-border); border-radius: 10px; background: #fff; box-shadow: 0 16px 44px rgba(18,26,24,.16); padding: .45rem; }
 .block-popover { top: 2.1rem; left: 0; }
 .block-popover p, .slash-menu p { margin: .45rem .55rem .2rem; color: var(--cms-muted); font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -1167,3 +1170,9 @@ code {
 .about-errors { background: #fff0ed; border-radius: 12px; padding: 16px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 @media (max-width: 720px) { .about-editor { padding: 16px; } .about-sns-row { grid-template-columns: 1fr; } .about-featured-list li { flex-wrap: wrap; } }
+
+/* Shared CMS popovers are positioned against the viewport, including on scroll. */
+.new-content-menu.floating-panel { width: 170px; }
+.floating-panel { right: auto; bottom: auto; position: fixed; z-index: 80; overflow-y: auto; box-sizing: border-box; max-width: calc(100vw - 16px); }
+.block-drop-indicator { position: absolute; height: 3px; background: var(--cms-accent); pointer-events: none; z-index: 10; }
+.visual-editor.is-dragging .drag-handle { color: var(--cms-accent); }

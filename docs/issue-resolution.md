@@ -59,3 +59,11 @@ Featured Worksの初期値は空配列。自動取得を廃止し、「紹介す
 種別 `kind`、公開状態 `publication`、検索語 `q` は URL を正本とし、一覧のローカル state を廃止した。画面と選択文書も `screen` / `document` に保持する。編集・メディアへの移動後も条件を維持し、reload と browser back / forward で復元する。未定義のパラメーターは安全な初期値に戻す。検索の入力中は履歴を置換し、フィルター選択と画面移動は履歴を追加する。配信先のルートを変えない query URL を使用する。
 
 `navigation-tests.mjs` で実際の App の画面移動、履歴、再マウントによる復元を検証。CMS build が成功。
+
+## #13: 共通メニューとブロック操作
+
+`FloatingPanel` と `useDismissable` を新規作成、Block操作、スラッシュメニューで共用。triggerでtoggle、Escapeで閉じてfocusを戻し、外側pointerdownで閉じる。URL貼り付け選択も同じdismiss処理を利用する。固定座標のportalで表示し、viewport端で上下を切替え、scroll / resizeで配置を再計算する。長いメニューは内部scrollで全項目を操作できる。
+
+Block追加・移動をSVGアイコンにし、toolbarをBlock先頭に揃える。既存drag/dropは移動先のラインを表示し、カスタムdrag中はProseMirrorの通常dropとの二重処理を避ける。操作メニューの上下移動はkeyboardからも利用できる。通常のテキストdropは従来どおり。
+
+`interaction-tests.mjs` でviewport配置、内部／外側click、Escapeとfocus、実際のBlock drag/drop・上下移動を検証。既存embed操作とCMS buildも成功。
