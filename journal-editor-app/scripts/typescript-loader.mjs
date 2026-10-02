@@ -6,7 +6,7 @@ import { transform } from "esbuild";
 const extensions = [".ts", ".tsx"];
 
 export async function resolve(specifier, context, nextResolve) {
-  if (specifier.endsWith("?url")) return { url: new URL(specifier, context.parentURL).href, shortCircuit: true };
+  if ((specifier.endsWith("?url") || specifier.endsWith("?raw"))) return { url: new URL(specifier, context.parentURL).href, shortCircuit: true };
   try {
     return await nextResolve(specifier, context);
   } catch (error) {
@@ -26,6 +26,7 @@ export async function resolve(specifier, context, nextResolve) {
 }
 
 export async function load(url, context, nextLoad) {
+  if (new URL(url).search === "?raw") return { format: "module", source: `export default ${JSON.stringify(await fs.readFile(fileURLToPath(new URL(url)), "utf8"))}`, shortCircuit: true };
   if (new URL(url).search === "?url") return { format: "module", source: `export default ${JSON.stringify(new URL(url).pathname)}`, shortCircuit: true };
   if (!extensions.some((extension) => url.endsWith(extension))) {
     return nextLoad(url, context);

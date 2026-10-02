@@ -12,7 +12,7 @@ test("managed content and media run validation without duplicate Pages or Worker
     assert.equal(triggers(worker.on.push, files), false);
     assert.equal(triggers(tests.on.push, files), true);
   }
-  for (const file of ["journal-editor-app/src/App.tsx", "journal-editor-app/worker/index.ts", "shared/contentStorage.ts", "src/utils/images.ts", "assets/css/embeds.css", "package.json", "package-lock.json"]) assert.equal(triggers(worker.on.push, [file]), true, file);
+  for (const file of ["journal-editor-app/src/App.tsx", "journal-editor-app/worker/index.ts", "shared/contentStorage.ts", "src/utils/images.ts", "assets/css/embeds.css", "assets/css/main.css", "assets/css/journal.css", "src/components/Header.astro", "favicon/favicon.ico", "package.json", "package-lock.json"]) assert.equal(triggers(worker.on.push, [file]), true, file);
   assert.equal(triggers(pages.on.push, ["src/content/journal/article.md", "src/pages/index.astro"]), true);
   assert.ok(pages.on.workflow_dispatch); assert.deepEqual(pages.on.repository_dispatch.types, ["cms_site_deploy"]);
   const checkout = pages.jobs.build.steps.find((step) => step.name === "Checkout");

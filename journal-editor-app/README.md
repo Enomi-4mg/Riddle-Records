@@ -33,7 +33,7 @@ Astro本体側の旧Editor `src/pages/tools/journal-editor.astro` は、現在�
 
 ### ローカルCMSモード
 
-dev server 上では、Editor から `src/content/<kind>/*.md` を開いて編集できます。`Journal` / `Songs` / `Gallery` / `Projects` の変更はまずブラウザ内に保留され、「記事をデプロイ」でローカルの `.md` ファイルへ反映します。
+dev server 上では、Editor から `src/content/<kind>/*.md` を開いて編集できます。`Journal` / `Songs` / `Gallery` / `Projects` の変更はまずブラウザ内に保留され、「保留変更をサイトに反映」でローカルの `.md` ファイルへ反映します。
 
 ローカルでの反映はVite dev server APIを使います。本番CMSでは同じ操作がGitHubへのコミットとGitHub Pagesの起動になります。
 
@@ -53,9 +53,9 @@ API は kind ごとに固定された `src/content/<kind>/` 配下のサブデ�
 
 保存リクエストは `{ kind, path, markdown, expectedRevision?, force? }`、削除リクエストは `{ kind, path, expectedRevision, force? }` をJSONで送ります。既存ファイルが読み込み後に更新されていた場合は `409 Conflict` になり、現在の内容を再読み込みするか明示的に強制保存します。削除にも同じ競合検査を適用します。
 
-CMSは1タブでの利用を想定しています。別タブが開いている間は後から開いたタブの編集とデプロイを停止します。保存されたdeploymentはreload後にも追跡を再開し、focus・表示復帰時にも状態を再確認します。15秒間隔・最大40回の確認や通信失敗で「確認待ち」になった場合、状態詳細から再確認できます。追跡解除は確認待ちの詳細から行え、GitHub反映済みの保留変更を維持します。失敗時も変更とrevisionを保持し、再編集・再試行できます。公開workflowは実行時点の`main`をビルドします。
+CMSは1タブでの利用を想定しています。別タブが開いている間は後から開いたタブの編集とデプロイを停止します。保存されたdeploymentはreload後にも追跡を再開し、focus・表示復帰時にも状態を再確認します。15秒間隔・最大40回の確認や通信失敗で「確認待ち」になった場合、状態詳細から再確認できます。追跡解除は確認待ちの詳細から行え、GitHub反映済みの保留変更を維持します。失敗時も変更とrevisionを保持し、再編集・再試行できます。公開workflowはCMSが指定したcommit SHAをcheckoutしてビルドします。
 
-ヘッダーの「デフォルト設定」では、新規Journal記事に入れるサムネイル、代替テキスト、OG画像を設定できます。画像URLまたはCloudinary public IDを直接入力するか、メディアから選択します。設定はこのブラウザのlocalStorageに保存され、既存記事には適用されません。
+Journal編集画面の「Journalの初期設定」では、新規Journal記事に入れるサムネイル、代替テキスト、OG画像を設定できます。画像URLまたはCloudinary public IDを直接入力するか、メディアから選択します。設定はこのブラウザのlocalStorageに保存され、既存記事には適用されません。
 
 ## Cloudflare Workerへのデプロイ
 
@@ -85,7 +85,7 @@ Repository settingsのActions secretsへ次を登録します。
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`: 対象アカウントのWorkers Scripts編集に必要な最小権限を持つトークン
 
-`main` の `journal-editor-app/**`、共有 `src/utils/**` / `src/data/**`、roundtrip 対象の `src/content/**`、ルートの依存関係、またはデプロイworkflowが変わると、テスト、roundtrip検証、buildの成功後にWorkerをデプロイします。初回はActionsを手動実行することもできます。
+`main` のeditor / Workerコード、共有runtime依存、プレビューで使うサイトCSS・Header・favicon、画像URL解決、ルートの依存manifest、またはデプロイworkflowが変わると、テスト・buildの成功後にWorkerをデプロイします。content / media registryのみの更新はテスト専用CIで検査し、Workerを再デプロイしません。初回はActionsを手動実行することもできます。
 
 ### 3. Custom DomainとAccess
 
@@ -109,45 +109,33 @@ npm run build
 npm run deploy
 ```
 
-CMSの編集・公開切替・削除・メディア情報変更は、そのブラウザのlocalStorageに保留されます。別端末には同期されず、ブラウザデータを消すと失われます。CMS全体の「記事をデプロイ」を押すと、保留した内容とメディア変更を1回のbatchでGitHub `main`へ1コミットにまとめて反映し、最後にGitHub Pages workflowを手動起動します。GitHub側で競合があれば反映を止めます。途中で失敗した場合は、未完了の操作を保持して再試行できます。
+CMSの編集・公開切替・削除・メディア情報変更は、そのブラウザのlocalStorageに保留されます。別端末には同期されず、ブラウザデータを消すと失われます。CMS全体の「保留変更をサイトに反映」を押すと、保留した内容とメディア変更を1回のbatchでGitHub `main`へ1コミットにまとめて反映し、最後にGitHub Pages workflowを手動起動します。GitHub側で競合があれば反映を止めます。途中で失敗した場合は、未完了の操作を保持して再試行できます。
 
 ローカルCMSでは同じボタンで保留内容をローカルファイルに書き込みます。GitHub Pagesは起動しません。CMSアプリ自身は`main`へのコード変更時に従来どおり自動デプロイされます。
 
 ### 削除操作の注意
 
-Editor の削除操作は dev server 上の実ファイルを削除します。削除前には確認UIで `kind`、`path`、`title` を確認してください。API 側では kind ごとに保存先ディレクトリを固定し、絶対パス、`..`、サブディレクトリ、`.md` 以外のファイル名を拒否します。
+Editor の削除操作は確認後にブラウザへ保留し、サイト反映操作でファイルを削除します。削除前には確認UIで `kind`、`path`、`title` を確認してください。API 側では kind ごとに保存先ディレクトリを固定し、絶対パス、`..`、サブディレクトリ、`.md` 以外のファイル名を拒否します。
 
 デプロイ前の変更はlocalStorageに保存します。デプロイ後の正本はMarkdownファイルです。ブラウザを閉じても未反映の変更を再表示し、デプロイが成功した後に保留データを消します。
 
 ### 新規記事作成
 
-1. DraftList で `新規作成` を押します。
+1. コンテンツ一覧で `新規作成` から種別を選びます。
 2. Editor 画面で `title` と本文 Markdown を書きます。
 3. 説明・タグ・画像などの表示内容は記事キャンバスで、日付・種別・slugなどの管理情報は`記事設定`で入力します。
-4. `チェック` で公開前チェックを確認します。
-5. ブラウザに保留した変更を「記事をデプロイ」で反映します。公開状態の切替だけではサイトは更新されません。
+4. `入力を確認`、記事設定の公開チェック、`サイトでの見え方`で確認します。
+5. ブラウザに保留した変更を「保留変更をサイトに反映」で反映します。公開状態の切替だけではサイトは更新されません。
 
-### 画像カード / Gallery支援
+### 画像・埋め込み・サイトプレビュー
 
-Editor 画面の `画像カード` から、旧Astro版Editorにあった画像カード生成系の補助機能を使えます。
+本文の＋ / スラッシュメニューから画像ピッカー・リンクカード・対応サービスの埋め込みを使えます。既存カードHTML・iframeはHTML互換ブロックで保持します。旧画像カード生成・Galleryコード生成画面は廃止しました。
 
-- `journal-card-grid` と `making-comparison-grid` のHTML生成
-- `data-lightbox` / `data-title` 付きの既存記事互換HTML出力
-- 生成HTMLのコピー、本文textareaのカーソル位置への挿入
-- 本文内の `.journal-card` / `.comparison-item` 抽出
-- 生成または抽出した Cloudinary ID の `featured_related` 追加
-- Gallery登録用Markdown/frontmatterコード生成
-- `thumbnail` / `og_image` / legacy `image` / カード画像の実URLプレビュー
-
-Cloudinary ID候補は `src/data/galleryIds.ts` に分離しています。本文内カードの置換編集、カード作成状態の永続化はまだ未実装です。ローカルCMSモードでは Gallery タブから `src/content/gallery/*.md` を開いて保存できます。
+「サイトでの見え方」は現在の入力を公開サイトのCSSとKiwi Maruで表示します。通常幅／375px幅を切り替えられ、下書きのまま確認できます。iframe内でスタイルを隔離し、スクリプトの実行を許可しません。埋め込みの再生、Xの動的表示、数式・コードの装飾、Lightbox・メニュー等は公開後に確認してください。
 
 Gallery Markdown の標準frontmatterは `image` / `tags` 優先です。`cloudinary_id` / `categories` は旧データ互換として読み取り可能ですが、新規作成では使わない方針です。`detail: true` の item だけ `/gallery/[slug]/` が生成され、`draft: true` は production build から除外されます。`thumbnail: true` は Journal 一覧などのサムネイル照合候補に含める意味です。
 
 作品のタグはCMSのタグ欄で編集し、その保存値をWorks / Galleryにも表示します。楽曲の `Music` は表示側で自動追加せず、通常のタグとして保存します。新規Songsの初期値は `Music` ですが、削除・変更できます。既知の表記ゆれ `music` / `MUSIC` は `Music` に統一し、前後の空白・空項目・同じタグの重複を除きます。その他のタグの大文字小文字と表示順は保持します。
-
-### 単体Markdown import
-
-`Markdown import` から `.md` ファイルを選ぶと、Markdownエディタとして読み込みます。ファイル名が `.md` の場合は保存先候補として使い、それ以外はfrontmatterから推奨ファイル名を生成します。
 
 ### 編集時刻の扱い
 
@@ -155,14 +143,13 @@ Editor内部では、時刻を以下の意味で分けています。
 
 - `createdAt`: CMSで新規作成した時刻。Markdownの`_cms.created_at`に保持（旧記事に記録がない場合は初回読み込み時刻）
 - `updatedAt`: Editor上で最後に更新された時刻
-- `importedAt`: 既存Markdownを読み込んだ時刻
 - `editedAt`: ユーザーが記事内容を最後に編集した時刻
 
-既存Journal記事を開いただけでは `editedAt` は付きません。本文やfrontmatter、画像カード挿入、`featured_related` 追加など、ユーザーが内容を変更したときだけ `editedAt` を更新します。
+既存Journal記事を開いただけでは `editedAt` は付きません。本文やfrontmatterの入力など、ユーザーが内容を変更したときだけ `editedAt` を更新します。
 
 ### 公開日の扱い
 
-`date`はサイトに表示する公開日です。新規下書きは公開日を空欄で保存でき、初回の「公開する」で日本時間（Asia/Tokyo）の当日を設定します。記事設定の「公開日」に入力した日付は手入力値として優先します。一度公開した記事は、編集・再デプロイ・非公開後の再公開でも日付を自動更新しません。既存公開記事の日付も維持します。
+`date`はサイトに表示する公開日です。新規下書きは公開日を空欄で保存でき、初回の「公開に設定」で日本時間（Asia/Tokyo）の当日を設定します。記事設定の「公開日」に入力した日付は手入力値として優先します。一度公開した記事は、編集・再デプロイ・非公開後の再公開でも日付を自動更新しません。既存公開記事の日付も維持します。
 
 作成・更新時刻と公開履歴はfrontmatterの`_cms`に保存します。`created_at`、`updated_at`、`has_been_published`、`date_source`、`first_published_at`がCMSの管理情報で、公開日の`date`とは別です。
 
@@ -172,16 +159,12 @@ Astroは日付未定の下書きにもschemaを適用します。下書きだけ
 
 ## Riddle Records本体への反映
 
-1. dev server 上では `Markdown保存` で `src/content/<kind>/` に直接保存します。
-2. build/公開環境では Editor の `.md` でMarkdownを書き出し、推奨ファイル名に従って `src/content/<kind>/` に配置します。
-3. Riddle Records 本体のルートで build を確認します。
+開発環境のサイト反映は保留内容をローカルファイルへ書き込みます。本番CMSはGitHubへ1コミットにまとめ、指定commitのPages workflowを1回起動します。確認dialogには全保留変更を表示します。公開設定だけではサイトは変わりません。
 
 ```sh
 cd ..
 npm run build
 ```
-
-既存記事を置き換える場合は、同名ファイルを差し替えてからbuildしてください。
 
 ## URL の規則
 
@@ -265,7 +248,7 @@ npm run test:roundtrip:write
 
 Featured Works は公開された Gallery / Songs から任意に選び、サムネイルとタイトルを確認できます。同じ作品は重複選択できません。未選択ならサイトに「紹介する作品は準備中です。」と表示し、最新作品で自動補完しません。作品は共通ID（例: `gallery:cry`、`songs:2026-09-29-summer-song`）で保存し、Galleryの該当作品へリンクします。
 
-**変更を保存 → 記事をデプロイ** の既存フローを利用します。編集中の値は同じ保留変更に保存され、再読込で復元されます。revisionによる競合検出・再読込・対象別の強制上書きも共通です。CMS、Worker、ローカルAPI、Astroビルドでプロフィールを検証します。選択された作品を削除・非公開化・slug変更する場合、先にFeatured Worksから外すか、同じbatchで参照も更新してください。
+**入力時に自動保存 → 入力を確認 → 保留変更をサイトに反映** の既存フローを利用します。編集中の値は同じ保留変更に保存され、再読込で復元されます。revisionによる競合検出・再読込・対象別の強制上書きも共通です。CMS、Worker、ローカルAPI、Astroビルドでプロフィールを検証します。選択された作品を削除・非公開化・slug変更する場合、先にFeatured Worksから外すか、同じbatchで参照も更新してください。
 
 `about-tests.mjs` は全項目のroundtripとvalidation、`about-editor-tests.mjs` は実際のAppで編集・復元・保存・再読込、`api-tests.mjs` は両APIでsingleton制約・競合・参照・batch保存を検証します。`test:coverage` にも現行About経路を含めています。
 
@@ -273,7 +256,7 @@ Viteコマンドは `--config vite.config.ts` を明示します。過去に生�
 
 ## CIの責務
 
-Content Editor Workerのdeployはeditor / Workerコード、shared、画像URL解決、埋め込みCSS、root依存manifestの変更で起動します。MarkdownとMedia Registryだけの更新はWorkerを再deployしません。未使用の静的Journal importを削除し、実データはGitHub APIから取得します。
+Content Editor Workerのdeployはeditor / Workerコード、shared、画像URL解決、プレビュー用サイトCSS・Header・favicon、root依存manifestの変更で起動します。MarkdownとMedia Registryだけの更新はWorkerを再deployしません。未使用の静的Journal importを削除し、実データはGitHub APIから取得します。
 
 コンテンツ・サイト側の変更は`content-tests.yml`でCMS tests、roundtrip、サイト / CMS build、旧リンクを検査します。このworkflowはdeployしません。公開はPages workflowが担当します。
 

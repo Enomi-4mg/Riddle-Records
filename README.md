@@ -127,7 +127,7 @@ npm run dev
 
 起動後に `http://localhost:5174/` を開きます。
 開発サーバーでは `src/content/<kind>/*.md` を直接読み書きできます。
-ビルド後の公開環境ではローカルファイルへ書き込めないため、出力欄からコピーするか `.md` ファイルをダウンロードします。
+本番CMSでは保留変更をGitHubへcommitし、指定したcommitでGitHub Pagesを公開します。公開前にエディタの「サイトでの見え方」で書体・本文幅・埋め込みを確認できます。
 
 エディタの入力項目は `journal-editor-app/src/types/content.ts`、Astro のコレクションスキーマは `src/content/config.ts` で管理します。
 frontmatter の詳しい仕様と運用方法は [Content Editor の README](journal-editor-app/README.md) を参照してください。
@@ -161,8 +161,8 @@ CMSでは、空の段落へのURL貼り付け、＋、スラッシュメニュ�
 内部記事は参照先の情報を使い、外部カードは情報の自動取得・手動修正に対応します。
 操作とMarkdown記法は[本文のリンク・埋め込み](docs/content-embeds.md)を参照してください。
 
-Works・Gallery・Journal・Discographyの一覧は、グリッド／リストを切り替えられます。
-初期表示はグリッドで、選択はページごとにブラウザに保存します。
+Journal・Works・Projectの一覧はグリッド／リストを切り替えられます。
+Journalはリスト、Works・Projectはグリッドが初期表示で、選択はページごとにブラウザに保存します。GalleryはVisual / Music共通の鑑賞画面です。
 
 Journal の一覧・検索・内部カード・記事リードは `description` を優先し、空なら既存の `og_description` を表示する。CMS の「説明・リード文」と配置先設定の「OG説明」は別々に保存され、自動移行・上書きは行わない。
 

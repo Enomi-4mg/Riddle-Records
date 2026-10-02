@@ -45,7 +45,7 @@ export function useCmsNavigation() {
       if (Math.abs(window.scrollY - target) < 1) { restoring.current = false; observer?.disconnect(); }
     };
     // A history entry may mount before its documents have loaded. Retry after DOM changes.
-    observer = new MutationObserver(restore); observer.observe(document.body, { childList: true, subtree: true });
+    observer = new window.MutationObserver(restore); observer.observe(document.body, { childList: true, subtree: true });
     restore();
     const cancel = () => { restoring.current = false; observer?.disconnect(); };
     window.addEventListener("wheel", cancel, { passive: true }); window.addEventListener("touchstart", cancel, { passive: true }); window.addEventListener("keydown", cancel);
