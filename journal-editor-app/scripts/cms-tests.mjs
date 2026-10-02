@@ -16,8 +16,8 @@ import { renderContentMarkdown } from "../../src/utils/renderMarkdown.ts";
 const media = { version: 1, assets: [] };
 const makeDoc = (kind = "journal") => { const doc = createContentDocument(kind); doc.common.title = "Test"; return doc; };
 const makeQueue = () => {
-  const first = makeDoc(); first.common.date = "2026-01-02";
-  const second = makeDoc(); second.common.date = "2026-01-03";
+  const first = makeDoc(); first.common.date = "2026-01-02"; first.common.publication = "published";
+  const second = makeDoc(); second.common.date = "2026-01-03"; second.common.publication = "published";
   return [first, second].reduce((queue, document) => upsertPending(queue, { document, operation: "save" }), emptyPending());
 };
 const unexpected = async () => { throw new Error("Unexpected individual write"); };
@@ -116,7 +116,7 @@ describe("current CMS serialization and editor conversion", () => {
   });
   test("generates filenames for current documents and preserves imported paths", () => {
     for (const kind of ["journal", "songs", "gallery", "projects"]) {
-      const doc = makeDoc(kind); doc.common.date = "2026-01-02";
+      const doc = makeDoc(kind); doc.common.date = "2026-01-02"; doc.common.publication = "published";
       if ("slug" in doc.placement.data) doc.placement.data.slug = "A Name";
       assert.equal(generatedContentFilename(doc), kind === "songs" ? "2026-01-02.md" : kind === "journal" ? "2026-01-02-a-name.md" : "a-name.md");
       doc.file = { path: "original.md" }; assert.equal(generatedContentFilename(doc), "original.md");

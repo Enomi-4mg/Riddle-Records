@@ -147,12 +147,22 @@ Gallery Markdown の標準frontmatterは `image` / `tags` 優先です。`cloudi
 
 Editor内部では、時刻を以下の意味で分けています。
 
-- `createdAt`: Editor上でMarkdownを開いた時刻
+- `createdAt`: CMSで新規作成した時刻。Markdownの`_cms.created_at`に保持（旧記事に記録がない場合は初回読み込み時刻）
 - `updatedAt`: Editor上で最後に更新された時刻
 - `importedAt`: 既存Markdownを読み込んだ時刻
 - `editedAt`: ユーザーが記事内容を最後に編集した時刻
 
 既存Journal記事を開いただけでは `editedAt` は付きません。本文やfrontmatter、画像カード挿入、`featured_related` 追加など、ユーザーが内容を変更したときだけ `editedAt` を更新します。
+
+### 公開日の扱い
+
+`date`はサイトに表示する公開日です。新規下書きは公開日を空欄で保存でき、初回の「公開する」で日本時間（Asia/Tokyo）の当日を設定します。記事設定の「公開日」に入力した日付は手入力値として優先します。一度公開した記事は、編集・再デプロイ・非公開後の再公開でも日付を自動更新しません。既存公開記事の日付も維持します。
+
+作成・更新時刻と公開履歴はfrontmatterの`_cms`に保存します。`created_at`、`updated_at`、`has_been_published`、`date_source`、`first_published_at`がCMSの管理情報で、公開日の`date`とは別です。
+
+新規Journal / Songsの下書きは`content-UUID.md`に保存できます。下書きをデプロイした場合は初回公開後も同じファイル名を使います。初回公開を済ませてから初めてデプロイする場合は公開日を使った従来のファイル名になります。既存ファイルはrenameせず、revisionと参照を維持します。JournalのURLはfrontmatterの公開日から、Songsの詳細URLは保存ファイル名から生成します。Gallery / Projectsの明示slugも従来どおりです。
+
+Astroは日付未定の下書きにもschemaを適用します。下書きだけに内部の仮日付を補い、公開ページからは従来どおり除外します。日付未設定の公開コンテンツは検証エラーにします。
 
 ## Riddle Records本体への反映
 

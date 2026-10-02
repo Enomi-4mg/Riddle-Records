@@ -85,3 +85,11 @@ Appのserver stateは`useContentDocuments`、`useMediaRegistry`、`usePendingQue
 非所有タブ／デプロイ中は編集欄と公開操作を無効化する。focus、disabled、選択状態を共通CSSで確認し、Block移動ラインにも既存mintトークンを使用する。
 
 `status-tests.mjs` で主要状態の優先順位、一時通知と未反映状態の分離、実際の競合→再読込、readonlyエディタ、古い応答・通信失敗、通知期限を検証。既存navigation / About / deploymentテストとCMS buildも成功。
+
+## #16: 公開日と作成日時の分離
+
+新規下書きの`date`は未設定とし、初回公開時にAsia/Tokyoの当日を設定する。設定画面の手入力日は優先する。`createdAt`は作成時刻のまま保持し、公開後の編集・再デプロイ・非公開後の再公開でも公開日を自動更新しない。既存公開コンテンツの日付も維持する。作成・更新時刻、公開済みフラグ、日付の入力元、初回公開時刻を`_cms`に永続化し、reload後にも判断できる。
+
+日付未定のJournal / Songsは日付非依存の`content-UUID.md`で下書き保存できる。初回公開後も既存ファイルのpath / revisionを維持する。下書きをGitHubへ保存する前に公開した場合は、従来どおり公開日のファイル名になる。Journalのpermalinkと内部カードは公開日、Songs詳細は実ファイル名を使う。renameを伴わず既存の競合検出を維持する。サイトschemaは下書きに限定した仮日付を使い、公開コンテンツの空日付は拒否する。
+
+`publication-tests.mjs`は4種別のD1作成→D2公開→D3編集／再公開、手入力、旧ブラウザ下書き、既存公開記事、未知の管理情報、UTC/JSTの境界、ファイル名とURL、実際のAstro schemaとAppの下書き保存→公開→reload→日付変更を検証する。

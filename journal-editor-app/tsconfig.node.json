@@ -26,6 +26,7 @@
     "../shared/contentTags.ts",
     "../shared/workIdentity.ts",
     "../shared/linkMetadata.ts",
-    "../shared/embeds.ts"
+    "../shared/embeds.ts",
+    "../shared/publicationDate.ts"
   ]
 }

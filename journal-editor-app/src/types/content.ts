@@ -29,6 +29,7 @@ export type ContentDocument = {
   createdAt: string;
   updatedAt: string;
   editedAt?: string;
+  publicationHistory?: { hasBeenPublished: boolean; dateSource: "automatic" | "manual" | "legacy"; firstPublishedAt?: string };
   source: "manual" | "imported" | "uploaded";
   file?: { path: string; revision?: string };
 };

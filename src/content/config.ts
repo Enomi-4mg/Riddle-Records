@@ -1,14 +1,19 @@
 import { aboutProfileErrors, readAboutProfile } from "../../shared/aboutProfile";
+import { normalizeUndatedDraft } from "../../shared/publicationDate";
 import { normalizeContentTags } from "../../shared/contentTags";
 import { defineCollection, z } from "astro:content";
+
+const withDraftDate = <T extends z.ZodTypeAny>(schema: T) => z.preprocess(normalizeUndatedDraft, schema);
+
+const publicationDate = z.preprocess((value) => value == null || value === "" ? undefined : value, z.coerce.date());
 
 const contentTags = z.array(z.string()).transform(normalizeContentTags).optional();
 
 const journalCollection = defineCollection({
   type: "content",
-  schema: z.object({
+  schema: withDraftDate(z.object({
     title: z.string(),
-    date: z.coerce.date(),
+    date: publicationDate,
     type: z.enum(["journal", "making", "report"]).optional().default("journal"),
     slug: z.string().optional(),
     og_description: z.string().optional(),
@@ -27,30 +32,30 @@ const journalCollection = defineCollection({
     tags: contentTags,
     thumbnail_class: z.string().optional(),
     draft: z.boolean().optional()
-  })
+  }))
 });
 
 const songsCollection = defineCollection({
   type: "content",
-  schema: z.object({
+  schema: withDraftDate(z.object({
     title: z.string(),
-    date: z.coerce.date(),
+    date: publicationDate,
     youtube_id: z.string(),
     credits: z.union([z.string(), z.array(z.string())]).optional(),
     description: z.string().optional(),
     lyrics: z.string().optional(),
     tags: contentTags,
     draft: z.boolean().optional()
-  })
+  }))
 });
 
 const galleryCollection = defineCollection({
   type: "content",
-  schema: z.object({
+  schema: withDraftDate(z.object({
     slug: z.string().optional(),
     detail: z.boolean().optional(),
     title: z.string(),
-    date: z.coerce.date(),
+    date: publicationDate,
     image: z.string().optional(),
     cloudinary_id: z.string().optional(),
     description: z.string().optional(),
@@ -62,16 +67,16 @@ const galleryCollection = defineCollection({
     thumbnail_alt: z.string().optional(),
     thumbnail_class: z.string().optional(),
     draft: z.boolean().optional()
-  })
+  }))
 });
 
 const projectsCollection = defineCollection({
   type: "content",
-  schema: z.object({
+  schema: withDraftDate(z.object({
     slug: z.string().optional(),
     title: z.string(),
     subtitle: z.string().optional(),
-    date: z.coerce.date(),
+    date: publicationDate,
     description: z.string().optional(),
     tags: contentTags,
     hero: z.string().optional(),
@@ -85,7 +90,7 @@ const projectsCollection = defineCollection({
     externalUrl: z.string().optional(),
     sourceUrl: z.string().optional(),
     features: z.array(z.string()).optional()
-  })
+  }))
 });
 
 const aboutCollection = defineCollection({

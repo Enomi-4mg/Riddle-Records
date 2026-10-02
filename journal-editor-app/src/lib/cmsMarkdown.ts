@@ -3,6 +3,7 @@ import { aboutFilename } from "../../../shared/contentStorage";
 import { normalizeContentTags } from "../../../shared/contentTags";
 import { dump, load } from "js-yaml";
 import { createPlacement, type ContentDocument, type ManagedContentKind } from "../types/content";
+import { isPublicationDate } from "../../../shared/publicationDate";
 import { slugify } from "./permalink";
 
 const commonKeys = ["title", "date", "description", "tags", "draft"];
@@ -32,9 +33,9 @@ export function normalizeYouTubeId(value: string) {
   return "";
 }
 
-export function createContentDocument(kind: ManagedContentKind): ContentDocument {
-  const timestamp = new Date().toISOString();
-  return { id: crypto.randomUUID(), common: { title: "", date: timestamp.slice(0, 10), description: "", tags: kind === "songs" ? ["Music"] : [], publication: "draft" }, placement: createPlacement(kind), body: "", unknownFrontmatter: {}, createdAt: timestamp, updatedAt: timestamp, source: "manual" };
+export function createContentDocument(kind: ManagedContentKind, instant = new Date()): ContentDocument {
+  const timestamp = instant.toISOString();
+  return { id: crypto.randomUUID(), common: { title: "", date: "", description: "", tags: kind === "songs" ? ["Music"] : [], publication: "draft" }, placement: createPlacement(kind), body: "", unknownFrontmatter: {}, createdAt: timestamp, updatedAt: timestamp, source: "manual", publicationHistory: { hasBeenPublished: false, dateSource: "automatic" } };
 }
 
 export function parseContentMarkdown(markdown: string, kind: ManagedContentKind, file?: { path: string; revision?: string }): ContentDocument {
@@ -50,7 +51,12 @@ export function parseContentMarkdown(markdown: string, kind: ManagedContentKind,
     doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => !aboutKeys.includes(key)));
     return doc;
   }
-  doc.common = { title: text(raw.title), date: dateText(raw.date) || doc.common.date, description: text(raw.description), tags: normalizeContentTags(list(raw.tags ?? (kind === "gallery" ? raw.categories : undefined))), publication: raw.draft === true ? "draft" : "published" };
+  doc.common = { title: text(raw.title), date: dateText(raw.date), description: text(raw.description), tags: normalizeContentTags(list(raw.tags ?? (kind === "gallery" ? raw.categories : undefined))), publication: raw.draft === true ? "draft" : "published" };
+  const cms = raw._cms && typeof raw._cms === "object" && !Array.isArray(raw._cms) ? raw._cms as Record<string, unknown> : {};
+  const timestamp = (value: unknown) => typeof value === "string" && Number.isFinite(new Date(value).getTime()) ? value : undefined;
+  doc.createdAt = timestamp(cms.created_at) || doc.createdAt;
+  doc.updatedAt = timestamp(cms.updated_at) || doc.createdAt;
+  doc.publicationHistory = { hasBeenPublished: cms.has_been_published === true || doc.common.publication === "published", dateSource: cms.date_source === "manual" || cms.date_source === "automatic" ? cms.date_source : doc.common.date ? "legacy" : "automatic", firstPublishedAt: timestamp(cms.first_published_at) };
   doc.body = match ? match[2].replace(/^\n/, "") : normalized;
   doc.unknownFrontmatter = Object.fromEntries(Object.entries(raw).filter(([key]) => ![...commonKeys, ...placementKeys[kind]].includes(key)));
   if (kind === "journal") doc.placement = { kind, data: { articleType: ["making", "report"].includes(text(raw.type)) ? text(raw.type) as "making" | "report" : "journal", slug: text(raw.slug), thumbnail: typeof raw.thumbnail === "boolean" ? String(raw.thumbnail) : text(raw.thumbnail), thumbnailAlt: text(raw.thumbnail_alt), thumbnailFit: text(raw.thumbnail_fit), thumbnailPosition: text(raw.thumbnail_position), ogImage: text(raw.og_image), ogDescription: text(raw.og_description), relatedContent: list(raw.featured_related), useMath: raw.use_math === true, permalink: text(raw.permalink), image: text(raw.image), thumbnailClass: text(raw.thumbnail_class) } };
@@ -70,7 +76,16 @@ export function parseContentMarkdown(markdown: string, kind: ManagedContentKind,
 
 export function contentFrontmatter(doc: ContentDocument) {
   if (doc.placement.kind === "about") return { ...doc.unknownFrontmatter, ...aboutFrontmatter(doc.placement.data) };
-  const value: Record<string, unknown> = { ...doc.unknownFrontmatter, title: doc.common.title || "Untitled", date: doc.common.date };
+  const originalCms = doc.unknownFrontmatter._cms;
+  const history = doc.publicationHistory;
+  const unknown = Object.fromEntries(Object.entries(doc.unknownFrontmatter).filter(([key]) => key !== "_cms"));
+  const value: Record<string, unknown> = { ...unknown, title: doc.common.title || "Untitled", date: doc.common.date, _cms: {
+    ...(originalCms && typeof originalCms === "object" && !Array.isArray(originalCms) ? originalCms : {}),
+    created_at: doc.createdAt, updated_at: doc.updatedAt,
+    has_been_published: history?.hasBeenPublished || doc.common.publication === "published",
+    date_source: history?.dateSource || (doc.source === "manual" ? "automatic" : "legacy"),
+    ...(history?.firstPublishedAt ? { first_published_at: history.firstPublishedAt } : {})
+  } };
   if (doc.placement.kind === "journal") Object.assign(value, { type: doc.placement.data.articleType, ...(doc.placement.data.slug && { slug: slugify(doc.placement.data.slug) }), ...(doc.placement.data.thumbnail && { thumbnail: doc.placement.data.thumbnail }), ...(doc.placement.data.thumbnailAlt && { thumbnail_alt: doc.placement.data.thumbnailAlt }), ...(doc.placement.data.thumbnailFit && { thumbnail_fit: doc.placement.data.thumbnailFit }), ...(doc.placement.data.thumbnailPosition && { thumbnail_position: doc.placement.data.thumbnailPosition }), ...(doc.placement.data.ogImage && { og_image: doc.placement.data.ogImage }), ...(doc.placement.data.ogDescription && { og_description: doc.placement.data.ogDescription }), ...(doc.placement.data.relatedContent.length && { featured_related: doc.placement.data.relatedContent }), ...(doc.placement.data.useMath && { use_math: true }), ...(doc.placement.data.permalink && { permalink: doc.placement.data.permalink }), ...(doc.placement.data.image && { image: doc.placement.data.image }), ...(doc.placement.data.thumbnailClass && { thumbnail_class: doc.placement.data.thumbnailClass }) });
   if (doc.placement.kind === "songs") Object.assign(value, { youtube_id: normalizeYouTubeId(doc.placement.data.youtubeId), ...(doc.placement.data.credits && { credits: doc.placement.data.credits }), ...(doc.placement.data.lyrics && { lyrics: doc.placement.data.lyrics }) });
   if (doc.placement.kind === "gallery") Object.assign(value, { slug: slugify(doc.placement.data.slug), detail: doc.placement.data.detail, image: doc.placement.data.image, ...(doc.placement.data.thumbnail && { thumbnail: doc.placement.data.thumbnail === "true" ? true : doc.placement.data.thumbnail === "false" ? false : doc.placement.data.thumbnail }), ...(doc.placement.data.thumbnailAlt && { thumbnail_alt: doc.placement.data.thumbnailAlt }) });
@@ -86,15 +101,18 @@ export function buildContentMarkdown(doc: ContentDocument) { return `---\n${dump
 export function generatedContentFilename(doc: ContentDocument) {
   if (doc.placement.kind === "about") return aboutFilename;
   if (doc.file?.path) return doc.file.path;
+  const stableDraftPath = `content-${slugify(doc.id)}.md`;
+  if (doc.common.publication === "draft" && (doc.placement.kind === "journal" || doc.placement.kind === "songs")) return stableDraftPath;
   if (doc.placement.kind === "songs") return doc.common.date ? `${doc.common.date}.md` : "";
   const slug = "slug" in doc.placement.data ? slugify(doc.placement.data.slug) : "";
   if ((doc.placement.kind === "gallery" || doc.placement.kind === "projects") && slug) return `${slug}.md`;
+  if (doc.common.publication === "draft") return stableDraftPath;
   return doc.common.date ? `${doc.common.date}${slug ? `-${slug}` : ""}.md` : "";
 }
 
 export function publicationChecks(doc: ContentDocument) {
   if (doc.placement.kind === "about") return aboutProfileErrors(doc.placement.data).map((label) => ({ ok: false, label }));
-  const checks = [{ ok: Boolean(doc.common.title.trim()), label: "タイトル" }, { ok: Boolean(doc.common.date), label: "日付" }];
+  const checks = [{ ok: Boolean(doc.common.title.trim()), label: "タイトル" }, { ok: isPublicationDate(doc.common.date), label: "公開日" }];
   if (doc.placement.kind === "songs") checks.push({ ok: Boolean(normalizeYouTubeId(doc.placement.data.youtubeId)), label: "YouTube URL または ID" });
   if (doc.placement.kind === "gallery") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "slug" }, { ok: Boolean(doc.placement.data.image.trim()), label: "メイン画像" });
   if (doc.placement.kind === "projects") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "slug" });
