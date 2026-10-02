@@ -51,3 +51,15 @@ test("App preserves URL filters through editor, media, reload and browser histor
     assert.ok(container.querySelector(".editor-shell")); assert.equal(container.querySelector(".title-input").value, "Target project");
   } finally { await act(async () => root.unmount()); container.remove(); globalThis.fetch = original; localStorage.clear(); }
 });
+
+ test("Journal OG-only summaries appear in the real list and participate in search", async () => {
+  const { ContentList } = await import("../src/components/ContentList.tsx");
+  const { parseContentMarkdown } = await import("../src/lib/cmsMarkdown.ts");
+  const doc = parseContentMarkdown("---\ntitle: Older Journal\ndate: 2026-10-01\nog_description: Searchable legacy summary\n---\nBody", "journal", "older.md");
+  const container = document.createElement("div"); document.body.append(container); const root = createRoot(container);
+  try {
+    await act(async () => root.render(createElement(ContentList, { documents: [doc], files: [], filters: { kind: "all", publication: "all", query: "searchable" }, onFilters() {}, onOpen() {}, onNew() {} })));
+    assert.equal(container.querySelector(".content-row small").textContent, "Searchable legacy summary");
+    assert.equal(doc.common.description, "");
+  } finally { await act(async () => root.unmount()); container.remove(); }
+});

@@ -1,3 +1,4 @@
+import { contentSummary } from "../../shared/contentSummary";
 import { getCollection } from "astro:content";
 import { getGalleryItems, getGalleryDetailPath, hasGalleryDetail } from "./gallery";
 import { getProjectItems } from "./projects";
@@ -12,7 +13,7 @@ async function buildCards() {
   const [journal, songs, gallery, projects] = await Promise.all([getCollection("journal"), getCollection("songs"), getGalleryItems(), getProjectItems()]);
   const cards = new Map<string, InternalCard>();
   const add = (url: string, title: string, description = "", image = "") => cards.set(url, { url, title, description, image });
-  journal.filter((entry) => !entry.data.draft).forEach((entry) => add(`/journal/${getJournalRoutePath(entry)}/`, entry.data.title, entry.data.description ?? entry.data.og_description, getJournalThumbnail(entry, gallery.filter((item) => !item.draft), fallbackIconUrl).src));
+  journal.filter((entry) => !entry.data.draft).forEach((entry) => add(`/journal/${getJournalRoutePath(entry)}/`, entry.data.title, contentSummary(entry.data.description, entry.data.og_description), getJournalThumbnail(entry, gallery.filter((item) => !item.draft), fallbackIconUrl).src));
   songs.filter((entry) => !entry.data.draft).forEach((entry) => add(`/disco/${entry.slug}/`, entry.data.title, entry.data.description, `https://img.youtube.com/vi/${entry.data.youtube_id}/mqdefault.jpg`));
   gallery.filter((item) => !item.draft && hasGalleryDetail(item)).forEach((item) => add(getGalleryDetailPath(item), item.title, item.description, resolveImageUrl(item.image) || ""));
   projects.filter((item) => !item.draft).forEach((item) => add(`/project/${item.slug}/`, item.title, item.description, resolveImageUrl(item.hero) || ""));

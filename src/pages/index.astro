@@ -1,4 +1,5 @@
 ---
+import { contentSummary } from "../../shared/contentSummary";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 import { hasVisiblePublicationDate } from "../../shared/publicationDate";
@@ -29,7 +30,7 @@ const latestWorkDate = latestGallery && latestSong
   : latestGallery?.date ?? latestSong?.data.date.toISOString().slice(0, 10);
 const siteUpdatedAt = new Date(import.meta.env.PUBLIC_SITE_UPDATED_AT ?? new Date().toISOString());
 const summarize = (text) => (text ? text.replace(/\s+/g, " ").trim().slice(0, 70) : "");
-const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_description ?? entry.body;
+const getJournalSummary = (entry) => contentSummary(entry.data.description, entry.data.og_description) || entry.body;
 ---
 
 <BaseLayout title="Riddle Records" description="4mgのポートフォリオサイトです。">

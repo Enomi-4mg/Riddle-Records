@@ -1,3 +1,4 @@
+import { contentSummary } from "../../../shared/contentSummary";
 import { aboutKeys, aboutFrontmatter, readAboutProfile, aboutProfileErrors } from "../../../shared/aboutProfile";
 import { aboutFilename } from "../../../shared/contentStorage";
 import { normalizeContentTags } from "../../../shared/contentTags";
@@ -118,4 +119,8 @@ export function publicationChecks(doc: ContentDocument) {
   if (doc.placement.kind === "projects") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "slug" });
   if (doc.placement.kind === "journal" && doc.placement.data.articleType === "making") checks.push({ ok: Boolean(slugify(doc.placement.data.slug)), label: "making記事のslug" });
   return checks;
+}
+
+export function documentSummary(doc: ContentDocument) {
+  return contentSummary(doc.common.description, doc.placement.kind === "journal" ? doc.placement.data.ogDescription : undefined);
 }

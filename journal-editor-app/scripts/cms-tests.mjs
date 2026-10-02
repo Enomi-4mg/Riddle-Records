@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
 import { load } from "js-yaml";
-import { buildContentMarkdown, createContentDocument, generatedContentFilename, parseContentMarkdown } from "../src/lib/cmsMarkdown.ts";
+import { documentSummary, buildContentMarkdown, createContentDocument, generatedContentFilename, parseContentMarkdown } from "../src/lib/cmsMarkdown.ts";
 import { editorHtmlToMarkdown, markdownToEditorHtml } from "../src/lib/editorMarkdown.ts";
 import { applyPendingChanges, PendingConflictError } from "../src/lib/deployPending.ts";
 import { BatchConflictError, commitBatch } from "../src/lib/commitBatch.ts";
@@ -200,4 +200,12 @@ describe("current CMS HTTP clients and defaults", () => {
     try { assert.deepEqual(readArticleDefaults(), { thumbnail: "", thumbnailAlt: "", ogImage: "" }); const defaults = { thumbnail: "image", thumbnailAlt: "alt", ogImage: "og" }; writeArticleDefaults(defaults); assert.deepEqual(readArticleDefaults(), defaults); stored = '{"thumbnail":false}'; assert.equal(readArticleDefaults().thumbnail, ""); }
     finally { if (original) Object.defineProperty(globalThis, "localStorage", original); else delete globalThis.localStorage; }
   });
+});
+
+test("Journal summary falls back to OG metadata without migrating either field on save", () => {
+  const old = parseContentMarkdown('---\ntitle: Legacy\ndate: 2026-10-01\nog_description: Searchable summary\n---\n\nBody', 'journal');
+  assert.equal(documentSummary(old), 'Searchable summary'); assert.equal(old.common.description, '');
+  const saved = parseContentMarkdown(buildContentMarkdown(old), 'journal');
+  assert.equal(saved.placement.data.ogDescription, 'Searchable summary'); assert.equal(saved.common.description, '');
+  assert.equal(documentSummary({ ...old, common: { ...old.common, description: 'Lead' } }), 'Lead');
 });

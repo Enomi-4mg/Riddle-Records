@@ -1,4 +1,4 @@
-import { normalizeYouTubeId } from "./cmsMarkdown";
+import { normalizeYouTubeId, documentSummary } from "./cmsMarkdown";
 import type { ContentDocument } from "../types/content";
 import { getJournalPermalink } from "../../../shared/contentRoutes";
 import { resolveImageUrl } from "../../../src/utils/images";
@@ -22,7 +22,7 @@ export function documentCard(doc: ContentDocument): InternalCard | undefined {
     url = `/project/${data.slug}/`; image = resolveImageUrl(data.hero) || "";
   }
   if (!url) return;
-  return { url, image, title: doc.common.title, description: doc.common.description };
+  return { url, image, title: doc.common.title, description: documentSummary(doc) };
 }
 export function publishedCards(documents: ContentDocument[]) {
   return documents.filter((doc) => doc.common.publication === "published").flatMap((doc) => { const card = documentCard(doc); return card ? [card] : []; });

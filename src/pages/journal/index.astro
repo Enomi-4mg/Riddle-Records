@@ -1,4 +1,5 @@
 ---
+import { contentSummary } from "../../../shared/contentSummary";
 import ListViewSwitch from "../../components/ListViewSwitch.astro";
 import SortSwitch from "../../components/SortSwitch.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -19,7 +20,7 @@ const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() +
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const getJournalUrl = (entry) => withBase(`/journal/${getJournalRoutePath(entry)}/`);
-const getJournalSummary = (entry) => entry.data.description ?? entry.data.og_description ?? "";
+const getJournalSummary = (entry) => contentSummary(entry.data.description, entry.data.og_description);
 ---
 
 <BaseLayout title="Journal" description="日記・活動報告の一覧。" wideContainer={true}>
