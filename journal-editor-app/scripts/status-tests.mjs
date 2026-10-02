@@ -47,13 +47,14 @@ test("App separates save feedback from pending state, resolves conflicts and dis
     await click(mounted.container.querySelector(".content-row")); const input = mounted.container.querySelector(".title-input");
     await act(async () => { Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(input, "Browser title"); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
     assert.equal(mounted.container.querySelector(".status-pill").textContent, "未反映");
-    await click(button(mounted.container, "変更を保存")); const notice = mounted.container.querySelector(".cms-notice"); assert.equal(notice.getAttribute("role"), "status"); assert.ok(!notice.classList.contains("status-pill"));
+    assert.equal(readPending().contents[0].document.common.title, "Browser title", "Input is saved before any explicit action");
+    await click(button(mounted.container, "入力を確認")); const notice = mounted.container.querySelector(".cms-notice"); assert.equal(notice.getAttribute("role"), "status"); assert.ok(!notice.classList.contains("status-pill"));
     await click(notice.querySelector("button")); assert.equal(mounted.container.querySelector(".cms-notice"), null); assert.equal(mounted.container.querySelector(".status-pill").textContent, "未反映");
-    external = true; await click([...mounted.container.querySelectorAll("button")].find((item) => item.textContent.startsWith("記事をデプロイ")));
+    external = true; await click([...mounted.container.querySelectorAll("button")].find((item) => item.textContent.startsWith("保留変更をサイトに反映")));
     assert.equal(mounted.container.querySelector(".status-pill").textContent, "競合"); assert.match(mounted.container.querySelector(".conflict-bar").textContent, /new/);
     await click(button(mounted.container, "GitHub版を再読み込み")); assert.equal(readPending().contents.length, 0); assert.equal(mounted.container.querySelector(".title-input").value, "Remote title"); assert.equal(mounted.container.querySelector(".status-pill").textContent, "保存済み");
     localStorage.setItem("riddle-cms-active-tab", JSON.stringify({ id: "other", at: Date.now() })); await act(async () => window.dispatchEvent(new window.StorageEvent("storage", { key: "riddle-cms-active-tab" })));
-    assert.equal(mounted.container.querySelector(".status-pill").textContent, "読み取り専用"); assert.equal(mounted.container.querySelector("[contenteditable]").getAttribute("contenteditable"), "false"); assert.equal(button(mounted.container, "変更を保存").disabled, true);
+    assert.equal(mounted.container.querySelector(".status-pill").textContent, "読み取り専用"); assert.equal(mounted.container.querySelector("[contenteditable]").getAttribute("contenteditable"), "false"); assert.equal(button(mounted.container, "入力を確認").disabled, true);
   } finally { await mounted.close(); globalThis.fetch = original; }
 });
 

@@ -8,7 +8,7 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const { act, createElement } = await import("react");
 const { createRoot } = await import("react-dom/client");
 const { App } = await import("../src/App.tsx");
-const { parseContentMarkdown } = await import("../src/lib/cmsMarkdown.ts");
+const { parseContentMarkdown, buildContentMarkdown } = await import("../src/lib/cmsMarkdown.ts");
 const source = await fs.readFile(new URL("../../src/content/about/profile.md", import.meta.url), "utf8");
 function input(container, label) { return [...container.querySelectorAll("label")].find((item) => item.firstChild.textContent === label).querySelector("input,textarea"); }
 function button(container, text) { return [...container.querySelectorAll("button")].find((item) => item.textContent === text); }
@@ -19,7 +19,7 @@ test("real App keeps About separate, edits every field and deploys/reloads throu
   localStorage.clear();
   const originals = globalThis.fetch;
   const sources = new Map([
-    ["about/profile.md", source],
+    ["about/profile.md", (() => { const fixture = parseContentMarkdown(source, "about"); fixture.placement.data.featuredWorks = []; return buildContentMarkdown(fixture); })()],
     ["gallery/cry.md", "---\ntitle: Cry\ndate: 2026-01-01\nslug: cry\nimage: cry.png\n---\n"],
     ["songs/summer.md", "---\ntitle: Summer\ndate: 2026-01-01\nyoutube_id: abcdefghijk\n---\n"]
   ]); let revision = "old"; const requests = [];
@@ -50,11 +50,11 @@ test("real App keeps About separate, edits every field and deploys/reloads throu
     await click(container.querySelector('[aria-label="Cryを追加"]')); await click(container.querySelector('[aria-label="Summerを追加"]')); await click(container.querySelector('[aria-label="Summerを上へ"]'));
     assert.deepEqual([...container.querySelectorAll(".about-featured-list li .about-work-preview > span")].map((item) => item.firstChild.textContent), ["Summer", "Cry"]);
     assert.equal(container.querySelector('[aria-label="Cryを追加"]').disabled, true);
-    await click(button(container, "変更を保存")); assert.match(container.querySelector(".global-notice").textContent, /ブラウザに保存/);
+    await click(button(container, "入力を確認")); assert.match(container.querySelector(".global-notice").textContent, /ブラウザに自動保存/);
     // Reopening the app recovers all pending fields before deployment.
     await act(async () => root.unmount()); root = createRoot(container); await act(async () => root.render(createElement(App))); await click(button(container, "About"));
     assert.equal(input(container, "名前").value, "New Name"); assert.equal(container.querySelectorAll(".about-featured-list li").length, 2);
-    await click([...container.querySelectorAll("button")].find((item) => item.textContent.startsWith("記事をデプロイ")));
+    await click([...container.querySelectorAll("button")].find((item) => item.textContent.startsWith("保留変更をサイトに反映")));
     assert.match(container.querySelector(".global-notice").textContent, /ローカルファイルに反映/);
     const saved = parseContentMarkdown(sources.get("about/profile.md"), "about").placement.data;
     assert.equal(saved.icon, "avatars/icon.png"); assert.equal(saved.name, "New Name"); assert.equal(saved.bio, "First line\nSecond line"); assert.equal(saved.birthday, "02-29"); assert.equal(saved.motto, "New motto");
@@ -62,7 +62,7 @@ test("real App keeps About separate, edits every field and deploys/reloads throu
     assert.deepEqual(saved.sns.at(-1), { service: "Website", url: "https://example.com/", label: "Homepage" }); assert.deepEqual(saved.featuredWorks, ["songs:summer", "gallery:cry"]);
     await act(async () => root.unmount()); root = createRoot(container); await act(async () => root.render(createElement(App))); await click(button(container, "About")); assert.equal(input(container, "名前").value, "New Name");
     await click(container.querySelector('[aria-label="Summerを削除"]')); await click(container.querySelector('[aria-label="Cryを削除"]')); assert.match(container.querySelector(".about-empty").textContent, /未選択/);
-    await change(input(container, "誕生日（月日）"), "02-30"); assert.equal(button(container, "変更を保存").disabled, true); assert.match(container.querySelector('[role="alert"]').textContent, /誕生日/);
+    await change(input(container, "誕生日（月日）"), "02-30"); assert.equal(button(container, "入力を確認").disabled, true); assert.match(container.querySelector('[role="alert"]').textContent, /誕生日/);
     assert.equal(requests.filter(([url, options]) => url === "/api/content-item" && options.method === "POST").length, 1);
   } finally { await act(async () => root.unmount()); container.remove(); globalThis.fetch = originals; localStorage.clear(); }
 });

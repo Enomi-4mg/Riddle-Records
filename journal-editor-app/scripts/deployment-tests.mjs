@@ -103,7 +103,7 @@ test("App applies changes before starting a remote deployment and clears the res
     await click(mounted.container.querySelector(".content-row"));
     const input = mounted.container.querySelector(".title-input");
     await act(async () => { Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set.call(input, "New title"); input.dispatchEvent(new window.Event("input", { bubbles: true })); });
-    await click([...mounted.container.querySelectorAll("button")].find((item) => item.textContent.startsWith("記事をデプロイ")));
+    await click([...mounted.container.querySelectorAll("button")].find((item) => item.textContent.startsWith("保留変更をサイトに反映")));
     assert.ok(started); assert.equal(readPending().contents.length, 0); assert.equal(readPending().lastDeployment.sha, "applied-commit");
   } finally { await mounted.close(); }
 });

@@ -276,3 +276,7 @@ Viteコマンドは `--config vite.config.ts` を明示します。過去に生�
 Content Editor Workerのdeployはeditor / Workerコード、shared、画像URL解決、埋め込みCSS、root依存manifestの変更で起動します。MarkdownとMedia Registryだけの更新はWorkerを再deployしません。未使用の静的Journal importを削除し、実データはGitHub APIから取得します。
 
 コンテンツ・サイト側の変更は`content-tests.yml`でCMS tests、roundtrip、サイト / CMS build、旧リンクを検査します。このworkflowはdeployしません。公開はPages workflowが担当します。
+
+## 自動保存と公開
+
+入力はその都度、このブラウザの保留変更に自動保存します。「入力を確認」は入力項目の検査だけを行い、保存の境界ではありません。「公開に設定」「非公開に設定」は次の反映時の公開状態を変更します。「保留変更をサイトに反映」は保留中の全件をGitHubへ反映してサイトを公開します。別ブラウザには保留変更が共有されません。保存容量不足時はエラーを表示し、以前に保存できた内容を維持します。

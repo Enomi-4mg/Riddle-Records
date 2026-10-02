@@ -3,12 +3,13 @@ import { mediaUrl } from "../lib/mediaRegistry";
 import type { MediaAsset, MediaRegistry, MediaType } from "../types/media";
 
 const blankAsset = (): MediaAsset => ({ id: crypto.randomUUID(), publicId: "", type: "image", displayName: "", tags: [], alt: "" });
-export function MediaLibrary({ registry, editable, onChange, onSelect, onSave, saving }: { registry: MediaRegistry; editable?: boolean; onChange?: (value: MediaRegistry) => void; onSelect?: (asset: MediaAsset) => void; onSave?: () => void; saving?: boolean }) {
+export function MediaLibrary({ registry, editable, onChange, onSelect }: { registry: MediaRegistry; editable?: boolean; onChange?: (value: MediaRegistry) => void; onSelect?: (asset: MediaAsset) => void }) {
   const [query, setQuery] = useState(""); const [type, setType] = useState<"all" | MediaType>("all"); const [editing, setEditing] = useState<MediaAsset | null>(null);
   const assets = useMemo(() => registry.assets.filter((asset) => (type === "all" || asset.type === type) && [asset.displayName, asset.publicId, asset.alt, ...asset.tags].join(" ").toLowerCase().includes(query.toLowerCase())), [registry, query, type]);
   function commit(asset: MediaAsset) { if (!onChange) return; const exists = registry.assets.some((item) => item.id === asset.id); onChange({ ...registry, assets: exists ? registry.assets.map((item) => item.id === asset.id ? asset : item) : [...registry.assets, asset] }); setEditing(null); }
   return <section className="media-library">
-    <header className="section-heading"><div><p>Media Registry</p><h1>メディア</h1></div>{editable && <div className="button-row"><button onClick={() => setEditing(blankAsset())}>メディアを登録</button><button className="primary" disabled={saving} onClick={onSave}>{saving ? "保存中…" : "変更を保存"}</button></div>}</header>
+    <header className="section-heading"><div><p>Media Registry</p><h1>メディア</h1></div>{editable && <div className="button-row"><button onClick={() => setEditing(blankAsset())}>メディアを登録</button></div>}</header>
+    {editable && <p>登録・編集を確定したメディア情報はブラウザに自動保存されます。サイトへの反映は別操作です。</p>}
     <div className="filter-bar"><input aria-label="メディア検索" placeholder="表示名、public ID、タグを検索" value={query} onChange={(event) => setQuery(event.target.value)} /><div className="segmented">{(["all", "image", "video", "audio"] as const).map((item) => <button className={type === item ? "active" : ""} onClick={() => setType(item)} key={item}>{item === "all" ? "すべて" : item === "image" ? "画像" : item === "video" ? "動画" : "音声"}</button>)}</div></div>
     <div className="media-grid">{assets.map((asset) => <article className="media-card" key={asset.id}>
       <button className="media-preview" onClick={() => onSelect?.(asset)}>{asset.type === "image" ? <img src={mediaUrl(asset.publicId, asset.type)} alt={asset.alt || asset.displayName} /> : <span>{asset.type === "video" ? "▶" : "♪"}</span>}</button>

@@ -148,8 +148,8 @@ test("App can save an undated draft, publish, reload and explicitly change its d
     await act(async () => root.render(createElement(App)));
     await click(button("新規作成")); await click([...document.querySelectorAll(".new-content-menu button")].find((item) => item.textContent === "Journal"));
     await input(container.querySelector(".title-input"), "New publication");
-    await click(button("下書きを保存")); assert.equal(readPending().contents[0].document.common.date, "");
-    const publish = [...container.querySelectorAll("button")].find((item) => item.textContent === "公開する");
+    await click(button("入力を確認")); assert.equal(readPending().contents[0].document.common.date, "");
+    const publish = [...container.querySelectorAll("button")].find((item) => item.textContent === "公開に設定");
     assert.ok(publish && !publish.disabled); await click(publish);
     const saved = readPending().contents[0].document;
     assert.equal(saved.common.date, publicationDateAt()); assert.equal(saved.publicationHistory.hasBeenPublished, true);

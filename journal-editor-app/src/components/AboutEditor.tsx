@@ -16,7 +16,7 @@ export function AboutEditor({ document: doc, documents, registry, disabled, onCh
   const errors = validateAboutDocument(doc, documents);
   const update = (data: AboutProfile) => onChange({ ...doc, placement: { kind: "about", data }, common: { ...doc.common, title: data.name, description: data.bio, publication: "published" } });
   const field = <K extends keyof AboutProfile>(key: K, value: AboutProfile[K]) => update({ ...profile, [key]: value });
-  return <section className="about-editor"><header className="section-heading"><div><p>Profile</p><h1>About</h1></div><button className="primary" disabled={disabled || errors.length > 0} onClick={onSave}>変更を保存</button></header><p>サイトに1件だけあるプロフィールです。保存後、「記事をデプロイ」でサイトに反映します。</p>
+  return <section className="about-editor"><header className="section-heading"><div><p>Profile</p><h1>About</h1></div><button className="primary" disabled={disabled || errors.length > 0} onClick={onSave}>入力を確認</button></header><p>サイトに1件だけあるプロフィールです。入力はこのブラウザに自動保存されます。「保留変更をサイトに反映」で公開します。</p>
     <fieldset disabled={disabled} className="about-fields"><legend className="sr-only">プロフィール</legend>
       <section className="about-basic"><label>アイコン<span className="input-with-action"><input value={profile.icon} onChange={(event) => field("icon", event.target.value)} placeholder="画像URL / Cloudinary ID / サイト内パス" /><button type="button" onClick={() => setMedia(true)}>画像を選択</button></span></label><img className="about-icon-preview" src={resolveImageUrl(profile.icon) || defaultIcon} alt="プロフィール画像プレビュー" /><small>空欄の場合は既定のプロフィール画像を使用します。</small>
         <label>名前<input value={profile.name} onChange={(event) => field("name", event.target.value)} /></label>
