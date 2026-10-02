@@ -6,6 +6,13 @@
 2. #9: Journal / Works / Project の表示切替とソート操作を整理する。
 3. #10: Visual / Music 共通の Gallery 鑑賞ビューと作品指定 URL を用意する。
 4. #11: About を固定プロフィールとして CMS 管理し、Featured Works を Gallery に接続する。
+5. #12: CMSの画面・フィルターをURLで復元できるようにする。
+6. #13: 共通PopoverとBlock操作を整え、後続の状態詳細でも再利用する。
+7. #14: デプロイ追跡のライフサイクルと復帰を安定させる。
+8. #15: 安定した追跡基盤の上でstatus / noticeとAppの責務を分離する。
+9. #16: 保存・公開処理を利用し、公開日と作成日時を分離する。
+
+2026-10-02時点の未解決Issueは9件（#6、#9〜#16）。本文とコメントを確認した。#6〜#11の4件は既存ローカル実装の再検証を先に行い、#12〜#16の5件を依存関係の順に実装した。GitHub上のIssueはpush前のためopenのまま。
 
 ## #6: 現行 CMS テスト
 
@@ -44,7 +51,7 @@ Featured Worksの初期値は空配列。自動取得を廃止し、「紹介す
 
 既存のGitHub revision競合検出とデプロイ処理を再利用する。実ファイルを書かないDOMテストでAppの編集→ブラウザ再起動→保存→デプロイ→再読込を検証し、APIは一時ディレクトリ／GitHub mockで検証する。ローカル確認で既存の未追跡 `vite.config.js` が古い設定を読み込む問題を見つけ、ViteコマンドにTS設定ファイルを明示した。
 
-## 最終検証（2026-10-02）
+## #6〜#11の既存対応時の検証（2026-10-02）
 
 - `npm test`: route 3件、現行CMS 117件、legacy 16件が成功。Journal 14 / Songs 5 / Gallery 10 / Projects 3ファイルのroundtripが成功。
 - サイトとCMSのproduction buildが成功。旧ページのローカル参照168件も解決する。
@@ -95,3 +102,35 @@ Appのserver stateは`useContentDocuments`、`useMediaRegistry`、`usePendingQue
 `publication-tests.mjs`は4種別のD1作成→D2公開→D3編集／再公開、手入力、旧ブラウザ下書き、既存公開記事、未知の管理情報、UTC/JSTの境界、ファイル名とURL、実際のAstro schemaとAppの下書き保存→公開→reload→日付変更を検証する。
 
 日付未定の下書きは開発プレビューからも除外する。schemaの仮日付が一覧に表示されたり、複数のJournal下書きが同じURLを生成したりすることを防ぐ。共通の`hasVisiblePublicationDate`を各collectionの表示経路へ適用し、複数下書きと既存の日付付き下書き・公開記事の混在、実際のWorks catalog、Journal URLの非衝突を検証した。
+
+## 今回の最終検証（2026-10-02）
+
+| Issue | ローカルでの対応 | 主な検証 |
+| --- | --- | --- |
+| [#6](https://github.com/Enomi-4mg/Riddle-Records/issues/6) | 既存対応を確認 | 現行CMS、API / Worker、4種類のroundtrip、現行経路coverage |
+| [#9](https://github.com/Enomi-4mg/Riddle-Records/issues/9) | 既存対応を確認 | 表示初期値・永続設定・日付順・タグ併用、Works / Journal / Projectのブラウザ表示 |
+| [#10](https://github.com/Enomi-4mg/Riddle-Records/issues/10) | 既存対応を確認 | 作品指定URL・フィルター・前後移動・Escape・旧Disco転送、375px表示 |
+| [#11](https://github.com/Enomi-4mg/Riddle-Records/issues/11) | 既存対応を確認 | Aboutの編集・保存・reload・参照制約、固定画面とサイト表示 |
+| [#12](https://github.com/Enomi-4mg/Riddle-Records/issues/12) | 実装済み | Appの編集→一覧復帰、reload、browser履歴、不正パラメーター |
+| [#13](https://github.com/Enomi-4mg/Riddle-Records/issues/13) | 実装済み | viewport配置、Escape・外側click・focus復帰、Block drag/dropと上下移動 |
+| [#14](https://github.com/Enomi-4mg/Riddle-Records/issues/14) | 実装済み | reload復帰、成功・失敗、revision更新、通信失敗・timeout・再確認、複数タブ |
+| [#15](https://github.com/Enomi-4mg/Riddle-Records/issues/15) | 実装済み | 状態優先順位、通知分離、競合再読込、readonly、古い応答、状態詳細の375px表示 |
+| [#16](https://github.com/Enomi-4mg/Riddle-Records/issues/16) | 実装済み | D1/D2/D3、手入力・既存日付、JST境界、永続履歴、URL / file整合、日付未定draft |
+
+- `npm test`: route 3件、現行CMS 146件、legacy 16件が全て成功。
+- Journal 14 / Songs 5 / Gallery 10 / Projects 3ファイルの現行CMS roundtripが成功。
+- AstroとCMSのproduction build、旧ページのローカル参照168件の検査が成功。
+- `npm --prefix journal-editor-app run check:worker` が成功。
+- 現行経路coverage（116テスト）: 行94.49%、分岐86.93%、関数90.88%。legacy Draft経路は含めない。
+- 実ブラウザで `/`、`/works/`、`/journal/`、`/project/`、`/gallery/`、`/disco/`、`/about/`とCMSを確認。GalleryのMusic指定・情報パネル・次作品、Disco転送、CMSフィルターのreload復元・公開日設定を確認した。375px幅のCMS共通メニューは左右・上下ともviewport内に収まる。
+
+今回作成した実装コミット（実行順）:
+
+1. `97b9746` Preserve CMS navigation and list filters in the URL
+2. `a49485a` Unify CMS popovers and improve block movement feedback
+3. `7ffccf0` Resume CMS deployment tracking across reloads and tab changes
+4. `557b450` Separate CMS status, transient notices and state ownership
+5. `371d62a` Assign and preserve publication dates independently of draft creation
+6. `1d3bfbe` Exclude undated drafts from site previews and date-based routes
+
+実装・検証はローカルコミットまで完了。リポジトリの指示に従いpush・本番公開はしていない。GitHub Issueのclose / コメント投稿もしていない。既存の未追跡`.claude/`は変更・commit対象に含めていない。
