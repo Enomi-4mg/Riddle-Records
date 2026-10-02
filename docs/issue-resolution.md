@@ -1,6 +1,53 @@
 # Issue 対応記録
 
-## 対応順序
+## 今回の対応（2026-10-02、#17〜#29）
+
+調査時のopen Issueは全22件（#6、#9〜#29）。
+既存対応の9件を再検証し、新たな13件を以下の順に実装した。
+Issue本文とコメントを確認し、#17〜#29に追加コメントはなかった。
+
+1. #28・#29：公開対象commitとCIの起動条件を先に固定する。
+2. #17・#18・#19：公開サイトのナビゲーション・可視性・文字表現を整える。
+3. #20・#21：Project情報と作品サムネイルを整える。
+4. #22・#23：CMSの自動保存モデル、削除確認、保留変更管理を揃える。
+5. #24・#25・#26：モバイル操作、説明文、画面移動を整える。
+6. #27：整えたサイトの見た目をプレビューに利用し、未使用画面を整理する。
+
+| Issue | 実装・判断 | 主な検証 | Commit |
+| --- | --- | --- | --- |
+| [#28](https://github.com/Enomi-4mg/Riddle-Records/issues/28) | content / mediaのみのpushはPagesを起動せず、CMS dispatchにSHAを渡す。checkout・更新日時・状態追跡を指定SHAに揃える | mainが先へ進んだ場合の旧SHA指定、SHA不一致409、workflowのcheckout契約 | `e23aa8c` |
+| [#29](https://github.com/Enomi-4mg/Riddle-Records/issues/29) | Worker deployをruntime依存に絞り、content / mediaの検査をdeployしないCIへ分離。未使用の静的Journal importを削除 | dataのみ・code混在・runtime依存のtrigger判定。#27で追加したCSS・Header・faviconも明示 | `8062324` |
+| [#17](https://github.com/Enomi-4mg/Riddle-Records/issues/17) | mobileは768px以下、desktopは769px以上。button・ARIA・inert・独立overlay・Escape・focus復帰を実装 | DOM操作、実ブラウザ767 / 768 / 769px、開閉・Escape・focus復帰 | `d3f8f39` |
+| [#18](https://github.com/Enomi-4mg/Riddle-Records/issues/18) | 本文を常時可視にし、curtainを廃止。Observerは移動演出のみ、reduced-motionで無効 | Observerなし・motion抑制・CSS初期可視性 | `442d8a7` |
+| [#19](https://github.com/Enomi-4mg/Riddle-Records/issues/19) | 本文・リンク・背景の色トークンを分離。リンク下線、Kiwi Maru 400 / 500、歌詞の書体、shadow・旧配色を整理 | 使用文字色の4.5:1以上の計算、サイトbuild、実表示 | `9812952` |
+| [#20](https://github.com/Enomi-4mg/Riddle-Records/issues/20) | 共通statusラベルを日本語にし、タグ・状態を分離。空のfeatures / tags / linksを省略 | 生成ページの日本語状態・空見出し省略・既存features保持 | `4d5e13d` |
+| [#21](https://github.com/Enomi-4mg/Riddle-Records/issues/21) | Works・Featured Works・内部カードを16:9のmqdefaultに変更。Galleryの動画表示を維持 | About・Gallery・embedテスト、site build | `d78c449` |
+| [#22](https://github.com/Enomi-4mg/Riddle-Records/issues/22) | 自動ブラウザ保存を明示し、「入力を確認」「公開に設定」「保留変更をサイトに反映」に操作を揃える | 入力直後のpending、保存・公開状態、About fixtureを実データから隔離 | `2868d5f` |
+| [#23](https://github.com/Enomi-4mg/Riddle-Records/issues/23) | 削除対象を確認し、保留一覧で保存・削除・mediaを個別取消。反映前に全件を確認し、内容変更なら再確認 | Appの削除取消・保存取消、applied / deployment中の拒否、公開確認 | `0627bf0` |
+| [#24](https://github.com/Enomi-4mg/Riddle-Records/issues/24) | stickyバーを戻る・状態・サイト反映に絞る。二次操作を本文側へ、Journal初期設定を専用画面へ移す | 実ブラウザ320 / 375pxで高さ60px。縦scrollbarのある320pxも横幅超過なし | `e4d4627`・`3e53e66` |
+| [#25](https://github.com/Enomi-4mg/Riddle-Records/issues/25) | 共通summaryでdescriptionを優先、空ならOG説明。入力欄の役割を明示し、既存OGを移行しない | OG-onlyの一覧・検索、frontmatter roundtrip、site / CMS build | `169efcc` |
+| [#26](https://github.com/Enomi-4mg/Riddle-Records/issues/26) | 共通navigationで画面先頭・一覧位置・履歴位置を復元。文書取得待ちにも対応 | Appの履歴・Media / About移動、新規作成、実ブラウザ一覧下部→記事先頭→元の一覧位置 | `65320f8` |
+| [#27](https://github.com/Enomi-4mg/Riddle-Records/issues/27) | 未使用6画面を削除し、現行ContentDocumentのSitePreviewDialogへ統合。サイトCSS・書体・幅・embedを隔離iframeで表示 | 4種類の描画、内部カード・動画、通常幅 / 375px、dialog開閉・focus、旧画面import不在 | `0e870ca` |
+
+プレビューはスクリプト実行を許可しない。
+動画の再生、Xの動的表示、数式・コードの装飾、Lightbox・メニューなどの動作は公開後に確認する仕様で、画面と[UXユースケース](content-editor-ux-use-cases.md)に明記した。
+
+### 最終検証
+
+- `npm test`：route 3件、現行CMS 159件、legacy 16件がすべて成功。
+- Journal 14 / Songs 5 / Gallery 10 / Projects 3ファイルの現行CMS roundtripが成功。
+- Astro 35ページとCMSのproduction build、旧ページの参照168件の検査が成功。
+- `npm --prefix journal-editor-app run check:worker`が成功。
+- `npm --prefix journal-editor-app run test:coverage`：現行経路125テスト、行94.65%、分岐86.88%、関数90.80%。旧Draft経路は含めない。
+- 実ブラウザで767 / 768 / 769pxのナビ境界、Escapeとfocus復帰、CMSの320 / 375px表示、一覧位置復元、プレビューのKiwi Maru・本文幅1000px・375px切替・編集復帰を確認。
+- 最後のCSS修正後にCMS production buildを再確認。320pxでは利用可能幅305px・content幅305px、375pxでは360px・360pxで横幅超過なし。
+
+各変更はstaged diffを確認して意味単位でcommitした。
+実装・検証はローカルで完了し、push・本番公開・GitHub Issueのclose / コメント投稿は未実施。
+リモートIssueはopenのままで、実際のActions起動回数・本番公開結果はpush後の運用確認対象となる。
+既存の未追跡`.claude/`は変更・commit対象に含めていない。
+
+## 前回までの対応順序（#6・#9〜#16）
 
 1. #6: 現行 CMS の保存・API・デプロイテストを確認する。
 2. #9: Journal / Works / Project の表示切替とソート操作を整理する。
@@ -12,7 +59,7 @@
 8. #15: 安定した追跡基盤の上でstatus / noticeとAppの責務を分離する。
 9. #16: 保存・公開処理を利用し、公開日と作成日時を分離する。
 
-2026-10-02時点の未解決Issueは9件（#6、#9〜#16）。本文とコメントを確認した。#6〜#11の4件は既存ローカル実装の再検証を先に行い、#12〜#16の5件を依存関係の順に実装した。GitHub上のIssueはpush前のためopenのまま。
+前回の調査対象は9件（#6、#9〜#16）。本文とコメントを確認した。#6〜#11の4件は既存ローカル実装の再検証を先に行い、#12〜#16の5件を依存関係の順に実装した。GitHub上のIssueはpush前のためopenのまま。
 
 ## #6: 現行 CMS テスト
 
@@ -103,7 +150,7 @@ Appのserver stateは`useContentDocuments`、`useMediaRegistry`、`usePendingQue
 
 日付未定の下書きは開発プレビューからも除外する。schemaの仮日付が一覧に表示されたり、複数のJournal下書きが同じURLを生成したりすることを防ぐ。共通の`hasVisiblePublicationDate`を各collectionの表示経路へ適用し、複数下書きと既存の日付付き下書き・公開記事の混在、実際のWorks catalog、Journal URLの非衝突を検証した。
 
-## 今回の最終検証（2026-10-02）
+## #6・#9〜#16の対応時の検証（2026-10-02）
 
 | Issue | ローカルでの対応 | 主な検証 |
 | --- | --- | --- |
