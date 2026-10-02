@@ -1204,3 +1204,16 @@ button:disabled:hover { border-color: var(--cms-border); }
 .pending-list li span { min-width: 0; overflow-wrap: anywhere; }
 .pending-list small { display: block; color: var(--cms-muted); }
 .pending-list button { flex-shrink: 0; }
+.editor-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; max-width: 1120px; margin: 1rem auto; padding-inline: 1rem; }
+.autosave-hint { max-width: 1120px; margin: .75rem auto; padding-inline: 1rem; font-size: .85rem; color: var(--cms-muted); }
+.deploy-label-mobile { display: none; }
+@media (max-width: 720px) {
+  .editor-topbar { flex-wrap: nowrap; gap: .5rem; padding: .5rem; min-height: 60px; }
+  .editor-topbar .deploy-action { margin-left: auto; width: auto; }
+  .editor-topbar button { padding: .5rem .65rem; white-space: nowrap; }
+  .editor-topbar .editor-back { min-width: 40px; }
+  .mobile-hidden, .deploy-label-desktop { display: none; }
+  .deploy-label-mobile { display: inline; }
+  .editor-tools { margin-block: .75rem; }
+  .global-bar { position: static; }
+}
