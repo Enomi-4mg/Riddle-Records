@@ -28,7 +28,8 @@ export async function getViewingWorks(): Promise<ViewingWork[]> {
       id: workReference("songs", entry.slug), kind: "music", title: entry.data.title,
       date: entry.data.date.toISOString().slice(0, 10), description: entry.data.description ?? "",
       tags: normalizeContentTags(entry.data.tags ?? []), image: "", imageAlt: entry.data.title,
-      thumbnail: `https://img.youtube.com/vi/${entry.data.youtube_id}/sddefault.jpg`,
+      // mqdefault is 320×180 (16:9); sddefault can include baked-in letterboxing.
+      thumbnail: `https://img.youtube.com/vi/${entry.data.youtube_id}/mqdefault.jpg`,
       youtubeId: entry.data.youtube_id,
       credits: Array.isArray(entry.data.credits) ? entry.data.credits.join("\n") : entry.data.credits,
       links: [{ label: "歌詞・詳細ページ", url: `/disco/${entry.slug}/` }]

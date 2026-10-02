@@ -13,7 +13,7 @@ export function featuredWorkOptions(documents: ContentDocument[]): WorkPreview[]
     }
     if (doc.placement.kind === "songs") {
       const slug = generatedContentFilename(doc).replace(/\.md$/, "");
-      return [{ id: workReference("songs", slug), kind: "music", title: doc.common.title, thumbnail: `https://img.youtube.com/vi/${normalizeYouTubeId(doc.placement.data.youtubeId)}/sddefault.jpg` }];
+      return [{ id: workReference("songs", slug), kind: "music", title: doc.common.title, thumbnail: `https://img.youtube.com/vi/${normalizeYouTubeId(doc.placement.data.youtubeId)}/mqdefault.jpg` }];
     }
     return [];
   });

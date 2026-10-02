@@ -13,7 +13,7 @@ export function documentCard(doc: ContentDocument): InternalCard | undefined {
     image = resolveImageUrl(data.thumbnail || data.image || data.ogImage) || "";
   } else if (kind === "songs" && "youtubeId" in data) {
     const slug = doc.file?.path.replace(/\.md$/, "") || doc.common.date;
-    url = `/disco/${slug}/`; image = `https://img.youtube.com/vi/${normalizeYouTubeId(data.youtubeId)}/sddefault.jpg`;
+    url = `/disco/${slug}/`; image = `https://img.youtube.com/vi/${normalizeYouTubeId(data.youtubeId)}/mqdefault.jpg`;
   } else if (kind === "gallery" && "detail" in data) {
     if (!data.detail || !data.slug) return;
     url = `/gallery/${data.slug}/`; image = resolveImageUrl(data.image) || "";
