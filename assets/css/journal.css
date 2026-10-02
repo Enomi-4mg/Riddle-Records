@@ -692,3 +692,14 @@
 @media (max-width: 600px) { .index-toolbar .filter-controls { justify-content: flex-start; } }
 .profile-bio { white-space: pre-wrap; }
 .profile-featured-empty { color: var(--color-muted); text-align: center; }
+
+.project-status {
+  width: fit-content;
+  margin: var(--space-xs) 0;
+  padding: 0.15rem 0 0.15rem var(--space-sm);
+  border-left: 3px solid var(--color-mint-deep);
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+.project-status[data-status="paused"],
+.project-status[data-status="archived"] { border-left-style: dotted; }

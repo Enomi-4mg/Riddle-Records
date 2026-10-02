@@ -1,6 +1,7 @@
 ---
 import SortSwitch from "../../components/SortSwitch.astro";
 import ListViewSwitch from "../../components/ListViewSwitch.astro";
+import { projectStatusLabel } from "../../../shared/projectStatus";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getSortedProjectItems } from "../../utils/projects";
 import { resolveImageUrl } from "../../utils/images";
@@ -34,8 +35,8 @@ const formatDate = (date) => new Date(date).toLocaleDateString("ja-JP");
             <a href={href(`/project/${project.slug}/`)}>{project.title}</a>
           </h2>
           <p class="journal-desc">{project.description}</p>
+          {project.status && <p class="project-status" data-status={project.status}>状態: {projectStatusLabel(project.status)}</p>}
           <div class="project-tags" aria-label={`${project.title} tags`}>
-            {project.status && <span class="project-tag">{project.status}</span>}
             {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}
           </div>
         </div>

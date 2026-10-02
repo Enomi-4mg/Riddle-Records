@@ -1,4 +1,5 @@
 ---
+import { projectStatusLabel } from "../../../shared/projectStatus";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getProjectItems } from "../../utils/projects";
 import { resolveImageUrl } from "../../utils/images";
@@ -43,7 +44,7 @@ const bodyHtml = await renderSiteMarkdown(project.body || project.description ||
     <header class="journal-hero project-detail-header">
       {project.date && <p class="journal-date"><time datetime={project.date}>{formatDate(project.date)}</time></p>}
       <h1 class="page_title">{project.title}</h1>
-      {project.status && <p class="project-kicker">{project.status}</p>}
+      {project.status && <p class="project-status" data-status={project.status}>状態: {projectStatusLabel(project.status)}</p>}
       <p class="journal-summary">{project.description}</p>
     </header>
 
@@ -61,24 +62,28 @@ const bodyHtml = await renderSiteMarkdown(project.body || project.description ||
         <div class="rendered-markdown" set:html={bodyHtml} />
       </section>
 
-      <section class="project-section">
+      {project.features.length > 0 && <section class="project-section">
         <h2>主な機能</h2>
         <ul class="project-feature-list">
           {project.features.map((feature) => <li>{feature}</li>)}
         </ul>
-      </section>
+      </section>}
 
-      <section class="project-section">
-        <h2>リンク</h2>
+      {project.tags.length > 0 && <section class="project-section">
+        <h2>タグ</h2>
         <div class="project-tags" aria-label={`${project.title} tags`}>
           {project.tags.map((tag) => <span class="project-tag">{tag}</span>)}
         </div>
+      </section>}
+
+      {project.links.length > 0 && <section class="project-section">
+        <h2>リンク</h2>
         <div class="project-actions">
           {project.links.map((link, index) => (
             <a href={link.url} class={`project-action${index === 0 ? " project-action-primary" : ""}`} target="_blank" rel="noopener noreferrer">{link.label}</a>
           ))}
         </div>
-      </section>
+      </section>}
     </div>
 
     <div class="journal-back-link">
