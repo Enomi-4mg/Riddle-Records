@@ -1,6 +1,7 @@
 import { galleryBodySections } from "../../shared/gallerySections";
 import { normalizeContentTags } from "../../shared/contentTags";
 import { getCollection } from "astro:content";
+import { hasVisiblePublicationDate } from "../../shared/publicationDate";
 import { galleryItems, type GalleryItem } from "../data/gallery";
 
 export type GalleryItemSource = "data" | "collection";
@@ -107,7 +108,7 @@ export const hasGalleryDetail = (item: Pick<GalleryItemView, "detail">) => item.
 export const getGalleryItems = async (): Promise<readonly GalleryItemView[]> => {
   const showDrafts = !import.meta.env.PROD;
   const collectionItems = (await getCollection("gallery"))
-    .filter((entry) => showDrafts || !entry.data.draft)
+    .filter((entry) => hasVisiblePublicationDate(entry.data, showDrafts))
     .map(normalizeCollectionItem);
   const items = [...galleryItems.map(normalizeDataItem), ...collectionItems];
   validateGalleryViews(items);

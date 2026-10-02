@@ -3,6 +3,7 @@ import ListViewSwitch from "../../components/ListViewSwitch.astro";
 import SortSwitch from "../../components/SortSwitch.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { hasVisiblePublicationDate } from "../../../shared/publicationDate";
 import { getGalleryItems } from "../../utils/gallery";
 import { getJournalRoutePath, getJournalThumbnail } from "../../utils/journal";
 import fallbackIconUrl from "../../../favicon/icon.jpg?url";
@@ -11,7 +12,7 @@ const base = import.meta.env.BASE_URL;
 const showDrafts = !import.meta.env.PROD;
 const galleryItems = await getGalleryItems();
 const journalEntries = (await getCollection("journal"))
-  .filter((entry) => showDrafts || !entry.data.draft)
+  .filter((entry) => hasVisiblePublicationDate(entry.data, showDrafts))
   .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 
 const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;

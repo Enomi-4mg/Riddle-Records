@@ -3,6 +3,7 @@ import { renderSiteMarkdown } from "../../utils/siteEmbeds";
 import { galleryWorkPath, workReference } from "../../../shared/workIdentity";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { hasVisiblePublicationDate } from "../../../shared/publicationDate";
 
 const base = import.meta.env.BASE_URL;
 const basePath = base.endsWith("/") ? base : `${base}/`;
@@ -10,7 +11,7 @@ const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 
 export async function getStaticPaths() {
   const showDraftPaths = !import.meta.env.PROD;
-  const songs = (await getCollection("songs")).filter((entry) => showDraftPaths || !entry.data.draft);
+  const songs = (await getCollection("songs")).filter((entry) => hasVisiblePublicationDate(entry.data, showDraftPaths));
   return songs.map((song) => ({
     params: {
       slug: song.slug

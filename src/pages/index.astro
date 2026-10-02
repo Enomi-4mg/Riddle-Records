@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { hasVisiblePublicationDate } from "../../shared/publicationDate";
 import { getGalleryItems, getSortedGalleryItems } from "../utils/gallery";
 import { getJournalRoutePath, getJournalThumbnail } from "../utils/journal";
 import { resolveImageUrl } from "../utils/images";
@@ -12,10 +13,10 @@ const href = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const showDrafts = !import.meta.env.PROD;
 
 const journals = (await getCollection("journal"))
-  .filter((entry) => showDrafts || !entry.data.draft)
+  .filter((entry) => hasVisiblePublicationDate(entry.data, showDrafts))
   .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 const songs = (await getCollection("songs"))
-  .filter((entry) => showDrafts || !entry.data.draft)
+  .filter((entry) => hasVisiblePublicationDate(entry.data, showDrafts))
   .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 const latestJournal = journals[0];
 const latestSong = songs[0];

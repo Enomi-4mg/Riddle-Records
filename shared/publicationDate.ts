@@ -15,3 +15,8 @@ export function normalizeUndatedDraft(value: unknown) {
   if (value && typeof value === "object" && "draft" in value && value.draft === true && (!('date' in value) || value.date === "" || value.date == null)) return { ...value, date: new Date(0) };
   return value;
 }
+
+/** Keep the schema's private draft placeholder out of previews and date-based routes. */
+export function hasVisiblePublicationDate(data: { draft?: boolean; date: Date }, showDrafts: boolean) {
+  return (!data.draft || showDrafts) && (!data.draft || data.date.getTime() !== 0);
+}

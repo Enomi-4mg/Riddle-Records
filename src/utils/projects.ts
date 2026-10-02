@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { hasVisiblePublicationDate } from "../../shared/publicationDate";
 import { projects, type ProjectDataItem } from "../data/projects";
 
 export type ProjectItemSource = "legacy" | "collection";
@@ -98,7 +99,7 @@ const validateProjectItems = (items: readonly ProjectItemView[]) => {
 export const getProjectItems = async (): Promise<readonly ProjectItemView[]> => {
   const showDrafts = !import.meta.env.PROD;
   const collectionItems = (await getCollection("projects"))
-    .filter((entry) => showDrafts || !entry.data.draft)
+    .filter((entry) => hasVisiblePublicationDate(entry.data, showDrafts))
     .map(normalizeCollectionItem);
   const items = [...projects.map(normalizeLegacyItem), ...collectionItems];
   validateProjectItems(items);

@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import { hasVisiblePublicationDate } from "../../shared/publicationDate";
 import { normalizeContentTags } from "../../shared/contentTags";
 import { galleryWorkPath, workReference, type WorkPreview } from "../../shared/workIdentity";
 import { getGalleryDetailPath, getGalleryItems, hasGalleryDetail } from "./gallery";
@@ -22,7 +23,7 @@ export async function getViewingWorks(): Promise<ViewingWork[]> {
     ]
   }));
   const music: ViewingWork[] = (await getCollection("songs"))
-    .filter((entry) => !import.meta.env.PROD || !entry.data.draft)
+    .filter((entry) => hasVisiblePublicationDate(entry.data, !import.meta.env.PROD))
     .map((entry) => ({
       id: workReference("songs", entry.slug), kind: "music", title: entry.data.title,
       date: entry.data.date.toISOString().slice(0, 10), description: entry.data.description ?? "",

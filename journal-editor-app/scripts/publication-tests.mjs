@@ -6,8 +6,9 @@ import { Window } from "happy-dom";
 import { buildContentMarkdown, contentFrontmatter, createContentDocument, generatedContentFilename, parseContentMarkdown, publicationChecks } from "../src/lib/cmsMarkdown.ts";
 import { publishDocument, setPublicationDate } from "../src/lib/publication.ts";
 import { documentCard } from "../src/lib/linkCards.ts";
-import { publicationDateAt, isPublicationDate } from "../../shared/publicationDate.ts";
+import { publicationDateAt, isPublicationDate, normalizeUndatedDraft, hasVisiblePublicationDate } from "../../shared/publicationDate.ts";
 import { getJournalPermalink } from "../../shared/contentRoutes.ts";
+import { assertUniqueJournalRoutes } from "../../src/utils/journal.ts";
 
 const d1 = new Date("2026-10-01T03:00:00Z"), d2 = new Date("2026-10-05T03:00:00Z"), d3 = new Date("2026-10-09T03:00:00Z");
 const kinds = ["journal", "songs", "gallery", "projects"];
@@ -105,6 +106,25 @@ test("actual Astro schemas accept undated drafts and reject undated public conte
     const publicData = contentFrontmatter(publishDocument(draft(kind), d2));
     assert.equal(collections[kind].schema.parse(publicData).date.toISOString().slice(0, 10), "2026-10-05");
   }
+});
+
+test("multiple undated drafts stay editable without appearing in site previews or colliding Journal routes", async () => {
+  const entries = [1, 2].map((id) => ({ id: `draft-${id}`, slug: `draft-${id}`, data: normalizeUndatedDraft({ title: "Draft", draft: true, date: "" }) }));
+  const dated = { id: "dated", slug: "dated", data: { title: "Dated", draft: true, date: d1 } };
+  const published = { id: "published", slug: "published", data: { title: "Public", date: d2 } };
+  const docs = [...entries, dated, published];
+  assert.deepEqual(docs.filter((entry) => hasVisiblePublicationDate(entry.data, true)).map((entry) => entry.id), ["dated", "published"]);
+  assert.deepEqual(docs.filter((entry) => hasVisiblePublicationDate(entry.data, false)).map((entry) => entry.id), ["published"]);
+  assert.doesNotThrow(() => assertUniqueJournalRoutes(docs.filter((entry) => hasVisiblePublicationDate(entry.data, true))));
+  const fixture = docs.map((entry) => ({ ...entry, data: { ...entry.data, date: entry.data.date.toISOString(), youtube_id: "abcdefghijk", image: "folder/art" } }));
+  const result = await build({ entryPoints: [fileURLToPath(new URL("../../src/utils/works.ts", import.meta.url))], bundle: true, write: false, format: "esm", platform: "node", define: { "import.meta.env.PROD": "false" },
+    plugins: [{ name: "undated-content", setup(builder) {
+      builder.onResolve({ filter: /^astro:content$/ }, () => ({ path: "fixture", namespace: "fixture" }));
+      builder.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({ contents: `export async function getCollection() { return ${JSON.stringify(fixture)}.map(entry => ({ ...entry, data: { ...entry.data, date: new Date(entry.data.date) } })); }` }));
+    } }] });
+  const { getViewingWorks } = await import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString("base64")}`);
+  const works = await getViewingWorks();
+  assert.equal(works.length, 4); assert.ok(works.every((work) => !work.id.includes("draft-")));
 });
 
 test("App can save an undated draft, publish, reload and explicitly change its date", async () => {

@@ -93,3 +93,5 @@ Appのserver stateは`useContentDocuments`、`useMediaRegistry`、`usePendingQue
 日付未定のJournal / Songsは日付非依存の`content-UUID.md`で下書き保存できる。初回公開後も既存ファイルのpath / revisionを維持する。下書きをGitHubへ保存する前に公開した場合は、従来どおり公開日のファイル名になる。Journalのpermalinkと内部カードは公開日、Songs詳細は実ファイル名を使う。renameを伴わず既存の競合検出を維持する。サイトschemaは下書きに限定した仮日付を使い、公開コンテンツの空日付は拒否する。
 
 `publication-tests.mjs`は4種別のD1作成→D2公開→D3編集／再公開、手入力、旧ブラウザ下書き、既存公開記事、未知の管理情報、UTC/JSTの境界、ファイル名とURL、実際のAstro schemaとAppの下書き保存→公開→reload→日付変更を検証する。
+
+日付未定の下書きは開発プレビューからも除外する。schemaの仮日付が一覧に表示されたり、複数のJournal下書きが同じURLを生成したりすることを防ぐ。共通の`hasVisiblePublicationDate`を各collectionの表示経路へ適用し、複数下書きと既存の日付付き下書き・公開記事の混在、実際のWorks catalog、Journal URLの非衝突を検証した。
