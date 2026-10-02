@@ -1,0 +1,33 @@
+name: Validate content and site
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "shared/**"
+      - "assets/**"
+      - "script.js"
+      - "scripts/**"
+      - "astro.config.*"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/content-tests.yml"
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            journal-editor-app/package-lock.json
+      - run: npm ci
+      - run: npm --prefix journal-editor-app ci
+      - run: npm test

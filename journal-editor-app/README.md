@@ -270,3 +270,9 @@ Featured Works は公開された Gallery / Songs から任意に選び、サム
 `about-tests.mjs` は全項目のroundtripとvalidation、`about-editor-tests.mjs` は実際のAppで編集・復元・保存・再読込、`api-tests.mjs` は両APIでsingleton制約・競合・参照・batch保存を検証します。`test:coverage` にも現行About経路を含めています。
 
 Viteコマンドは `--config vite.config.ts` を明示します。過去に生成された、Git管理外の `vite.config.js` が残っていても古いAPI設定を読み込みません。
+
+## CIの責務
+
+Content Editor Workerのdeployはeditor / Workerコード、shared、画像URL解決、埋め込みCSS、root依存manifestの変更で起動します。MarkdownとMedia Registryだけの更新はWorkerを再deployしません。未使用の静的Journal importを削除し、実データはGitHub APIから取得します。
+
+コンテンツ・サイト側の変更は`content-tests.yml`でCMS tests、roundtrip、サイト / CMS build、旧リンクを検査します。このworkflowはdeployしません。公開はPages workflowが担当します。
