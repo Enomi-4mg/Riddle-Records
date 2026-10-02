@@ -39,8 +39,9 @@ export async function trackDeployment(deployment: Deployment, options: {
   let url: string | undefined;
   try {
     for (let attempt = 0; attempt < attempts && !signal.aborted; attempt += 1) {
-      const result = await getStatus(deployment.id, deployment.startedAt, signal);
+      const result = await getStatus(deployment.id, deployment.startedAt, signal, deployment.sha);
       if (signal.aborted) return;
+      if (result.sha && result.sha !== deployment.sha) throw new Error("公開対象のcommitが一致しません");
       url = result.url;
       if (result.status === "completed") { await onComplete(result); return; }
       onState({ state: "waiting", deployment, url });

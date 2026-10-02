@@ -260,8 +260,9 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
       const status = (await comparison.json() as { status?: string }).status;
       if (status !== "ahead" && status !== "identical") return json(409, { error: "CMS changes are not included in main" });
     }
-    await githubRepositoryRequest(fetcher, env, "dispatches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event_type: "cms_site_deploy", client_payload: { deployment_id: deploymentId } }) });
-    return json(200, { deploymentId, sha: headSha, status: "queued" });
+    const deploySha = typeof requestedSha === "string" ? requestedSha : headSha;
+    await githubRepositoryRequest(fetcher, env, "dispatches", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event_type: "cms_site_deploy", client_payload: { deployment_id: deploymentId, commit_sha: deploySha } }) });
+    return json(200, { deploymentId, sha: deploySha, status: "queued" });
   }
 
   if (url.pathname === "/api/site-deploy" && request.method === "GET") {
@@ -271,9 +272,14 @@ async function handleApi(request: Request, env: Env, fetcher: typeof fetch): Pro
     if (!response.ok) throw new GitHubApiError(response.status, response.status === 403 && response.headers.get("x-ratelimit-remaining") === "0");
     const runs = (await response.json() as { workflow_runs?: Array<{ display_title: string; head_sha: string; status: "queued" | "in_progress" | "completed"; conclusion?: string | null; html_url?: string }> }).workflow_runs ?? [];
     const run = runs.find((item) => item.display_title.includes(deploymentId));
+    const expectedSha = url.searchParams.get("commitSha");
+    if (expectedSha && !/^[a-f0-9]{40}$/.test(expectedSha)) return json(400, { error: "Invalid commit SHA" });
+    // repository_dispatch head_sha describes the default branch, not the checkout.
+    const builtSha = run?.display_title.match(/\[([a-f0-9]{40})\]$/)?.[1];
+    if (run && (!builtSha || (expectedSha && builtSha !== expectedSha))) return json(409, { error: "Deployment commit does not match the requested commit" });
     const startedAt = url.searchParams.get("startedAt");
     const missingTooLong = startedAt && Number.isFinite(Date.parse(startedAt)) && Date.now() - Date.parse(startedAt) > 300_000;
-    return json(200, run ? { deploymentId, sha: run.head_sha, status: run.status, conclusion: run.conclusion, url: run.html_url } : missingTooLong ? { deploymentId, sha: "", status: "completed", conclusion: "workflow run not found" } : { deploymentId, sha: "", status: "queued" });
+    return json(200, run ? { deploymentId, sha: builtSha, status: run.status, conclusion: run.conclusion, url: run.html_url } : missingTooLong ? { deploymentId, sha: "", status: "completed", conclusion: "workflow run not found" } : { deploymentId, sha: "", status: "queued" });
   }
 
   if (request.method === "GET" && url.pathname === "/api/content-list") {

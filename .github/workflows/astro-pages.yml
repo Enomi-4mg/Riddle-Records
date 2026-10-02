@@ -1,9 +1,12 @@
 name: Deploy Astro site to GitHub Pages
-run-name: Deploy site (${{ github.event.client_payload.deployment_id || inputs.deployment_id || 'manual' }})
+run-name: Deploy site (${{ github.event.client_payload.deployment_id || inputs.deployment_id || 'manual' }}) [${{ github.event.client_payload.commit_sha || github.sha }}]
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "src/content/**"
+      - "src/data/media-registry.json"
   repository_dispatch:
     types: [cms_site_deploy]
   workflow_dispatch:
@@ -24,10 +27,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate CMS deployment commit
+        if: github.event_name == 'repository_dispatch'
+        env:
+          CMS_COMMIT_SHA: ${{ github.event.client_payload.commit_sha }}
+        run: |
+          [[ "$CMS_COMMIT_SHA" =~ ^[a-f0-9]{40}$ ]] || exit 1
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.commit_sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v4

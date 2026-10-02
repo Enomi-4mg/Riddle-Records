@@ -141,7 +141,9 @@ npm run build
 ## デプロイ
 
 GitHub Pages へのデプロイは `.github/workflows/astro-pages.yml` で行います。
-サイトは `main` へのpushだけでは更新されません。CMSの「記事をデプロイ」かGitHub Actionsの手動実行で公開します。
+サイトコードの `main` pushでは、そのpushのcommitを自動公開します。`src/content/**` と `src/data/media-registry.json` だけの変更ではpushによる公開を起動せず、CMSの「保留変更をサイトに反映」から1回だけ起動します。CMSは公開対象commit SHAをdispatchし、ActionsはそのSHAをcheckoutするため、実行中にmainが進んでも公開対象は変わりません。手動実行は選択したbranch / tagのcommitを公開します。
+
+repository_dispatchの`head_sha`はdefault branchのcommitを示すため、CMSの状況確認はrun名に記録した公開対象SHAとdeployment IDを照合します（[GitHubのイベント仕様](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#repository_dispatch)）。
 
 このリポジトリでは Cloudflare Pages を使いません。
 Cloudflare Pages のプロジェクトがリポジトリに接続されたままの場合は、ビルドを無視するコマンドに次を設定します。

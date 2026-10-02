@@ -239,17 +239,17 @@ describe("Cloudflare Worker content API", () => {
     assert.equal((await response.json()).sha, "site-sha");
     assert.equal(calls.length, 2);
     assert.match(calls[1][0], /repos\/Enomi-4mg\/Riddle-Records\/dispatches/);
-    assert.deepEqual(JSON.parse(calls[1][1].body), { event_type: "cms_site_deploy", client_payload: { deployment_id: id } });
+    assert.deepEqual(JSON.parse(calls[1][1].body), { event_type: "cms_site_deploy", client_payload: { deployment_id: id, commit_sha: "site-sha" } });
   });
 
   test("reports only the matching site deployment run", async () => {
     const id = "123e4567-e89b-42d3-a456-426614174000";
     const handler = createWorkerHandler(async () => Response.json({ workflow_runs: [
       { display_title: "Deploy site (another-run)", head_sha: "other", status: "completed", conclusion: "success" },
-      { display_title: `Deploy site (${id})`, head_sha: "selected", status: "completed", conclusion: "success", html_url: "https://github.com/run/1" }
+      { display_title: `Deploy site (${id}) [${"a".repeat(40)}]`, head_sha: "selected", status: "completed", conclusion: "success", html_url: "https://github.com/run/1" }
     ] }));
     const response = await handler(new Request(`https://cms.4mg.dev/api/site-deploy?deploymentId=${id}`), env);
-    assert.deepEqual(await response.json(), { deploymentId: id, sha: "selected", status: "completed", conclusion: "success", url: "https://github.com/run/1" });
+    assert.deepEqual(await response.json(), { deploymentId: id, sha: "a".repeat(40), status: "completed", conclusion: "success", url: "https://github.com/run/1" });
   });
 
   test("authenticates deployment polling and stops waiting for a missing run", async () => {

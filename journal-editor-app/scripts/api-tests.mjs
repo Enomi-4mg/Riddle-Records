@@ -15,6 +15,7 @@ function remote(options = {}) {
   const handler = createWorkerHandler(async (url, init = {}) => {
     const address = String(url); calls.push([address, init]);
     if (address.includes("git/ref/heads") && init.method !== "PATCH") return Response.json({ object: { sha: "b".repeat(40) } });
+    if (address.includes("actions/workflows/")) return Response.json({ workflow_runs: options.runs ?? [] });
     if (address.includes("/compare/")) return Response.json({ status: options.compare ?? "ahead" });
     if (address.includes("git/commits/") && init.method !== "POST") return Response.json({ tree: { sha: "base-tree" } });
     if (address.includes("/contents/")) {
@@ -61,7 +62,18 @@ describe("Worker deployment commit containment", () => {
     const api = remote({ compare: status }); const result = await api.request("/api/site-deploy", "POST", { deploymentId, commitSha: "a".repeat(40) });
     assert.equal(result.status, ["ahead", "identical"].includes(status) ? 200 : 409);
     assert.equal(api.calls.filter(([url]) => url.endsWith("/dispatches")).length, result.status === 200 ? 1 : 0);
-    if (result.status === 200) assert.equal(result.body.sha, "b".repeat(40));
+    if (result.status === 200) {
+      assert.equal(result.body.sha, "a".repeat(40));
+      const dispatch = api.calls.find(([url]) => url.endsWith("/dispatches"));
+      assert.equal(JSON.parse(dispatch[1].body).client_payload.commit_sha, "a".repeat(40));
+    }
+  });
+  test("status follows the pinned checkout even after main advances, and rejects a mismatched commit", async () => {
+    const sha = "a".repeat(40);
+    const api = remote({ runs: [{ display_title: `Deploy site (${deploymentId}) [${sha}]`, head_sha: "b".repeat(40), status: "completed", conclusion: "success" }] });
+    const result = await api.request(`/api/site-deploy?deploymentId=${deploymentId}&commitSha=${sha}`);
+    assert.equal(result.status, 200); assert.equal(result.body.sha, sha);
+    assert.equal((await api.request(`/api/site-deploy?deploymentId=${deploymentId}&commitSha=${"c".repeat(40)}`)).status, 409);
   });
   test("head SHA bypasses comparison; malformed SHA is rejected", async () => {
     const api = remote(); assert.equal((await api.request("/api/site-deploy", "POST", { deploymentId, commitSha: "b".repeat(40) })).status, 200);
