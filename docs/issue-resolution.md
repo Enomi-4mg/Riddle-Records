@@ -67,3 +67,11 @@ Featured Worksの初期値は空配列。自動取得を廃止し、「紹介す
 Block追加・移動をSVGアイコンにし、toolbarをBlock先頭に揃える。既存drag/dropは移動先のラインを表示し、カスタムdrag中はProseMirrorの通常dropとの二重処理を避ける。操作メニューの上下移動はkeyboardからも利用できる。通常のテキストdropは従来どおり。
 
 `interaction-tests.mjs` でviewport配置、内部／外側click、Escapeとfocus、実際のBlock drag/drop・上下移動を検証。既存embed操作とCMS buildも成功。
+
+## #14: デプロイ追跡の復帰
+
+GitHub反映とdeployment pollingを分離し、`useDeployment` / `deploymentTracking.ts` が明示的なidle、syncing、waiting、paused、success、failedを管理する。保存されたdeploymentを起動時に再確認し、focus / visibility復帰時と手動再確認でも追跡を再開する。最大40回のpolling後や通信失敗ではIDを保持したままpausedとし、再確認を提供する。unmount時はHTTPと待機を中断し、遅い応答が新しい追跡状態を上書きしない。
+
+成功時は保留queueを解消し、contentとmediaのrevisionを再取得する。現在の文書も取得したrevisionへ同期する。失敗時はdeploymentだけを外し、GitHub反映済みの変更とrevisionを保持して再編集／再試行できる。完了結果を永続化し、reload後も失敗を表示する。別タブのqueue更新時も同期する。既存の対象別競合処理を維持。
+
+`deployment-tests.mjs` でpolling上限・再開・中断、実際のAppのreload→成功とrevision取得、通信失敗→手動／focus再確認、失敗→reload→再編集を検証。既存About保存／競合テストとCMS buildも成功。

@@ -6,10 +6,10 @@ export async function startSiteDeploy(deploymentId: string, commitSha?: string):
   return await response.json() as DeployStatus;
 }
 
-export async function getSiteDeploy(deploymentId: string, startedAt?: string): Promise<DeployStatus> {
+export async function getSiteDeploy(deploymentId: string, startedAt?: string, signal?: AbortSignal): Promise<DeployStatus> {
   const params = new URLSearchParams({ deploymentId });
   if (startedAt) params.set("startedAt", startedAt);
-  const response = await fetch(`/api/site-deploy?${params}`);
+  const response = await fetch(`/api/site-deploy?${params}`, signal ? { signal } : undefined);
   if (!response.ok) throw new Error(await response.text());
   return await response.json() as DeployStatus;
 }

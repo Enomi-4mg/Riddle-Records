@@ -33,7 +33,7 @@ export function useCmsNavigation() {
     window.dispatchEvent(new Event(event));
   }
   return { ...navigation,
-    navigate: (screen: Screen, documentId?: string) => update({ screen: screen === "content" ? null : screen, document: documentId || null }),
+    navigate: (screen: Screen, documentId?: string, replace = false) => update({ screen: screen === "content" ? null : screen, document: documentId || null }, replace),
     setFilters: (filters: ContentFilters, replace = false) => update({ kind: filters.kind === "all" ? null : filters.kind, publication: filters.publication === "all" ? null : filters.publication, q: filters.query }, replace)
   };
 }
