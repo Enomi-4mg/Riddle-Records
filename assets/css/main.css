@@ -301,6 +301,14 @@ img {
     border-bottom: 2px solid transparent;
 }
 
+.nav-item a.active {
+    background: var(--color-mint-tint);
+    border-bottom-color: var(--color-mint-deep);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.3em;
+}
+
 .nav-item a:hover {
     border-bottom-color: var(--color-ink);
 }
@@ -398,6 +406,11 @@ body.sidebar-open { overflow: hidden; }
     padding-left: 1.5rem;
 }
 .menu_item a.active {
+    background: var(--color-paper);
+    border-radius: var(--radius-sm);
+    box-shadow: inset 4px 0 var(--color-ink);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
     color: var(--color-ink);
     font-weight: 500;
     padding-left: 1.5rem;

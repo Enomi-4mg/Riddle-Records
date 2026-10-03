@@ -12,9 +12,9 @@ const galleryLookupItems = galleryItems.map(({ image, title, slug }) => ({ image
   <div class="header-container">
     <nav class="header-nav header-nav-left">
       <ul class="nav-menu">
-        <li class="nav-item"><a href={href("/")} class={Astro.url.pathname === basePath || Astro.url.pathname === `${basePath}index.html` ? "active" : ""}>Home</a></li>
-        <li class="nav-item"><a href={href("/about/")} class={Astro.url.pathname.includes(`${basePath}about`) ? "active" : ""}>About</a></li>
-        <li class="nav-item"><a href={href("/journal/")} class={Astro.url.pathname.includes(`${basePath}journal`) ? "active" : ""}>Journal</a></li>
+        <li class="nav-item"><a href={href("/")} class={Astro.url.pathname === basePath || Astro.url.pathname === `${basePath}index.html` ? "active" : ""} aria-current={Astro.url.pathname === basePath || Astro.url.pathname === `${basePath}index.html` ? "page" : undefined}>Home</a></li>
+        <li class="nav-item"><a href={href("/about/")} class={Astro.url.pathname.includes(`${basePath}about`) ? "active" : ""} aria-current={Astro.url.pathname.includes(`${basePath}about`) ? "page" : undefined}>About</a></li>
+        <li class="nav-item"><a href={href("/journal/")} class={Astro.url.pathname.includes(`${basePath}journal`) ? "active" : ""} aria-current={Astro.url.pathname.includes(`${basePath}journal`) ? "page" : undefined}>Journal</a></li>
       </ul>
     </nav>
 
@@ -25,8 +25,8 @@ const galleryLookupItems = galleryItems.map(({ image, title, slug }) => ({ image
 
     <nav class="header-nav header-nav-right">
       <ul class="nav-menu">
-        <li class="nav-item"><a href={href("/works/")} class={Astro.url.pathname.includes(`${basePath}works`) || Astro.url.pathname.includes(`${basePath}gallery`) || Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""}>Works</a></li>
-        <li class="nav-item"><a href={href("/project/")} class={Astro.url.pathname.includes(`${basePath}project`) ? "active" : ""}>Project</a></li>
+        <li class="nav-item"><a href={href("/works/")} class={Astro.url.pathname.includes(`${basePath}works`) || Astro.url.pathname.includes(`${basePath}gallery`) || Astro.url.pathname.includes(`${basePath}disco`) ? "active" : ""} aria-current={Astro.url.pathname.includes(`${basePath}works`) || Astro.url.pathname.includes(`${basePath}gallery`) || Astro.url.pathname.includes(`${basePath}disco`) ? "page" : undefined}>Works</a></li>
+        <li class="nav-item"><a href={href("/project/")} class={Astro.url.pathname.includes(`${basePath}project`) ? "active" : ""} aria-current={Astro.url.pathname.includes(`${basePath}project`) ? "page" : undefined}>Project</a></li>
       </ul>
     </nav>
 
