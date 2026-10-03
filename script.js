@@ -44,10 +44,13 @@ function getPageCategory(url) {
 
 function updateNavigationActiveState() {
   const currentCategory = getPageCategory(window.location.href);
-  const navLinks = document.querySelectorAll('.site-header a, .sidebar a');
+  const navLinks = document.querySelectorAll('.nav-item a, .menu_item a');
 
   navLinks.forEach((link) => {
-    link.classList.toggle('active', currentCategory === getPageCategory(link.href));
+    const active = currentCategory === getPageCategory(link.href);
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
   });
 }
 
