@@ -28,6 +28,6 @@ const groups = [{ label: "趣味", values: profile.hobbies }, { label: "特技",
   <section class="works-preview journal-entry-animate">
     <h3 class="page_title profile-section-title">最近の作品・おすすめ作品</h3>
     {featuredWorks.length > 0 ? <div class="works-grid">{featuredWorks.map((work) => <div class="work-card"><a href={href(galleryWorkPath(work.id))} class="work-thumb"><img src={work.thumbnail} alt={work.imageAlt} loading="lazy" /></a><div class="work-info"><p class="work_title">{work.title}</p><time datetime={work.date} class="work_date">{new Date(work.date).toLocaleDateString("ja-JP")}</time></div></div>)}</div> : <p class="profile-featured-empty">紹介する作品は準備中です。</p>}
-    <p class="works-preview-link"><a href={href("/works/")}>Works一覧を見る</a></p>
+    <p class="works-preview-link"><a class="home-card-cta" href={href("/works/")}>Works一覧を見る →</a></p>
   </section>
 </BaseLayout>

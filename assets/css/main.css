@@ -1105,6 +1105,7 @@ body.sidebar-open { overflow: hidden; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--card-gap);
     margin-top: var(--space-xl);
+    align-items: start;
 }
 
 .home-card {
@@ -1187,7 +1188,6 @@ body.sidebar-open { overflow: hidden; }
     color: var(--color-ink);
     font-size: 0.95rem;
     line-height: 1.6;
-    flex: 1;
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 3;
