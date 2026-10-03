@@ -650,10 +650,6 @@
   margin-top: 1rem;
 }
 
-.work-detail-links .article-links-horizontal {
-  margin-top: 0.75rem;
-}
-
 .song-article .song-video {
   margin: 0 auto 1rem;
   border-radius: var(--radius-md);
@@ -671,7 +667,6 @@
 .content-index .journal-desc { margin: 0; }
 .content-index[data-view="list"] { grid-template-columns: 1fr; }
 .content-index[data-view="list"] > .content-item { display: grid; grid-template-columns: 180px minmax(0, 1fr); padding: var(--space-lg); }
-.content-index .article-link-btn { margin-top: .25rem; padding: .4rem .75rem; }
 @media (max-width: 600px) {
   .content-index[data-view="list"] > .content-item { grid-template-columns: 92px minmax(0, 1fr); gap: .85rem; padding: .75rem; }
   .content-index[data-view="list"] .journal-thumb { width: 92px; height: 92px; aspect-ratio: 1; }

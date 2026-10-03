@@ -134,65 +134,6 @@
   line-height: 1.5;
 }
 
-/* カテゴリタグ */
-.category {
-  display: inline-block;
-  padding: 0.3rem 0.8rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.category-list {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
-
-.category-3DCG {
-  background: var(--color-link);
-  color: white;
-}
-
-.category-イラスト {
-  background: var(--color-link);
-  color: white;
-}
-
-.category-写真 {
-  background: var(--color-link);
-  color: white;
-}
-
-.category-四コマ漫画 {
-  background: var(--color-link);
-  color: white;
-}
-
-/* =====================================
-   記事リンクボタン
-   ===================================== */
-.article-link-btn {
-  display: inline-block;
-  margin-top: 0.75rem;
-  padding: 0.6rem 1.2rem;
-  background: var(--color-link);
-  color: var(--color-paper);
-  text-decoration: none;
-  border: 1px solid var(--color-mint-deep);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-soft);
-}
-
-.article-link-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(10, 21, 16, 0.12);
-  text-decoration: none;
-}
-
 /* =====================================
    スマホ対応
    ===================================== */

@@ -1,5 +1,26 @@
 # Issue 対応記録
 
+## 今回の対応（2026-10-03、#30〜#33）
+
+未解決4件を番号順にローカルで実装した。Issue本文とコメントを確認し、追加コメントはなかった。
+
+| Issue | 実装 | Commit |
+| --- | --- | --- |
+| #30 | desktopは背景・下線、mobileは背景・下線・左マーカーで現在地を表示。SSRとページ遷移時に `aria-current` を同期 | `a6554ce`、`1f96bdd` |
+| #31 | Homeの画像なしカードを内容に応じた高さにし、About / ProjectとJournal / Worksを同じ行にまとめる。冗長な案内文を削除し、AboutのWorksリンクを既存CTAに統一 | `beb8447` |
+| #32 | フッターの `·` に `aria-label="Legacy site"` を追加。リンク先・画面表示・フォーカススタイルを維持 | `de8ba6f` |
+| #33 | 旧カテゴリ・記事リンク・関連記事UIの未使用CSS38ルールと空のmediaルールを削除。comparisonは下書き・CMS生成用途があるため維持 | [使用状況の確認](css-usage-audit.md) |
+
+- `npm test`：route 3件、現行CMS 162件、legacy 16件、4種類のコンテンツroundtripが成功。
+- サイトとCMSのproduction build、legacyリンク168件の検査が成功。
+- Chromeで1280 / 375pxの主要7ページと記事・作品・楽曲の詳細を確認し、横幅超過なし。
+- モバイルメニューの開閉・Escape・現在地表示、クライアントページ遷移後のARIA同期を確認。
+- 隠しリンクのアクセシブルネーム・文字 `·`・legacyへのhref・フォーカス枠を実ブラウザで確認。
+- CSS削除対象のクラスが生成HTML56ファイルにないことを確認し、削除前後の表示を比較。
+
+push・本番公開・GitHub Issueのclose / コメント投稿は未実施。リモートIssueはopenのまま。
+既存の未追跡 `.claude/` は変更・commit対象に含めていない。
+
 ## 今回の対応（2026-10-02、#17〜#29）
 
 調査時のopen Issueは全22件（#6、#9〜#29）。
