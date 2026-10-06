@@ -1,4 +1,5 @@
 ---
+import { formatDate } from "../../../shared/formatDate.js";
 import { renderSiteMarkdown } from "../../utils/siteEmbeds";
 import { contentSummary } from "../../../shared/contentSummary";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -13,7 +14,6 @@ const journalEntries = (await getCollection("journal"))
   .filter((entry) => hasVisiblePublicationDate(entry.data, showDrafts))
   .sort((left, right) => right.data.date.getTime() - left.data.date.getTime());
 
-const formatDate = (date) => `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, "0")}月${String(date.getDate()).padStart(2, "0")}日`;
 const basePath = base.endsWith("/") ? base : `${base}/`;
 const withBase = (path) => `${basePath}${path.replace(/^\/+/, "")}`;
 const normalizeCredits = (credits) => Array.isArray(credits) ? credits.join("\n") : credits;

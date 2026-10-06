@@ -1,4 +1,5 @@
 ---
+import { formatDate } from "../../../shared/formatDate.js";
 import { renderSiteMarkdown } from "../../utils/siteEmbeds";
 import { galleryWorkPath, workReference } from "../../../shared/workIdentity";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -47,7 +48,7 @@ const entryDateIso = song.id.split("/").pop()?.replace(/\.md$/, "") ?? song.data
 
     <header class="journal-hero">
       <p class="journal-date"><time datetime={entryDateIso}>
-        {song.data.date.getFullYear()}年{String(song.data.date.getMonth() + 1).padStart(2, "0")}月{String(song.data.date.getDate()).padStart(2, "0")}日
+        {formatDate(entryDateIso)}
       </time></p>
       <h1 class="page_title">{song.data.title}</h1>
       {song.data.description && <p class="journal-summary">{song.data.description}</p>}

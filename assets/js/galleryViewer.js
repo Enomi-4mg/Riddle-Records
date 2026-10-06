@@ -1,3 +1,5 @@
+import { formatDate } from "../../shared/formatDate.js";
+
 export function initializeGalleryViewers(root = document) {
   root.querySelectorAll("[data-gallery-viewer]").forEach((viewer) => {
     if (viewer.dataset.initialized) return;
@@ -52,7 +54,7 @@ export function initializeGalleryViewers(root = document) {
       viewer.querySelector('[data-step="-1"]').disabled = index <= 0;
       viewer.querySelector('[data-step="1"]').disabled = index < 0 || index >= items.length - 1;
       text("[data-status]", selected ? `${index + 1} / ${items.length}：${selected.title}` : "作品はありません");
-      text("[data-info-title]", selected?.title); text("[data-info-date]", selected?.date);
+      text("[data-info-title]", selected?.title); text("[data-info-date]", formatDate(selected?.date));
       viewer.querySelector("[data-info-date]").setAttribute("datetime", selected?.date || "");
       text("[data-info-description]", selected?.description); text("[data-info-credits]", selected?.credits);
       viewer.querySelector("[data-credits-section]").hidden = !selected?.credits;

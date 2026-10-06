@@ -1,4 +1,5 @@
 ---
+import { formatDate } from "../../shared/formatDate.js";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getAboutPageData } from "../utils/about";
 import { galleryWorkPath } from "../utils/works";
@@ -27,7 +28,7 @@ const groups = [{ label: "趣味", values: profile.hobbies }, { label: "特技",
   {profile.sns.length > 0 && <section class="profile-links journal-entry-animate"><h2 class="page_title profile-section-title">リンク集</h2><ul class="link-list"><li class="platform-icons" aria-label="プラットフォーム">{profile.sns.map((item) => <a href={item.url} target="_blank" rel="noopener noreferrer" aria-label={item.label || item.service}>{item.label || item.service}</a>)}</li></ul></section>}
   <section class="works-preview journal-entry-animate">
     <h2 class="page_title profile-section-title">最近の作品・おすすめ作品</h2>
-    {featuredWorks.length > 0 ? <div class="works-grid">{featuredWorks.map((work) => <div class="work-card"><a href={href(galleryWorkPath(work.id))} class="work-thumb"><img src={work.thumbnail} alt={work.imageAlt} loading="lazy" /></a><div class="work-info"><p class="work_title">{work.title}</p><time datetime={work.date} class="work_date">{new Date(work.date).toLocaleDateString("ja-JP")}</time></div></div>)}</div> : <p class="profile-featured-empty">紹介する作品は準備中です。</p>}
+    {featuredWorks.length > 0 ? <div class="works-grid">{featuredWorks.map((work) => <div class="work-card"><a href={href(galleryWorkPath(work.id))} class="work-thumb"><img src={work.thumbnail} alt={work.imageAlt} loading="lazy" /></a><div class="work-info"><p class="work_title">{work.title}</p><time datetime={work.date} class="work_date">{formatDate(work.date)}</time></div></div>)}</div> : <p class="profile-featured-empty">紹介する作品は準備中です。</p>}
     <p class="works-preview-link"><a class="home-card-cta" href={href("/works/")}>Works一覧を見る →</a></p>
   </section>
 </BaseLayout>

@@ -1,4 +1,5 @@
 ---
+import { formatDate } from "../../shared/formatDate.js";
 import { contentSummary } from "../../shared/contentSummary";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
@@ -37,7 +38,7 @@ const getJournalSummary = (entry) => contentSummary(entry.data.description, entr
   <section class="home-intro journal-entry-animate">
     <h1 class="home-welcome">ようこそ！<br />Riddle Records 公式サイトへ。</h1>
     <p>4mgのポートフォリオサイトです。</p>
-    <p><small>サイト最終更新：{siteUpdatedAt.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo" })}</small></p>
+    <p><small>サイト最終更新：{formatDate(siteUpdatedAt, "Asia/Tokyo")}</small></p>
   </section>
 
   <section class="home-latest journal-entry-animate">
@@ -69,7 +70,7 @@ const getJournalSummary = (entry) => contentSummary(entry.data.description, entr
               <a href={href(`/journal/${getJournalRoutePath(latestJournal)}/`)} class="home-card-clickable">
             <div class="home-card-head">
               <span class="home-card-label">Journal</span>
-              <time class="home-card-date" datetime={latestJournal.data.date.toISOString().slice(0, 10)}>{latestJournal.data.date.toLocaleDateString("ja-JP")}</time>
+              <time class="home-card-date" datetime={latestJournal.data.date.toISOString().slice(0, 10)}>{formatDate(latestJournal.data.date)}</time>
             </div>
             {journalThumbnail && (
               <div class="home-card-thumb">
@@ -90,7 +91,7 @@ const getJournalSummary = (entry) => contentSummary(entry.data.description, entr
           <a href={href("/works/")} class="home-card-clickable">
             <div class="home-card-head">
               <span class="home-card-label">Works</span>
-              {latestWorkDate && <time class="home-card-date" datetime={latestWorkDate}>{new Date(latestWorkDate).toLocaleDateString("ja-JP")}</time>}
+              {latestWorkDate && <time class="home-card-date" datetime={latestWorkDate}>{formatDate(latestWorkDate)}</time>}
             </div>
             {latestGallery && (
               <div class="home-card-thumb">
