@@ -77,7 +77,7 @@ const olderEntry = currentIndex >= 0 && currentIndex < journalEntries.length - 1
     {entry.data.credits && (
       <section class="post-info">
         <div class="post-credits">
-          <h3>クレジット</h3>
+          <h2>クレジット</h2>
           <pre>{normalizeCredits(entry.data.credits)}</pre>
         </div>
       </section>
@@ -96,7 +96,7 @@ const olderEntry = currentIndex >= 0 && currentIndex < journalEntries.length - 1
       <a href={withBase("/journal/")}>Journal一覧へ戻る</a>
     </div>
 
-    <nav class="post-nav">
+    <nav class="post-nav" aria-label="前後の記事">
       {olderEntry && (
         <a href={withBase(`/journal/${getJournalRoutePath(olderEntry)}/`)} class="post-nav-prev">← {olderEntry.data.title}</a>
       )}

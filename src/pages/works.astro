@@ -16,15 +16,18 @@ const allTags = [...new Set(works.flatMap((work) => work.tags))].sort((left, rig
   <h1 class="web_title">Works</h1>
 
   <div class="index-toolbar works-controls journal-entry-animate">
-    <div class="filter-controls">
-      <button class="filter-btn active" data-filter="all">すべて</button>
+    <div class="filter-controls" role="group" aria-label="タグで絞り込み">
+      <button type="button" aria-pressed="true" class="filter-btn active" data-filter="all">すべて</button>
       {allTags.map((tag) => (
-        <button class="filter-btn" data-filter={tag}>{tag}</button>
+        <button type="button" aria-pressed="false" class="filter-btn" data-filter={tag}>{tag}</button>
       ))}
     </div>
     <div class="index-view-controls"><SortSwitch target="gallery-container" /><ListViewSwitch target="gallery-container" page="works" /></div>
   </div>
 
+  <p>複数のタグを選ぶと、いずれかに該当する作品を表示します。</p>
+  <p data-filter-status role="status">{works.length}件表示中</p>
+  <p data-filter-empty hidden>該当する作品はありません。</p>
   <div class="content-index" id="gallery-container" data-view="grid">
     {works.map((work) => (
       <article class="gallery-item content-item journal-row works-row journal-entry-animate" data-work-kind={work.kind} data-date={work.date} data-categories={work.tags.join(",")}>

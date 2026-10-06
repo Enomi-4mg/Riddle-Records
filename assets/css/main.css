@@ -969,7 +969,7 @@ body.sidebar-open { overflow: hidden; }
     border-radius: 0.5rem;
 }
 
-.post-credits h3 {
+.post-credits :is(h2, h3) {
     margin-top: 0;
     color: var(--color-link);
     font-size: 1.2rem;
@@ -2038,3 +2038,6 @@ main.container pre::-webkit-scrollbar-thumb:hover {
         aspect-ratio: 4 / 3;
     }
 }
+
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 2000; padding: .75rem 1rem; background: var(--color-paper, #f4fffa); color: var(--color-ink); transform: translateY(-200%); }
+.skip-link:focus { transform: translateY(0); }

@@ -57,3 +57,19 @@ test("horizontal swipes move works, vertical scrolling does not, transition clea
   touch("touchstart", 200, 100); touch("touchend", 190, 250); assert.ok(stage.querySelector("iframe"));
   document.dispatchEvent(new window.Event("astro:before-swap")); key("ArrowRight"); assert.ok(stage.querySelector("iframe"));
 });
+
+test("panels contain keyboard focus and restore the stage and opener", () => {
+  const { window, document, click, key, stage } = setup();
+  click('[data-open="info"]');
+  assert.equal(stage.inert, true);
+  const panel = document.querySelector('#viewer-info');
+  const first = panel.querySelector('button');
+  const last = panel.querySelector('a');
+  document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }));
+  assert.equal(document.activeElement, last);
+  key('Tab');
+  assert.equal(document.activeElement, first);
+  key('Escape');
+  assert.equal(stage.inert, false);
+  assert.equal(document.activeElement, document.querySelector('[data-open="info"]'));
+});

@@ -16,6 +16,7 @@ export function initializeGalleryViewers(root = document) {
     function closePanels(restore = true) {
       const opener = !menu.hidden ? "menu" : !info.hidden ? "info" : null;
       menu.hidden = info.hidden = true;
+      viewer.querySelectorAll(".viewer-topbar, [data-stage], [data-step]").forEach(element => { element.inert = false; });
       viewer.querySelectorAll("[data-open]").forEach((button) => button.setAttribute("aria-expanded", "false"));
       if (restore && opener) viewer.querySelector(`[data-open="${opener}"]`).focus();
     }
@@ -69,13 +70,24 @@ export function initializeGalleryViewers(root = document) {
       const panel = button.dataset.open === "menu" ? menu : info;
       const opening = panel.hidden; closePanels(false); panel.hidden = !opening;
       button.setAttribute("aria-expanded", String(opening));
-      if (opening) panel.querySelector("button").focus();
+      if (opening) {
+        viewer.querySelectorAll(".viewer-topbar, [data-stage], [data-step]").forEach(element => { element.inert = true; });
+        panel.querySelector("button").focus();
+      }
     }));
     viewer.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => closePanels()));
     viewer.querySelectorAll("[data-step]").forEach((button) => button.addEventListener("click", () => step(Number(button.dataset.step))));
     viewer.querySelectorAll("[data-kind]").forEach((button) => button.addEventListener("click", () => { filter = button.dataset.kind; show(selected?.id); }));
     viewer.querySelectorAll("[data-work]").forEach((button) => button.addEventListener("click", () => { show(button.dataset.work); closePanels(false); stage.focus(); }));
     const onKey = (event) => {
+      const panel = !menu.hidden ? menu : !info.hidden ? info : null;
+      if (panel && event.key === "Tab") {
+        const controls = Array.from(panel.querySelectorAll("button:not(:disabled), a[href], [tabindex=\"0\"]")).filter(element => !element.closest("[hidden]"));
+        const first = controls[0]; const last = controls[controls.length - 1];
+        if (event.shiftKey && (doc.activeElement === first || !panel.contains(doc.activeElement))) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && (doc.activeElement === last || !panel.contains(doc.activeElement))) { event.preventDefault(); first?.focus(); }
+        return;
+      }
       if (event.key === "Escape") { closePanels(); return; }
       if (!menu.hidden || !info.hidden || /INPUT|TEXTAREA|SELECT|IFRAME/.test(event.target.tagName) || event.altKey || event.ctrlKey || event.metaKey) return;
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); step(event.key === "ArrowLeft" ? -1 : 1); }

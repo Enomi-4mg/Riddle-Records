@@ -43,7 +43,7 @@ const getJournalSummary = (entry) => contentSummary(entry.data.description, entr
           </a>
           <div class="journal-copy">
             <time class="journal-date" datetime={entry.data.date.toISOString().slice(0, 10)}>{formatDate(entry.data.date)}</time>
-            <h3 class="journal-title"><a href={articleUrl}>{entry.data.title}</a></h3>
+            <h2 class="journal-title"><a href={articleUrl}>{entry.data.title}</a></h2>
             <p class="journal-desc">{getJournalSummary(entry)}</p>
           </div>
         </article>

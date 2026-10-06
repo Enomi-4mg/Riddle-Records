@@ -50,77 +50,29 @@ function initGallery() {
     return raw.split(',').map(c => c.trim()).filter(Boolean);
   };
   
-  // Initial display follows the active buttons rendered by the page.
   function initializeFilters() {
-    const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
-    if (allBtn && allBtn.classList.contains('active')) {
-      galleryItems.forEach(item => {
-        item.style.display = '';
-      });
-      return;
-    }
-
-    const activeFilters = Array.from(document.querySelectorAll('.filter-btn.active'))
-      .map(btn => btn.dataset.filter)
-      .filter(f => f !== 'all');
+    const activeFilters = Array.from(filterButtons).filter(button => button.classList.contains('active') && button.dataset.filter !== 'all').map(button => button.dataset.filter);
+    let count = 0;
     galleryItems.forEach(item => {
-      const categories = getCategories(item);
-      if (activeFilters.length === 0 || activeFilters.some(filter => categories.includes(filter))) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
+      const visible = activeFilters.length === 0 || activeFilters.some(filter => getCategories(item).includes(filter));
+      item.style.display = visible ? '' : 'none';
+      if (visible) count++;
     });
+    filterButtons.forEach(button => {
+      if (button.dataset.filter === 'all') button.classList.toggle('active', activeFilters.length === 0);
+      button.setAttribute('aria-pressed', String(button.classList.contains('active')));
+    });
+    const status = document.querySelector('[data-filter-status]');
+    if (status) status.textContent = `${count}件表示中`;
+    const empty = document.querySelector('[data-filter-empty]');
+    if (empty) empty.hidden = count !== 0;
   }
-  
-  filterButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const filter = this.dataset.filter;
-      
-      // 「すべて」ボタンの処理
-      if (filter === 'all') {
-        document.querySelectorAll('.gallery-item').forEach(item => item.style.display = '');
-        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
-        return;
-      }
-      
-      // 個別カテゴリボタンの処理
-      this.classList.toggle('active');
-      
-      // 「すべて」ボタンを非アクティブに
-      const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
-      if (allBtn) {
-        allBtn.classList.remove('active');
-      }
-      
-      // アクティブなカテゴリを取得
-      const activeFilters = Array.from(document.querySelectorAll('.filter-btn.active'))
-        .map(btn => btn.dataset.filter)
-        .filter(f => f !== 'all');
-      
-      // フィルタリング処理
-      document.querySelectorAll('.gallery-item').forEach(item => {
-        const categories = getCategories(item);
-        
-        if (activeFilters.length === 0 || activeFilters.some(filter => categories.includes(filter))) {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
-      });
-      
-      // すべて非選択なら「すべて」を自動選択
-      if (activeFilters.length === 0) {
-        const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
-        if (allBtn) {
-          allBtn.classList.add('active');
-        }
-        document.querySelectorAll('.gallery-item').forEach(item => item.style.display = '');
-      }
-    });
-  });
-  
+  filterButtons.forEach(button => button.addEventListener('click', () => {
+    if (button.dataset.filter === 'all') filterButtons.forEach(item => item.classList.remove('active'));
+    else button.classList.toggle('active');
+    initializeFilters();
+  }));
+
   // ページ読み込み時に初期フィルター適用
   initializeFilters();
 }

@@ -13,13 +13,14 @@ const base = import.meta.env.BASE_URL;
       <a class="viewer-exit" href={`${base}works/`}>Worksへ戻る</a>
       <button class="viewer-button" data-open="info" aria-controls="viewer-info" aria-expanded="false" aria-label="作品情報を開く">ⓘ</button>
     </div>
-    <div class="viewer-stage" data-stage tabindex="0" aria-label="作品。左右キーで前後に移動">
+    <p id="viewer-instructions" class="viewer-instructions">左右キーで前後の作品へ移動できます。</p>
+    <div class="viewer-stage" data-stage tabindex="0" role="region" aria-label="作品" aria-describedby="viewer-instructions">
       {first ? first.kind === "visual" ? <img src={first.image} alt={first.imageAlt} /> : <iframe src={`https://www.youtube-nocookie.com/embed/${first.youtubeId}`} title={first.title} allow="encrypted-media; picture-in-picture" allowfullscreen /> : <p>公開された作品はまだありません。</p>}
     </div>
     <button class="viewer-button viewer-previous" data-step="-1" aria-label="前の作品">‹</button>
     <button class="viewer-button viewer-next" data-step="1" aria-label="次の作品">›</button>
     <p class="visually-hidden" data-status role="status" aria-live="polite"></p>
-    <aside class="viewer-panel viewer-menu" id="viewer-menu" hidden aria-label="作品メニュー">
+    <aside role="dialog" aria-modal="true" tabindex="-1" class="viewer-panel viewer-menu" id="viewer-menu" hidden aria-label="作品メニュー">
       <header><h2>Gallery</h2><button class="viewer-button" data-close aria-label="作品メニューを閉じる">×</button></header>
       <div class="viewer-filters" role="group" aria-label="作品種別">
         <button data-kind="all" aria-pressed="true">All</button><button data-kind="visual" aria-pressed="false">Visual</button><button data-kind="music" aria-pressed="false">Music</button>
@@ -27,7 +28,7 @@ const base = import.meta.env.BASE_URL;
       <p data-empty hidden>この種別の作品はまだありません。</p>
       <ul class="viewer-work-list">{works.map((work) => <li data-kind-item={work.kind}><button data-work={work.id}><img src={work.thumbnail} alt="" loading="lazy" /><span>{work.title}</span></button></li>)}</ul>
     </aside>
-    <aside class="viewer-panel viewer-info" id="viewer-info" hidden aria-label="作品情報">
+    <aside role="dialog" aria-modal="true" tabindex="-1" class="viewer-panel viewer-info" id="viewer-info" hidden aria-label="作品情報">
       <header><h2>作品情報</h2><button class="viewer-button" data-close aria-label="作品情報を閉じる">×</button></header>
       <h3 data-info-title></h3><time data-info-date></time><div class="work-tags" data-info-tags></div>
       <p class="viewer-description" data-info-description></p><section data-credits-section hidden><h3>クレジット</h3><p class="viewer-description" data-info-credits></p></section>
